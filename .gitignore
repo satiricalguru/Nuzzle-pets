@@ -8,8 +8,15 @@ __pycache__/
 *$py.class
 .venv/
 venv/
+audit_report.json
 
 # Temporary / Scratch
 /tmp/
 scratch/
 *.log
+.pet-upgrades/
+
+# Native desktop build output
+dist/
+node_modules/
+src-tauri/target/

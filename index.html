@@ -7,9 +7,6 @@
     <meta name="description" content="Nuzzle is a local-first companion studio for AI coding agents with 8x9 animation sprite atlases." />
     <title>Nuzzle — your agents, with a little more life</title>
     <link rel="icon" type="image/svg+xml" href="/public/nuzzle-logo.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -19,25 +16,25 @@
       <aside class="rail">
         <div class="brand-lockup" aria-label="Nuzzle home" data-view-target="overview">
           <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-          <div class="brand-name">nuzzle<span>·</span></div>
+          <div class="brand-name">Nuzzle<span>·</span></div>
         </div>
 
         <div class="rail-label">workspace</div>
         <nav class="rail-nav" aria-label="Primary navigation">
           <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span> <span>Overview</span></button>
           <button class="nav-item" data-view="library"><span class="nav-icon">✣</span> <span>Pet library</span> <em id="nav-pet-count">42</em></button>
-          <button class="nav-item" data-view="agents"><span class="nav-icon">⌘</span> <span>Agents</span> <em class="live-count" id="nav-agent-count">5/6</em></button>
+          <button class="nav-item" data-view="agents"><span class="nav-icon">⌘</span> <span>Agents</span> <em class="live-count" id="nav-agent-count">0/5</em></button>
           <button class="nav-item" data-view="settings"><span class="nav-icon">◌</span> <span>Settings</span></button>
         </nav>
 
         <div class="rail-spacer"></div>
         <div class="rail-status">
           <div class="status-orb" aria-hidden="true"><span></span></div>
-          <div><strong>Local & quiet</strong><small>Nothing leaves your Mac</small></div>
-          <button class="icon-button" data-toast="Local-first mode is active. Zero data sent to cloud." aria-label="Local-first privacy information">?</button>
+          <div><strong>Local & private</strong><small>Authenticated loopback hooks</small></div>
+          <button class="icon-button" data-toast="Agent events stay on your Mac and require a rotating local token." aria-label="Local-first privacy information">?</button>
         </div>
         <div class="rail-footer">
-          <span class="version-dot"></span> Nuzzle 0.2.0 <span>·</span> <a href="https://github.com/ChanceYu/CoPet" target="_blank" rel="noreferrer">CoPet</a> <span>·</span> <a href="https://github.com/chenxin-dlut/codex-anime-pets" target="_blank" rel="noreferrer">anime pets</a>
+          <span class="version-dot"></span> Nuzzle 0.3.0 native <span>·</span> <a href="https://github.com/ChanceYu/CoPet" target="_blank" rel="noreferrer">CoPet</a> <span>·</span> <a href="https://github.com/chenxin-dlut/codex-anime-pets" target="_blank" rel="noreferrer">anime pets</a>
         </div>
       </aside>
 
@@ -47,7 +44,7 @@
           <div class="breadcrumb"><span>companion studio</span><b>/</b><strong id="page-title">overview</strong></div>
           <div class="topbar-actions">
             <button class="status-pill float-pill" id="topbar-float-btn" title="Float pet on desktop over Antigravity IDE (Always on Top)"><span>❐</span> float pet</button>
-            <button class="status-pill" id="system-status-btn" data-toast="All agent listeners and animations are purring smoothly."><span class="pulse-dot"></span> all systems purring</button>
+            <button class="status-pill" id="system-status-btn" data-toast="The native runtime listens only on authenticated localhost."><span class="pulse-dot"></span> checking native runtime</button>
             <button class="icon-button" id="notification-btn" data-toast="All agent activity is calm and up to date." aria-label="Notifications">♧<i></i></button>
             <button class="avatar-button" id="profile-btn" data-toast="Nuzzle Companion Studio (Local Session)" aria-label="User profile">JP</button>
           </div>
@@ -89,9 +86,8 @@
                   </div>
                 </div>
               </div>
-              <div class="stage-shadow" aria-hidden="true"></div>
               <div class="stage-ribbon">
-                <span>8×9 animated atlas</span>
+                <span>8×11 animated atlas</span>
                 <span>codex-compatible</span>
                 <span id="hero-pet-state-tag">idle state</span>
               </div>
@@ -135,7 +131,7 @@
             <div>
               <div class="eyebrow"><span class="eyebrow-line"></span> the collection</div>
               <h1 id="library-heading">Find your next <i>sidekick.</i></h1>
-              <p>Real 8×9 animation sprite atlases, packaged for the Codex pet format. Pick a mood, then make it yours.</p>
+              <p>Animated companion atlases packaged inside the native Nuzzle app. Pick a mood, then make it yours.</p>
             </div>
             <div class="library-stats"><strong id="library-count-display">42</strong><span>pets in<br />the library</span></div>
           </div>
@@ -161,7 +157,7 @@
             <div>
               <div class="eyebrow"><span class="eyebrow-line"></span> integrations</div>
               <h1 id="agents-heading">Every agent gets<br /><i>a little personality.</i></h1>
-              <p>Connect the tools you already use. Nuzzle stays local, listens for lifecycle events, and lets your companion react in real time.</p>
+              <p>Connect detected tools with backed-up, app-managed lifecycle hooks. Events stay on an authenticated localhost runtime.</p>
             </div>
             <div class="connection-orbit"><span id="orbit-count">5</span><small>connected</small></div>
           </div>
@@ -207,6 +203,16 @@
                     <button class="size-option" data-size="s">S</button>
                     <button class="size-option active" data-size="m">M</button>
                     <button class="size-option" data-size="l">L</button>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <strong>Floating Companion Style</strong>
+                    <p>Display as a pure transparent desktop sprite (Codex style) or widget card.</p>
+                  </div>
+                  <div class="size-picker" role="radiogroup" aria-label="Floating Companion Style">
+                    <button class="size-option mode-option active" data-mode="sprite">Sprite</button>
+                    <button class="size-option mode-option" data-mode="card">Card</button>
                   </div>
                 </div>
                 <div class="setting-row">
@@ -273,7 +279,7 @@
                 <div class="setting-row">
                   <div>
                     <strong>100% Local-First Storage</strong>
-                    <p>All companion settings and favorites are stored locally in your browser/device.</p>
+                    <p>All companion settings, favorites, hook metadata, and backups stay on this Mac.</p>
                   </div>
                   <span class="status-pill"><span class="pulse-dot"></span> active</span>
                 </div>

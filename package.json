@@ -1,0 +1,15 @@
+{
+  "name": "nuzzle-desktop",
+  "version": "0.3.0",
+  "private": true,
+  "description": "A native floating desktop companion for coding agents",
+  "scripts": {
+    "frontend:build": "python3 scripts/build_frontend.py",
+    "dev": "npm run frontend:build && tauri dev",
+    "build": "npm run frontend:build && tauri build",
+    "check": "npm run frontend:build && cargo test --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.8.4"
+  }
+}

@@ -3,6 +3,17 @@
  * Core Application Logic & State Engine
  */
 
+const TAURI = window.__TAURI__ || null;
+const IS_NATIVE_APP = Boolean(TAURI?.core?.invoke);
+let nativeEventSequence = 0;
+let nativePetRevision = -1;
+let nativePollInFlight = false;
+
+async function invokeNative(command, args = {}) {
+  if (!IS_NATIVE_APP) throw new Error('This action requires the native Nuzzle app.');
+  return TAURI.core.invoke(command, args);
+}
+
 // 1. DATA MODELS & CATALOG
 const PETS = [
   // ── Anime Companions (Clean transparent WebP sprite atlases) ──────
@@ -517,12 +528,12 @@ const PETS = [
 ];
 
 const INITIAL_AGENTS = [
-  { id: 'codex', name: 'Codex', key: 'codex', mark: 'C', desc: 'Your local coding companion, ready for the next prompt.', active: true },
-  { id: 'claude', name: 'Claude Code', key: 'claude', mark: '✦', desc: 'Thoughtful, methodical, and always up for a long session.', active: true },
-  { id: 'cursor', name: 'Cursor', key: 'cursor', mark: '⌁', desc: 'Fast pair programming with a taste for good shortcuts.', active: true },
-  { id: 'antigravity', name: 'Antigravity', key: 'antigravity', mark: '↗', desc: 'Exploring new ideas with a little lift.', active: true },
-  { id: 'gemini', name: 'Gemini', key: 'gemini', mark: '✧', desc: 'A multi-modal spark for the edges of your work.', active: true },
-  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: '◎', desc: 'Open tooling, honest feedback, no cloud required.', active: false }
+  { id: 'codex', name: 'Codex', key: 'codex', mark: 'C', desc: 'Prompt, tool, approval, completion, and error hooks.', active: false, available: true },
+  { id: 'claude-code', name: 'Claude Code', key: 'claude', mark: '✦', desc: 'Lifecycle hooks through Claude Code settings.', active: false, available: true },
+  { id: 'cursor', name: 'Cursor', key: 'cursor', mark: '⌁', desc: 'Cursor Agent prompt and tool lifecycle hooks.', active: false, available: true },
+  { id: 'antigravity', name: 'Antigravity', key: 'antigravity', mark: '↗', desc: 'Antigravity invocation and tool lifecycle hooks.', active: false, available: true },
+  { id: 'gemini', name: 'Gemini', key: 'gemini', mark: '✧', desc: 'Multimodal prompt and response hooks.', active: false, available: true },
+  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: '◎', desc: 'A local OpenCode plugin forwards lifecycle events.', active: false, available: true }
 ];
 
 const SAMPLE_EVENTS = [
@@ -567,11 +578,12 @@ const state = {
     animation: true,
     showMessages: true,
     launchGreeting: true,
-    keepOnTop: false,
+    keepOnTop: true,
     petSounds: true,
-    completionSounds: false
+    completionSounds: false,
+    companionMode: loadStored('nuzzle_companion_mode', 'sprite')
   }),
-  agents: loadStored(STORAGE_KEYS.AGENTS, INITIAL_AGENTS),
+  agents: INITIAL_AGENTS.map(agent => ({ ...agent })),
   activity: [...SAMPLE_EVENTS],
   currentView: 'overview',
   currentSettingsTab: 'appearance',
@@ -721,6 +733,16 @@ function updatePipWindow() {
 }
 
 async function floatPetOnDesktop() {
+  if (IS_NATIVE_APP) {
+    try {
+      await invokeNative('show_companion');
+      showToast('Your companion is floating above your apps.');
+    } catch (error) {
+      showToast(`Could not show companion: ${error}`);
+    }
+    return;
+  }
+
   if (pipWindowInstance && !pipWindowInstance.closed) {
     pipWindowInstance.focus();
     showToast('Companion is already floating on your desktop!');
@@ -752,16 +774,11 @@ async function floatPetOnDesktop() {
         } catch (e) {}
       });
 
-      const fontLink = document.createElement('link');
-      fontLink.rel = 'stylesheet';
-      fontLink.href = 'https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap';
-      pip.document.head.appendChild(fontLink);
-
       const pipStyle = document.createElement('style');
       pipStyle.textContent = `
-        @keyframes pet-frames-4 { from { background-position-x: 0%; } to { background-position-x: 42.857%; } }
-        @keyframes pet-frames-6 { from { background-position-x: 0%; } to { background-position-x: 71.429%; } }
-        @keyframes pet-frames-8 { from { background-position-x: 0%; } to { background-position-x: 100%; } }
+        @keyframes pet-frames-4 { from { background-position-x: 0%; } to { background-position-x: 57.143%; } }
+        @keyframes pet-frames-6 { from { background-position-x: 0%; } to { background-position-x: 85.714%; } }
+        @keyframes pet-frames-8 { from { background-position-x: 0%; } to { background-position-x: 114.286%; } }
         @keyframes pet-float-gentle {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-4px); }
@@ -782,7 +799,7 @@ async function floatPetOnDesktop() {
           background: #fcfbf8;
           overflow: hidden;
           user-select: none;
-          font-family: 'DM Sans', sans-serif;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
         .pip-card {
           width: 100%;
@@ -845,7 +862,7 @@ async function floatPetOnDesktop() {
           animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important;
         }
         .pip-name {
-          font-family: 'Fraunces', serif;
+          font-family: Georgia, 'Times New Roman', serif;
           font-size: 15px;
           font-weight: 700;
           color: #1f1d1a;
@@ -976,6 +993,16 @@ function selectCompanion(petId) {
 
   state.selectedPetId = petId;
   saveStored(STORAGE_KEYS.SELECTED_PET, petId);
+  if (IS_NATIVE_APP) {
+    invokeNative('select_native_pet', { id: petId }).catch(error => {
+      console.warn('Unable to persist native pet selection:', error);
+    });
+  }
+  if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('nuzzle-pet-selection');
+    channel.postMessage({ petId });
+    channel.close();
+  }
 
   renderFeaturedPet();
   renderPetStrip();
@@ -1099,16 +1126,17 @@ function renderAgents() {
     <article class="agent-card">
       <div class="agent-card-top">
         <div class="agent-logo ${agent.key}">${agent.mark}</div>
-        <button class="toggle ${agent.active ? 'on' : ''}" data-agent-toggle="${agent.id}" aria-label="Toggle ${agent.name}">
+        <button class="toggle ${agent.active ? 'on' : ''}" data-agent-toggle="${agent.id}" aria-label="${agent.active ? 'Disconnect' : 'Connect'} ${agent.name}" ${!agent.available && !agent.active ? 'disabled' : ''}>
           <span></span>
         </button>
       </div>
       <h3>${agent.name}</h3>
       <p>${agent.desc}</p>
       <div class="agent-card-foot">
-        <span><i class="green-dot"></i> ${agent.active ? 'connected' : 'available'}</span>
-        <button data-action="${agent.id === 'codex' ? 'auto-set-codex' : 'configure-agent'}" data-toast="${agent.id === 'codex' ? '✓ 42 Companions active in ~/.codex/pets' : `${agent.name} hook listener is ready`}">${agent.id === 'codex' ? 'auto-set ~/.codex ↗' : 'configure ↗'}</button>
+        <span><i class="${agent.healthy ? 'green-dot' : 'status-dot-muted'}"></i> ${agent.active ? 'connected' : agent.available ? 'detected' : 'not detected'}</span>
+        <button data-action="configure-agent" data-agent-id="${agent.id}" ${!agent.available && !agent.active ? 'disabled' : ''}>${agent.active ? 'disconnect' : 'connect'} ↗</button>
       </div>
+      <small class="agent-health-message">${agent.message || 'Checking native integration…'}</small>
     </article>
   `).join('');
 
@@ -1153,6 +1181,7 @@ const PALETTE_ACTIONS = [
   { id: 'view-agents', category: 'Navigation', title: 'Manage Agents & Integrations', icon: '⌘', shortcut: '3', action: () => setView('agents') },
   { id: 'view-settings', category: 'Navigation', title: 'Open Settings & Preferences', icon: '◌', shortcut: '4', action: () => setView('settings') },
   { id: 'act-float', category: 'Desktop', title: 'Float Companion on Desktop (Always on Top)', icon: '❐', shortcut: 'F', action: () => floatPetOnDesktop() },
+  { id: 'act-toggle-mode', category: 'Desktop', title: 'Toggle Desktop Sprite / Card Mode (Codex Style)', icon: '👻', shortcut: 'M', action: () => toggleCompanionMode() },
   { id: 'act-codex-setup', category: 'Codex Integration', title: 'Auto-Set 42 Companions in Codex (~/.codex/pets)', icon: '⌘', shortcut: 'C', action: () => autoSetCodex() },
   { id: 'act-pat', category: 'Pet Actions', title: 'Pet Active Companion', icon: '♡', action: () => patActivePet() },
   { id: 'act-sim', category: 'Agent Actions', title: 'Simulate Agent Tool Call', icon: '⚡︎', action: () => simulateAgentEvent() },
@@ -1250,10 +1279,22 @@ function applySettings() {
 
   // Noise overlay
   document.body.classList.toggle('no-noise', !state.settings.noise);
+  document.body.classList.toggle('no-animations', !state.settings.animation);
+  document.body.classList.toggle('hide-agent-messages', !state.settings.showMessages);
+
+  if (IS_NATIVE_APP) {
+    invokeNative('set_companion_always_on_top', { enabled: Boolean(state.settings.keepOnTop) })
+      .catch(error => console.warn('Unable to change always-on-top state:', error));
+  }
 
   // Size buttons UI
-  $$('.size-option').forEach(btn => {
+  $$('.size-option:not(.mode-option)').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.size === state.settings.petSize);
+  });
+
+  // Companion Mode UI
+  $$('.mode-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === (state.settings.companionMode || 'sprite'));
   });
 
   // Toggles UI
@@ -1263,6 +1304,19 @@ function applySettings() {
       toggle.classList.toggle('on', Boolean(state.settings[key]));
     }
   });
+}
+
+function toggleCompanionMode() {
+  const nextMode = (state.settings.companionMode || 'sprite') === 'sprite' ? 'card' : 'sprite';
+  state.settings.companionMode = nextMode;
+  saveStored(STORAGE_KEYS.SETTINGS, state.settings);
+  localStorage.setItem('nuzzle_companion_mode', nextMode);
+  if ('BroadcastChannel' in window) {
+    const channel = new BroadcastChannel('nuzzle-pet-selection');
+    channel.postMessage({ companionMode: nextMode });
+  }
+  applySettings();
+  showToast(`Switched companion mode to ${nextMode === 'sprite' ? 'Desktop Sprite' : 'Widget Card'}!`);
 }
 
 function setSettingsTab(tabName) {
@@ -1324,7 +1378,12 @@ function normalizeAgentEvent(payload = {}) {
 }
 
 function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
-  const item = normalizeAgentEvent(payload);
+  const safePayload = state.settings.showMessages ? payload : {
+    ...payload,
+    title: `${payload.agentName || payload.agent || 'Agent'} activity`,
+    sub: payload.type || payload.kind || 'local event'
+  };
+  const item = normalizeAgentEvent(safePayload);
   state.activity.unshift(item);
   if (state.activity.length > 10) state.activity.pop();
   renderActivity();
@@ -1349,15 +1408,102 @@ function simulateAgentEvent() {
   });
 }
 
-function autoSetCodex() {
-  playChime('bell');
-  showToast('✓ 42 Companions auto-set in ~/.codex/pets and hooks configured!');
+async function configureAgent(agentId, shouldInstall = true) {
+  const agent = state.agents.find(item => item.id === agentId);
+  if (!agent) return;
+  if (!IS_NATIVE_APP) {
+    showToast('Agent connections are available in the native Nuzzle app.');
+    return;
+  }
+  try {
+    const command = shouldInstall ? 'install_integration' : 'uninstall_integration';
+    const summary = await invokeNative(command, { id: agentId });
+    Object.assign(agent, {
+      active: summary.installed,
+      available: summary.available,
+      healthy: summary.healthy,
+      message: summary.message,
+      configPath: summary.configPath
+    });
+    renderAgents();
+    playChime(summary.installed ? 'bell' : 'pop');
+    showToast(`${agent.name} ${summary.installed ? 'connected' : 'disconnected'} safely.`);
+  } catch (error) {
+    showToast(`${agent.name}: ${error}`);
+  }
+}
+
+async function autoSetCodex() {
+  return configureAgent('codex', true);
+}
+
+async function refreshNativeIntegrations() {
+  if (!IS_NATIVE_APP) return;
+  try {
+    const integrations = await invokeNative('list_integrations');
+    state.agents = INITIAL_AGENTS.map(base => {
+      const summary = integrations.find(item => item.id === base.id);
+      return summary ? {
+        ...base,
+        active: summary.installed,
+        available: summary.available,
+        healthy: summary.healthy,
+        message: summary.message,
+        configPath: summary.configPath
+      } : { ...base };
+    });
+    renderAgents();
+    const runtime = await invokeNative('get_runtime_status');
+    const status = $('#system-status-btn');
+    if (status) status.lastChild.textContent = ` native runtime · ${runtime.acceptedEvents} events`;
+    const mode = $('.eyebrow-mono');
+    if (mode) mode.textContent = 'NATIVE HOOKS READY';
+  } catch (error) {
+    console.warn('Native integration status failed:', error);
+  }
+}
+
+function applyNativePetSelection(petId) {
+  if (!PETS.some(pet => pet.id === petId) || state.selectedPetId === petId) return;
+  state.selectedPetId = petId;
+  saveStored(STORAGE_KEYS.SELECTED_PET, petId);
+  renderFeaturedPet();
+  renderPetStrip();
+  renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
+  updatePipWindow();
+  if (typeof window.updateMiniUI === 'function') window.updateMiniUI();
+}
+
+async function pollNativeState() {
+  if (!IS_NATIVE_APP || nativePollInFlight) return;
+  nativePollInFlight = true;
+  try {
+    const [batch, desktopState] = await Promise.all([
+      invokeNative('get_runtime_events', { afterSequence: nativeEventSequence }),
+      invokeNative('get_desktop_state')
+    ]);
+    for (const entry of batch.events || []) {
+      dispatchAgentEvent(entry.event || {});
+    }
+    nativeEventSequence = batch.latestSequence || nativeEventSequence;
+    if (desktopState.revision !== nativePetRevision) {
+      nativePetRevision = desktopState.revision;
+      applyNativePetSelection(desktopState.selectedPetId);
+    }
+    const status = $('#system-status-btn');
+    if (status) status.lastChild.textContent = ` native runtime · ${nativeEventSequence} events`;
+  } catch (error) {
+    console.warn('Native state poll failed:', error);
+  } finally {
+    nativePollInFlight = false;
+  }
 }
 
 window.nuzzle = window.nuzzle || {};
 window.nuzzle.dispatchAgentEvent = dispatchAgentEvent;
 window.nuzzle.floatPetOnDesktop = floatPetOnDesktop;
 window.nuzzle.autoSetCodex = autoSetCodex;
+window.nuzzle.configureAgent = configureAgent;
 window.nuzzle.patActivePet = patActivePet;
 window.nuzzle.selectCompanion = selectCompanion;
 window.addEventListener('nuzzle:agent-event', event => dispatchAgentEvent(event.detail || {}));
@@ -1371,7 +1517,7 @@ if ('BroadcastChannel' in window) {
 }
 
 // Server-Sent Events (SSE) Live Agent Bridge Listener
-if (typeof window !== 'undefined' && 'EventSource' in window) {
+if (!IS_NATIVE_APP && typeof window !== 'undefined' && 'EventSource' in window) {
   try {
     const sse = new EventSource('/events/stream');
     sse.addEventListener('message', event => {
@@ -1389,6 +1535,14 @@ if (typeof window !== 'undefined' && 'EventSource' in window) {
   } catch (err) {
     // Static mode without bridge server
   }
+}
+
+if (IS_NATIVE_APP && TAURI?.event?.listen) {
+  TAURI.event.listen('nuzzle-agent-event', incoming => {
+    const entry = incoming.payload || {};
+    nativeEventSequence = Math.max(nativeEventSequence, Number(entry.sequence) || 0);
+    dispatchAgentEvent(entry.event || entry);
+  }).catch(error => console.warn('Native event listener failed:', error));
 }
 
 // 13. DATE/TIME TICKER
@@ -1486,17 +1640,37 @@ document.addEventListener('click', event => {
     const agentId = agentToggle.dataset.agentToggle;
     const targetAgent = state.agents.find(a => a.id === agentId);
     if (targetAgent) {
-      targetAgent.active = !targetAgent.active;
-      saveStored(STORAGE_KEYS.AGENTS, state.agents);
-      renderAgents();
-      playChime('pop');
-      showToast(`${targetAgent.name} is now ${targetAgent.active ? 'connected' : 'disconnected'}`);
+      configureAgent(agentId, !targetAgent.active);
     }
     return;
   }
 
+  const configureButton = event.target.closest('[data-action="configure-agent"]');
+  if (configureButton) {
+    const targetAgent = state.agents.find(agent => agent.id === configureButton.dataset.agentId);
+    if (targetAgent) configureAgent(targetAgent.id, !targetAgent.active);
+    return;
+  }
+
+  // Mode option picker (Sprite vs Card)
+  const modeOpt = event.target.closest('.mode-option');
+  if (modeOpt) {
+    const newMode = modeOpt.dataset.mode;
+    state.settings.companionMode = newMode;
+    saveStored(STORAGE_KEYS.SETTINGS, state.settings);
+    localStorage.setItem('nuzzle_companion_mode', newMode);
+    if ('BroadcastChannel' in window) {
+      const channel = new BroadcastChannel('nuzzle-pet-selection');
+      channel.postMessage({ companionMode: newMode });
+    }
+    applySettings();
+    playChime('pop');
+    showToast(`Companion floating style: ${newMode === 'sprite' ? 'Desktop Sprite (Codex)' : 'Widget Card'}`);
+    return;
+  }
+
   // Size option picker
-  const sizeOpt = event.target.closest('.size-option');
+  const sizeOpt = event.target.closest('.size-option:not(.mode-option)');
   if (sizeOpt) {
     state.settings.petSize = sizeOpt.dataset.size;
     saveStored(STORAGE_KEYS.SETTINGS, state.settings);
@@ -1511,8 +1685,8 @@ document.addEventListener('click', event => {
     Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
     state.selectedPetId = 'hu-tao';
     state.favorites = new Set(['hu-tao', 'ganyu']);
-    state.settings = { petSize: 'm', noise: true, animation: true, showMessages: true, launchGreeting: true, keepOnTop: false, petSounds: true, completionSounds: false };
-    state.agents = INITIAL_AGENTS;
+    state.settings = { petSize: 'm', noise: true, animation: true, showMessages: true, launchGreeting: true, keepOnTop: true, petSounds: true, completionSounds: false };
+    state.agents = INITIAL_AGENTS.map(agent => ({ ...agent }));
     applySettings();
     renderFeaturedPet();
     renderPetStrip();
@@ -1618,8 +1792,11 @@ renderLibrary();
 renderAgents();
 renderActivity();
 applySettings();
+refreshNativeIntegrations();
+pollNativeState();
 updateDateTime();
 setInterval(updateDateTime, 30000);
+if (IS_NATIVE_APP) setInterval(pollNativeState, 250);
 
 if (state.settings.launchGreeting) {
   setTimeout(() => {

@@ -1,26 +1,295 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="transparent-bg">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nuzzle — Mini Companion</title>
+    <title>Nuzzle — Companion</title>
     <link rel="icon" type="image/svg+xml" href="/public/nuzzle-logo.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
     <style>
+      :root {
+        --mini-pet-size: 160px;
+      }
+      html,
+      body,
+      html.transparent-bg,
+      body.transparent-bg,
       body.mini-body {
         margin: 0;
-        padding: 12px;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        min-width: 0 !important;
         min-height: 100vh;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: transparent;
+        background: transparent !important;
+        background-color: transparent !important;
         overflow: hidden;
+        user-select: none;
+        -webkit-user-select: none;
       }
-      .mini-container {
+      /* =========================================================
+         TOAST NOTIFICATION REGION (Sleek Floating Bottom Capsule)
+         ========================================================= */
+      .toast-region {
+        position: fixed;
+        top: auto !important;
+        bottom: 12px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        z-index: 1000;
+        pointer-events: none;
+        width: auto;
+        max-width: 90%;
+      }
+      .toast {
+        background: rgba(22, 20, 18, 0.92) !important;
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.16) !important;
+        border-radius: 999px !important;
+        padding: 4px 12px !important;
+        color: #f3eee6 !important;
+        font-size: 11px !important;
+        font-weight: 500;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        pointer-events: none !important;
+        animation: toast-slide-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      .toast span:first-child {
+        color: var(--coral, #ef7861);
+        font-size: 11px;
+      }
+      @keyframes toast-slide-up {
+        from { opacity: 0; transform: translateY(8px) scale(0.95); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      .toast.fade {
+        animation: toast-fade-out 0.22s ease both;
+      }
+      @keyframes toast-fade-out {
+        to { opacity: 0; transform: translateY(4px) scale(0.95); }
+      }
+
+      /* =========================================================
+         MODE: SPRITE (Codex-Style Borderless Transparent Overlay)
+         ========================================================= */
+      body.mode-sprite .mini-container {
+        width: 100%;
+        height: 100%;
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        padding: 10px 0 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: relative;
+        text-align: center;
+      }
+      body.mode-sprite .mini-topbar,
+      body.mode-sprite .mini-badge,
+      body.mode-sprite .mini-name,
+      body.mode-sprite .mini-quote,
+      body.mode-sprite .mini-status-bar {
+        display: none !important;
+      }
+      body.mode-sprite .mini-stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin: 0;
+      }
+      body.mode-sprite .mini-art-wrapper {
+        position: relative;
+        width: 175px;
+        height: 190px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+      }
+      body.mode-sprite .mini-art-wrapper:active {
+        cursor: grabbing;
+      }
+      body.mode-sprite .mini-art {
+        width: 160px;
+        height: 175px;
+        background-color: transparent !important;
+        background-repeat: no-repeat;
+        background-size: 800% 900%;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        cursor: grab;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: pixelated;
+        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      body.mode-sprite .mini-art:hover {
+        transform: scale(1.03);
+        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.55));
+      }
+      body.mode-sprite .mini-art:active {
+        transform: scale(0.96);
+      }
+      body.mode-sprite .mini-art.gif-pet {
+        background-size: contain !important;
+        background-position: center center !important;
+      }
+
+      /* Compact Floating Pill & Dropdown in Sprite Mode */
+      body.mode-sprite .mini-hud {
+        position: relative;
+        margin-top: 2px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        z-index: 100;
+      }
+      body.mode-sprite .mini-pill-dock {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(22, 20, 18, 0.82);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 999px;
+        padding: 3px 8px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
+        opacity: 0.35;
+        transform: translateY(2px);
+        transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      }
+      body.mode-sprite .mini-container:hover .mini-pill-dock,
+      body.mode-sprite .mini-container:focus-within .mini-pill-dock,
+      body.mode-sprite .mini-hud.menu-open .mini-pill-dock {
+        opacity: 1;
+        transform: translateY(0);
+        background: rgba(22, 20, 18, 0.94);
+      }
+      body.mode-sprite .mini-pill-btn {
+        background: transparent;
+        color: #ede8e1;
+        border: none;
+        border-radius: 999px;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
+      }
+      body.mode-sprite .mini-pat-btn {
+        color: var(--coral, #ef7861);
+        font-weight: 700;
+        font-size: 14px;
+      }
+      body.mode-sprite .mini-pill-btn:hover {
+        background: rgba(255, 255, 255, 0.16);
+        transform: scale(1.1);
+      }
+      body.mode-sprite .mini-pat-btn:hover {
+        background: rgba(239, 120, 97, 0.22);
+        color: #ff8c77;
+      }
+      body.mode-sprite .mini-dropdown-trigger {
+        font-size: 15px;
+        line-height: 1;
+        letter-spacing: 0.5px;
+      }
+
+      /* Dropdown Menu */
+      body.mode-sprite .mini-dropdown-menu {
+        display: none;
+        position: absolute;
+        top: calc(100% + 5px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(22, 20, 18, 0.96);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        padding: 4px;
+        min-width: 148px;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        flex-direction: column;
+        gap: 2px;
+        z-index: 200;
+        animation: menu-pop 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      body.mode-sprite .mini-hud.menu-open .mini-dropdown-menu {
+        display: flex;
+      }
+      @keyframes menu-pop {
+        from { opacity: 0; transform: translateX(-50%) scale(0.94) translateY(-4px); }
+        to { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+      }
+      body.mode-sprite .mini-menu-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        width: 100%;
+        padding: 5px 8px;
+        border: none;
+        border-radius: 7px;
+        background: transparent;
+        color: #ede8e1;
+        font-size: 11px;
+        font-weight: 500;
+        text-align: left;
+        cursor: pointer;
+        transition: background 0.12s ease, transform 0.12s ease;
+      }
+      body.mode-sprite .mini-menu-item:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateX(2px);
+      }
+      body.mode-sprite .menu-icon {
+        font-size: 12px;
+        width: 16px;
+        text-align: center;
+        opacity: 0.85;
+      }
+      body.mode-sprite .menu-divider {
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+        margin: 2px 0;
+      }
+      body.mode-sprite .mini-menu-item.item-danger:hover {
+        background: rgba(234, 90, 71, 0.2);
+        color: #ff7f6e;
+      }
+
+      /* In card mode, hide sprite pill/dropdown */
+      body.mode-card .mini-hud {
+        display: none !important;
+      }
+
+      /* =========================================================
+         MODE: CARD (Original Widget Card UI)
+         ========================================================= */
+      body.mode-card .mini-container {
         width: 100%;
         max-width: 280px;
         background: rgba(254, 252, 248, 0.94);
@@ -32,9 +301,8 @@
         box-shadow: 0 16px 36px rgba(77, 47, 30, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
         text-align: center;
         position: relative;
-        user-select: none;
       }
-      .mini-topbar {
+      body.mode-card .mini-topbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -42,7 +310,7 @@
         font-size: 11px;
         color: var(--muted, #7c7267);
       }
-      .mini-brand {
+      body.mode-card .mini-brand {
         font-family: var(--display, serif);
         font-weight: 600;
         font-size: 13px;
@@ -51,12 +319,12 @@
         align-items: center;
         gap: 4px;
       }
-      .mini-brand span { color: var(--accent, #ea5a47); }
-      .mini-controls {
+      body.mode-card .mini-brand span { color: var(--accent, #ea5a47); }
+      body.mode-card .mini-controls {
         display: flex;
         gap: 4px;
       }
-      .mini-btn {
+      body.mode-card .mini-btn {
         background: rgba(0,0,0,0.04);
         border: 1px solid rgba(0,0,0,0.06);
         border-radius: 6px;
@@ -66,8 +334,8 @@
         color: var(--ink, #1f1d1a);
         transition: background 0.15s ease;
       }
-      .mini-btn:hover { background: rgba(0,0,0,0.08); }
-      .mini-stage {
+      body.mode-card .mini-btn:hover { background: rgba(0,0,0,0.08); }
+      body.mode-card .mini-stage {
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -75,7 +343,7 @@
         margin: 6px 0;
         position: relative;
       }
-      .mini-art-wrapper {
+      body.mode-card .mini-art-wrapper {
         position: relative;
         width: 140px;
         height: 155px;
@@ -83,7 +351,7 @@
         align-items: center;
         justify-content: center;
       }
-      .mini-art {
+      body.mode-card .mini-art {
         width: 130px;
         height: 145px;
         background-color: #f2ede5;
@@ -94,25 +362,25 @@
         cursor: pointer;
         transition: transform 0.15s ease;
       }
-      .mini-art:hover { transform: scale(1.04); }
-      .mini-art:active { transform: scale(0.96); }
-      .mini-art.gif-pet {
+      body.mode-card .mini-art:hover { transform: scale(1.04); }
+      body.mode-card .mini-art:active { transform: scale(0.96); }
+      body.mode-card .mini-art.gif-pet {
         background-size: contain !important;
         background-position: center center !important;
       }
-      .mini-name {
+      body.mode-card .mini-name {
         font-family: var(--display, serif);
         font-size: 18px;
         font-weight: 700;
         color: var(--ink, #1f1d1a);
         margin: 0;
       }
-      .mini-badge {
+      body.mode-card .mini-badge {
         font-size: 11px;
         color: var(--accent, #ea5a47);
         font-weight: 600;
       }
-      .mini-quote {
+      body.mode-card .mini-quote {
         font-size: 11px;
         font-style: italic;
         color: var(--muted, #7c7267);
@@ -120,12 +388,13 @@
         line-height: 1.3;
         min-height: 28px;
       }
-      .mini-actions {
+      body.mode-card .mini-card-actions {
         display: flex;
         gap: 6px;
         justify-content: center;
+        align-items: center;
       }
-      .mini-pat-btn {
+      body.mode-card .mini-card-pat-btn {
         background: var(--accent, #ea5a47);
         color: #fff;
         border: none;
@@ -137,9 +406,9 @@
         box-shadow: 0 4px 10px rgba(234, 90, 71, 0.25);
         transition: transform 0.15s ease, background 0.15s ease;
       }
-      .mini-pat-btn:hover { background: #d94936; transform: translateY(-1px); }
-      .mini-pat-btn:active { transform: translateY(1px); }
-      .mini-pip-btn {
+      body.mode-card .mini-card-pat-btn:hover { background: #d94936; transform: translateY(-1px); }
+      body.mode-card .mini-card-pat-btn:active { transform: translateY(1px); }
+      body.mode-card .mini-card-pip-btn {
         background: rgba(0,0,0,0.05);
         color: var(--ink, #1f1d1a);
         border: 1px solid rgba(0,0,0,0.08);
@@ -150,8 +419,8 @@
         cursor: pointer;
         transition: background 0.15s ease;
       }
-      .mini-pip-btn:hover { background: rgba(0,0,0,0.09); }
-      .mini-status-bar {
+      body.mode-card .mini-card-pip-btn:hover { background: rgba(0,0,0,0.09); }
+      body.mode-card .mini-status-bar {
         margin-top: 10px;
         padding-top: 8px;
         border-top: 1px solid rgba(0,0,0,0.06);
@@ -160,41 +429,84 @@
         font-size: 10px;
         color: var(--muted, #7c7267);
       }
-      .mini-status-bar span { display: flex; align-items: center; gap: 4px; }
-      .mini-dot {
+      body.mode-card .mini-status-bar span { display: flex; align-items: center; gap: 4px; }
+      body.mode-card .mini-dot {
         width: 6px;
         height: 6px;
         border-radius: 50%;
         background: #52a447;
         box-shadow: 0 0 6px rgba(82, 164, 71, 0.6);
       }
+      /* Hide card actions in sprite mode */
+      body.mode-sprite .mini-card-actions {
+        display: none !important;
+      }
     </style>
   </head>
-  <body class="mini-body">
-    <div class="mini-container" id="mini-container">
+  <body class="mini-body mode-sprite transparent-bg" id="mini-body">
+    <div class="mini-container" id="mini-container" data-tauri-drag-region>
       <div class="pet-particles" id="mini-particles" aria-hidden="true"></div>
-      <div class="mini-topbar">
-        <div class="mini-brand">nuzzle<span>·</span> companion</div>
+      
+      <!-- Card Topbar (Visible in Card Mode) -->
+      <div class="mini-topbar" data-tauri-drag-region>
+        <div class="mini-brand" data-tauri-drag-region>Nuzzle<span>·</span> companion</div>
         <div class="mini-controls">
-          <button class="mini-btn" id="mini-switch-btn" title="Cycle to next pet">next ↻</button>
-          <button class="mini-btn" id="mini-pip-top-btn" title="Always on Top Picture-in-Picture">float ❐</button>
+          <button class="mini-btn" id="mini-switch-btn-card" title="Cycle to next pet">next ↻</button>
+          <button class="mini-btn" id="mini-mode-toggle-card" title="Switch to Desktop Sprite Mode">👻 sprite</button>
+          <button class="mini-btn" id="mini-pip-top-btn" title="Hide the floating companion">hide ×</button>
         </div>
       </div>
 
-      <div class="mini-stage">
+      <!-- Stage / Character Sprite -->
+      <div class="mini-stage" data-tauri-drag-region>
         <div class="mini-badge" id="mini-badge">✦ active companion</div>
-        <div class="mini-art-wrapper">
-          <div class="mini-art state-idle" id="mini-art" title="Click to pat!"></div>
+        <div class="mini-art-wrapper" id="mini-art-wrapper" data-tauri-drag-region>
+          <div class="mini-art state-idle" id="mini-art" data-tauri-drag-region title="Left-click to pat, right-click for menu, drag to move!"></div>
         </div>
         <h2 class="mini-name" id="mini-name">Hu Tao</h2>
         <div class="mini-quote" id="mini-quote">“If there's work to do, I'll haunt it.”</div>
       </div>
 
-      <div class="mini-actions">
-        <button class="mini-pat-btn" id="mini-pat-btn">♡ pat companion</button>
-        <button class="mini-pip-btn" id="mini-pip-btn" title="Float always-on-top over Antigravity IDE">❐ float on desktop</button>
+      <!-- Compact Floating Micro-Dock & Dropdown (Desktop Sprite Mode) -->
+      <div class="mini-hud" id="mini-hud">
+        <div class="mini-pill-dock" id="mini-pill-dock">
+          <button class="mini-pill-btn mini-pat-btn" id="mini-pat-btn" title="Pat companion (♡)">♡</button>
+          <button class="mini-pill-btn mini-dropdown-trigger" id="mini-menu-trigger" title="Companion Menu">⋯</button>
+        </div>
+
+        <div class="mini-dropdown-menu" id="mini-dropdown-menu" role="menu">
+          <button class="mini-menu-item" id="mini-walk-btn" role="menuitem">
+            <span class="menu-icon" id="walk-menu-icon">🚶</span>
+            <span id="walk-menu-text">Toggle walk</span>
+          </button>
+          <button class="mini-menu-item" id="mini-switch-btn" role="menuitem">
+            <span class="menu-icon">↻</span>
+            <span>Next pet</span>
+          </button>
+          <div class="menu-divider"></div>
+          <button class="mini-menu-item" id="mini-mode-toggle-btn" role="menuitem">
+            <span class="menu-icon" id="mode-menu-icon">🪟</span>
+            <span id="mode-menu-text">Card mode</span>
+          </button>
+          <button class="mini-menu-item" id="mini-pip-btn" role="menuitem">
+            <span class="menu-icon">⌂</span>
+            <span>Open studio</span>
+          </button>
+          <div class="menu-divider"></div>
+          <button class="mini-menu-item item-danger" id="mini-hide-btn" role="menuitem">
+            <span class="menu-icon">✕</span>
+            <span>Hide companion</span>
+          </button>
+        </div>
       </div>
 
+      <!-- Card Mode Actions (Visible only in Card Mode) -->
+      <div class="mini-card-actions" id="mini-card-actions">
+        <button class="mini-card-pat-btn" id="mini-card-pat-btn">♡ pat companion</button>
+        <button class="mini-card-pip-btn" id="mini-card-pip-btn" title="Open Nuzzle Studio">⌂ open studio</button>
+      </div>
+
+      <!-- Card Status Bar (Visible in Card Mode) -->
       <div class="mini-status-bar">
         <span><i class="mini-dot"></i> <span id="mini-state-text">idle state</span></span>
         <span id="mini-vibe-text">local & quiet</span>
@@ -206,24 +518,258 @@
 
     <script src="/app.js"></script>
     <script>
-      // Mini page specific wiring
+      // Mini companion page logic
       document.addEventListener('DOMContentLoaded', () => {
+        const miniBody = document.getElementById('mini-body');
         const miniArt = document.getElementById('mini-art');
         const miniName = document.getElementById('mini-name');
         const miniQuote = document.getElementById('mini-quote');
         const miniBadge = document.getElementById('mini-badge');
         const miniStateText = document.getElementById('mini-state-text');
         const miniVibeText = document.getElementById('mini-vibe-text');
+        const miniHud = document.getElementById('mini-hud');
+        const miniMenuTrigger = document.getElementById('mini-menu-trigger');
         const miniPatBtn = document.getElementById('mini-pat-btn');
+        const miniWalkBtn = document.getElementById('mini-walk-btn');
         const miniSwitchBtn = document.getElementById('mini-switch-btn');
+        const miniSwitchBtnCard = document.getElementById('mini-switch-btn-card');
+        const miniModeToggleBtn = document.getElementById('mini-mode-toggle-btn');
+        const miniModeToggleCard = document.getElementById('mini-mode-toggle-card');
         const miniPipBtn = document.getElementById('mini-pip-btn');
         const miniPipTopBtn = document.getElementById('mini-pip-top-btn');
+        const miniHideBtn = document.getElementById('mini-hide-btn');
+        const miniCardPatBtn = document.getElementById('mini-card-pat-btn');
+        const miniCardPipBtn = document.getElementById('mini-card-pip-btn');
+
+        // Dropdown toggle management
+        function toggleMenu(force) {
+          if (!miniHud) return;
+          const shouldOpen = typeof force === 'boolean' ? force : !miniHud.classList.contains('menu-open');
+          miniHud.classList.toggle('menu-open', shouldOpen);
+        }
+
+        if (miniMenuTrigger) {
+          miniMenuTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMenu();
+          });
+        }
+
+        // Right-click on sprite opens menu
+        if (miniArt) {
+          miniArt.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu(true);
+          });
+        }
+
+        // Click outside closes menu
+        document.addEventListener('click', (e) => {
+          if (miniHud && !miniHud.contains(e.target)) {
+            toggleMenu(false);
+          }
+        });
+
+        // Close menu after clicking any dropdown item
+        document.querySelectorAll('.mini-dropdown-menu .mini-menu-item').forEach(item => {
+          item.addEventListener('click', () => {
+            toggleMenu(false);
+          });
+        });
+
+        // Mode Management: 'sprite' (Codex-style) or 'card'
+        let currentMode = localStorage.getItem('nuzzle_companion_mode') || 'sprite';
+        function setCompanionMode(mode) {
+          currentMode = mode;
+          localStorage.setItem('nuzzle_companion_mode', mode);
+          const modeIcon = document.getElementById('mode-menu-icon');
+          const modeText = document.getElementById('mode-menu-text');
+
+          if (mode === 'card') {
+            miniBody.classList.remove('mode-sprite');
+            miniBody.classList.add('mode-card');
+            if (modeIcon) modeIcon.textContent = '👻';
+            if (modeText) modeText.textContent = 'Sprite mode';
+            if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Desktop Sprite Mode';
+          } else {
+            miniBody.classList.remove('mode-card');
+            miniBody.classList.add('mode-sprite');
+            if (modeIcon) modeIcon.textContent = '🪟';
+            if (modeText) modeText.textContent = 'Card mode';
+            if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Widget Card Mode';
+          }
+        }
+        setCompanionMode(currentMode);
+
+        if (miniModeToggleBtn) {
+          miniModeToggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setCompanionMode(currentMode === 'sprite' ? 'card' : 'sprite');
+            showToast(`Switched to ${currentMode === 'sprite' ? 'Desktop Sprite' : 'Widget Card'} mode!`);
+          });
+        }
+        if (miniModeToggleCard) {
+          miniModeToggleCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            setCompanionMode('sprite');
+            showToast('Switched to Desktop Sprite mode!');
+          });
+        }
+
+        // Walk / Idle animation toggle
+        let isWalking = false;
+        if (miniWalkBtn) {
+          miniWalkBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isWalking = !isWalking;
+            const targetState = isWalking ? 'walk' : 'idle';
+            if (typeof setPetState === 'function') {
+              setPetState(targetState);
+            } else {
+              state.activePetState = targetState;
+            }
+            const walkIcon = document.getElementById('walk-menu-icon');
+            const walkText = document.getElementById('walk-menu-text');
+            if (walkIcon) walkIcon.textContent = isWalking ? '💤' : '🚶';
+            if (walkText) walkText.textContent = isWalking ? 'Rest companion' : 'Walk companion';
+            updateMiniUI();
+            showToast(isWalking ? 'Companion is now walking!' : 'Companion is now resting.');
+          });
+        }
+
+        // Dynamic Running Animation & Movement Tracking Engine
+        let isMoving = false;
+        let moveStopTimer = null;
+        let isPointerDown = false;
+        let didDrag = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+
+        function setRunningState(direction) {
+          const moveClass = direction < 0 ? 'walk-left' : 'walk';
+          if (state.activePetState !== moveClass) {
+            state.activePetState = moveClass;
+            if (miniArt) {
+              const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+              miniArt.className = `mini-art state-${moveClass}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
+            }
+          }
+        }
+
+        function clearRunningState() {
+          clearTimeout(moveStopTimer);
+          moveStopTimer = setTimeout(() => {
+            isMoving = false;
+            // Return to idle state (or walk if user specifically set permanent walk)
+            const baseState = isWalking ? 'walk' : 'idle';
+            state.activePetState = baseState;
+            updateMiniUI();
+          }, 240);
+        }
+
+        function handlePetMove(deltaX) {
+          isMoving = true;
+          setRunningState(deltaX);
+          clearRunningState();
+        }
+        window.handlePetMove = handlePetMove;
+
+        // 1. Listen for native window move events from Tauri backend
+        if (window.__TAURI__?.event) {
+          window.__TAURI__.event.listen('companion-moved', (event) => {
+            const payload = event.payload || {};
+            handlePetMove(payload.dx || 0);
+          });
+        }
+
+        // 2. Continuous window position delta tracking (catches all OS window dragging)
+        let prevScreenX = window.screenX;
+        let prevScreenY = window.screenY;
+        setInterval(() => {
+          const curX = window.screenX;
+          const curY = window.screenY;
+          const dx = curX - prevScreenX;
+          const dy = curY - prevScreenY;
+          prevScreenX = curX;
+          prevScreenY = curY;
+
+          if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            handlePetMove(dx);
+          }
+        }, 30);
+
+        // 3. Pointer drag tracking on container and art
+        const miniContainer = document.getElementById('mini-container');
+        if (miniContainer) {
+          miniContainer.addEventListener('pointerdown', (e) => {
+            if (e.button !== 0) return;
+            isPointerDown = true;
+            didDrag = false;
+            dragStartX = e.screenX;
+            dragStartY = e.screenY;
+          });
+        }
+
+        window.addEventListener('pointermove', (e) => {
+          if (!isPointerDown) return;
+          const dx = e.screenX - dragStartX;
+          const dy = e.screenY - dragStartY;
+          if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+            didDrag = true;
+            dragStartX = e.screenX;
+            dragStartY = e.screenY;
+            handlePetMove(dx);
+          }
+        });
+
+        window.addEventListener('pointerup', () => {
+          isPointerDown = false;
+          if (didDrag) {
+            clearRunningState();
+            // Keep didDrag true briefly to swallow the trailing click event
+            setTimeout(() => { didDrag = false; }, 80);
+          }
+        });
+
+        window.addEventListener('pointercancel', () => {
+          isPointerDown = false;
+          if (didDrag) {
+            clearRunningState();
+            setTimeout(() => { didDrag = false; }, 80);
+          }
+        });
+
+        // Toast single-instance & fast fade handling in mini mode
+        const baseShowToast = window.showToast;
+        window.showToast = function(message) {
+          const region = document.querySelector('.toast-region');
+          if (region) {
+            // Clear existing toasts so they never stack on screen
+            while (region.firstChild) {
+              region.removeChild(region.firstChild);
+            }
+          }
+          if (typeof baseShowToast === 'function') {
+            baseShowToast(message);
+          }
+          if (region && region.lastElementChild) {
+            const t = region.lastElementChild;
+            const icon = t.querySelector('span:first-child');
+            if (icon) icon.textContent = '♡';
+            setTimeout(() => {
+              t.classList.add('fade');
+              setTimeout(() => t.remove(), 250);
+            }, 1400);
+          }
+        };
 
         function updateMiniUI() {
           const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
           if (miniArt) {
             miniArt.style.backgroundImage = `url('${petUrl(pet)}')`;
-            miniArt.className = `mini-art state-${state.activePetState || 'idle'}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
+            const activeState = state.activePetState || (isWalking ? 'walk' : 'idle');
+            miniArt.className = `mini-art state-${activeState}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
           }
           if (miniName) miniName.textContent = pet.name;
           if (miniQuote) miniQuote.textContent = pet.quote;
@@ -232,50 +778,123 @@
           if (miniStateText) miniStateText.textContent = `${state.activePetState || 'idle'} state`;
         }
 
+        window.updateMiniUI = updateMiniUI;
         updateMiniUI();
 
+        // Patting triggers
+        function handlePat() {
+          if (typeof patActivePet === 'function') patActivePet();
+          updateMiniUI();
+        }
+
         if (miniArt) {
-          miniArt.addEventListener('click', () => {
-            if (typeof patActivePet === 'function') patActivePet();
-            updateMiniUI();
+          miniArt.addEventListener('click', (e) => {
+            // If the user was moving/dragging the companion, don't trigger pat
+            if (didDrag) return;
+            handlePat();
           });
         }
         if (miniPatBtn) {
-          miniPatBtn.addEventListener('click', () => {
-            if (typeof patActivePet === 'function') patActivePet();
-            updateMiniUI();
+          miniPatBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handlePat();
           });
+        }
+        if (miniCardPatBtn) {
+          miniCardPatBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handlePat();
+          });
+        }
+
+        // Cycle to next companion
+        function cycleNextPet() {
+          const idx = PETS.findIndex(p => p.id === state.selectedPetId);
+          const nextIdx = (idx + 1) % PETS.length;
+          if (typeof selectCompanion === 'function') {
+            selectCompanion(PETS[nextIdx].id);
+          }
+          updateMiniUI();
         }
 
         if (miniSwitchBtn) {
-          miniSwitchBtn.addEventListener('click', () => {
-            const idx = PETS.findIndex(p => p.id === state.selectedPetId);
-            const nextIdx = (idx + 1) % PETS.length;
-            if (typeof selectCompanion === 'function') {
-              selectCompanion(PETS[nextIdx].id);
-            }
-            updateMiniUI();
+          miniSwitchBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cycleNextPet();
           });
+        }
+        if (miniSwitchBtnCard) {
+          miniSwitchBtnCard.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cycleNextPet();
+          });
+        }
+
+        // Studio & Hide triggers
+        async function openStudio() {
+          if (IS_NATIVE_APP) {
+            try { await invokeNative('show_studio'); } catch (error) { showToast(String(error)); }
+          } else if (typeof floatPetOnDesktop === 'function') {
+            floatPetOnDesktop();
+          }
+        }
+        async function hideCompanion() {
+          if (IS_NATIVE_APP) {
+            try { await invokeNative('hide_companion'); } catch (error) { showToast(String(error)); }
+          } else {
+            window.close();
+          }
         }
 
         if (miniPipBtn) {
-          miniPipBtn.addEventListener('click', () => {
-            if (typeof floatPetOnDesktop === 'function') floatPetOnDesktop();
+          miniPipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openStudio();
+          });
+        }
+        if (miniCardPipBtn) {
+          miniCardPipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openStudio();
           });
         }
         if (miniPipTopBtn) {
-          miniPipTopBtn.addEventListener('click', () => {
-            if (typeof floatPetOnDesktop === 'function') floatPetOnDesktop();
+          miniPipTopBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideCompanion();
+          });
+        }
+        if (miniHideBtn) {
+          miniHideBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            hideCompanion();
           });
         }
 
-        // Listen for storage or channel sync
+        // Cross-window storage & BroadcastChannel synchronization
         window.addEventListener('storage', (e) => {
           if (e.key === 'nuzzle_selected_pet_v1') {
-            state.selectedPetId = e.newValue || 'hu-tao';
+            try { state.selectedPetId = JSON.parse(e.newValue) || 'hu-tao'; }
+            catch { state.selectedPetId = 'hu-tao'; }
             updateMiniUI();
           }
+          if (e.key === 'nuzzle_companion_mode' && e.newValue) {
+            setCompanionMode(e.newValue);
+          }
         });
+
+        if ('BroadcastChannel' in window) {
+          const petChannel = new BroadcastChannel('nuzzle-pet-selection');
+          petChannel.addEventListener('message', event => {
+            if (event.data?.petId) {
+              state.selectedPetId = event.data.petId;
+              updateMiniUI();
+            }
+            if (event.data?.companionMode) {
+              setCompanionMode(event.data.companionMode);
+            }
+          });
+        }
       });
     </script>
   </body>
