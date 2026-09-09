@@ -582,18 +582,23 @@ const state = {
 // 3. SYNTHETIC AUDIO ENGINE (Web Audio API for gentle micro-chimes)
 let audioCtx = null;
 function playChime(type = 'pat') {
-  if (!state.settings.petSounds) return;
+  if (type === 'completion') {
+    if (!state.settings.completionSounds) return;
+  } else {
+    if (!state.settings.petSounds) return;
+  }
+
   try {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') audioCtx.resume();
     
     const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
     
-    osc.type = 'sine';
     if (type === 'pat') {
       // Happy two-tone chime (E5 -> A5)
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(659.25, now);
       osc.frequency.exponentialRampToValueAtTime(880.00, now + 0.15);
       gain.gain.setValueAtTime(0.08, now);
@@ -604,6 +609,9 @@ function playChime(type = 'pat') {
       osc.stop(now + 0.36);
     } else if (type === 'pop') {
       // Subtle toggle tick
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(520, now);
       gain.gain.setValueAtTime(0.04, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
@@ -611,6 +619,22 @@ function playChime(type = 'pat') {
       gain.connect(audioCtx.destination);
       osc.start(now);
       osc.stop(now + 0.09);
+    } else if (type === 'completion' || type === 'bell') {
+      // Gentle ascending triad (C5: 523.25 -> E5: 659.25 -> G5: 783.99)
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((freq, idx) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        const start = now + idx * 0.11;
+        o.frequency.setValueAtTime(freq, start);
+        g.gain.setValueAtTime(0.06, start);
+        g.gain.exponentialRampToValueAtTime(0.001, start + 0.32);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(start);
+        o.stop(start + 0.33);
+      });
     }
   } catch (e) {
     // Audio Context not permitted without prior user gesture
@@ -1305,7 +1329,11 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   if (state.activity.length > 10) state.activity.pop();
   renderActivity();
   setPetState(item.petState, item.durationMs);
-  playChime('pop');
+  if (item.type === 'done') {
+    playChime('completion');
+  } else {
+    playChime('pop');
+  }
   if (toast) showToast(item.title);
   return item;
 }
@@ -1340,6 +1368,27 @@ window.addEventListener('message', event => {
 if ('BroadcastChannel' in window) {
   const agentEventChannel = new BroadcastChannel('nuzzle-agent-events');
   agentEventChannel.addEventListener('message', event => dispatchAgentEvent(event.data || {}));
+}
+
+// Server-Sent Events (SSE) Live Agent Bridge Listener
+if (typeof window !== 'undefined' && 'EventSource' in window) {
+  try {
+    const sse = new EventSource('/events/stream');
+    sse.addEventListener('message', event => {
+      try {
+        if (!event.data || event.data.startsWith(':')) return;
+        const payload = JSON.parse(event.data);
+        dispatchAgentEvent(payload);
+      } catch (err) {
+        console.warn('Malformed SSE event payload:', err);
+      }
+    });
+    sse.addEventListener('error', () => {
+      // Reconnect is handled natively by browser EventSource
+    });
+  } catch (err) {
+    // Static mode without bridge server
+  }
 }
 
 // 13. DATE/TIME TICKER

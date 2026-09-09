@@ -62,44 +62,11 @@ PETS_DATA = [
 ]
 
 def auto_set_codex():
-    print(f"🐾 Setting up Codex companions in: {CODEX_PETS_DIR}")
-    CODEX_PETS_DIR.mkdir(parents=True, exist_ok=True)
-    
-    installed = 0
-    for pet in PETS_DATA:
-        pet_id = pet["id"]
-        pet_target_dir = CODEX_PETS_DIR / pet_id
-        pet_target_dir.mkdir(parents=True, exist_ok=True)
-        
-        # 1. Check if upstream anime pet package folder exists
-        upstream_dir = TMP_ANIME_PETS_DIR / pet_id
-        if upstream_dir.exists():
-            for item in upstream_dir.iterdir():
-                shutil.copy(item, pet_target_dir / item.name)
-            installed += 1
-            continue
+    print(f"🐾 Setting up Codex v2 companions in: {CODEX_PETS_DIR}")
+    from upgrade_pets_to_v2 import upgrade_all_pets
+    upgrade_all_pets()
 
-        # 2. Copy from public/pets/
-        source_sprite = PUBLIC_PETS_DIR / f"{pet_id}.{pet['ext']}"
-        if source_sprite.exists():
-            dest_sprite_name = f"spritesheet.{pet['ext']}"
-            shutil.copy(source_sprite, pet_target_dir / dest_sprite_name)
-            
-            # Write pet.json
-            pet_json = {
-                "id": pet_id,
-                "displayName": pet["name"],
-                "description": pet["desc"],
-                "spritesheetPath": dest_sprite_name,
-                "lookDirections": ["center"]
-            }
-            with open(pet_target_dir / "pet.json", "w") as f:
-                json.dump(pet_json, f, indent=2)
-            installed += 1
-
-    print(f"✅ Successfully installed {installed} companions into ~/.codex/pets/")
-
-    # Setup Codex Hook forwarding if desired
+    # Setup Codex Hook forwarding
     hooks_file = CODEX_DIR / "hooks.json"
     print(f"🔗 Checking Codex hook config in: {hooks_file}")
     
@@ -114,13 +81,13 @@ def auto_set_codex():
     # Add Nuzzle lifecycle notification hook
     existing_hooks["nuzzle"] = {
         "description": "Nuzzle Companion Studio Lifecycle Listener",
-        "url": "http://127.0.0.1:4173",
+        "url": "http://127.0.0.1:4173/events",
         "events": ["prompt", "tool_use", "thinking", "completion", "error"]
     }
 
     with open(hooks_file, "w") as f:
         json.dump(existing_hooks, f, indent=2)
-    print("✅ Configured ~/.codex/hooks.json for automatic agent event reaction!")
+    print("✅ Configured ~/.codex/hooks.json for automatic agent event reaction via http://127.0.0.1:4173/events!")
 
 if __name__ == "__main__":
     auto_set_codex()
