@@ -635,24 +635,36 @@ function artStyle(petOrFile) {
 let petStateTimeout = null;
 
 function setPetState(newState, durationMs = 2000) {
-  const heroArt = $('#hero-pet-art');
-  const stateTag = $('#hero-pet-state-tag');
-  if (!heroArt) return;
-
   state.activePetState = newState;
   const activePet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
   const gifClass = activePet.ext === 'gif' ? ' gif-pet' : '';
-  heroArt.className = `pet-art state-${newState}${gifClass}`;
+
+  const arts = $$('.pet-art, .mini-art, .pip-art');
+  arts.forEach(art => {
+    const isMini = art.classList.contains('mini-art');
+    const isPip = art.classList.contains('pip-art');
+    art.className = `${isMini ? 'mini-art ' : isPip ? 'pip-art ' : 'pet-art '}state-${newState}${gifClass}`;
+  });
+
+  const stateTag = $('#hero-pet-state-tag');
   if (stateTag) stateTag.textContent = `${newState} state`;
+
+  const miniStateText = $('#mini-state-text');
+  if (miniStateText) miniStateText.textContent = `${newState} state`;
 
   if (petStateTimeout) clearTimeout(petStateTimeout);
   if (newState !== 'idle') {
     petStateTimeout = setTimeout(() => {
       const activePet2 = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
       const gifClass2 = activePet2.ext === 'gif' ? ' gif-pet' : '';
-      heroArt.className = `pet-art state-idle${gifClass2}`;
+      $$('.pet-art, .mini-art, .pip-art').forEach(art => {
+        const isMini = art.classList.contains('mini-art');
+        const isPip = art.classList.contains('pip-art');
+        art.className = `${isMini ? 'mini-art ' : isPip ? 'pip-art ' : 'pet-art '}state-idle${gifClass2}`;
+      });
       state.activePetState = 'idle';
       if (stateTag) stateTag.textContent = 'idle state';
+      if (miniStateText) miniStateText.textContent = 'idle state';
       updatePipWindow();
     }, durationMs);
   }
@@ -723,6 +735,20 @@ async function floatPetOnDesktop() {
 
       const pipStyle = document.createElement('style');
       pipStyle.textContent = `
+        @keyframes pet-frames-4 { from { background-position-x: 0%; } to { background-position-x: 42.857%; } }
+        @keyframes pet-frames-6 { from { background-position-x: 0%; } to { background-position-x: 71.429%; } }
+        @keyframes pet-frames-8 { from { background-position-x: 0%; } to { background-position-x: 100%; } }
+        @keyframes pet-float-gentle {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes pet-pat-bounce {
+          0% { transform: scale(1) translateY(0); }
+          25% { transform: scale(1.12, 0.9) translateY(4px); }
+          50% { transform: scale(0.95, 1.1) translateY(-10px); }
+          75% { transform: scale(1.05, 0.95) translateY(-2px); }
+          100% { transform: scale(1) translateY(0); }
+        }
         body {
           margin: 0;
           padding: 8px;
@@ -758,12 +784,41 @@ async function floatPetOnDesktop() {
           box-shadow: 0 8px 16px rgba(77,47,30,0.1);
           cursor: pointer;
           transition: transform 0.15s ease;
+          animation: pet-frames-6 1.2s steps(6) infinite, pet-float-gentle 3.6s ease-in-out infinite;
         }
         .pip-art:hover { transform: scale(1.05); }
         .pip-art:active { transform: scale(0.95); }
+        .pip-art.state-idle {
+          background-position-y: 1.5%;
+          animation: pet-frames-6 1.2s steps(6) infinite, pet-float-gentle 3.6s ease-in-out infinite;
+        }
+        .pip-art.state-pat {
+          background-position-y: 38.5%;
+          animation: pet-frames-4 0.7s steps(4) 3, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
+        }
+        .pip-art.state-work {
+          background-position-y: 88.5%;
+          animation: pet-frames-6 0.75s steps(6) infinite, pet-float-gentle 2s ease-in-out infinite;
+        }
+        .pip-art.state-sleep {
+          background-position-y: 75.5%;
+          animation: pet-frames-6 1.8s steps(6) infinite, pet-float-gentle 5s ease-in-out infinite;
+        }
+        .pip-art.state-failed {
+          background-position-y: 63.5%;
+          animation: pet-frames-8 1s steps(8) infinite, pet-float-gentle 2.4s ease-in-out infinite;
+        }
+        .pip-art.state-review {
+          background-position-y: 100%;
+          animation: pet-frames-6 1s steps(6) infinite, pet-float-gentle 3s ease-in-out infinite;
+        }
         .pip-art.gif-pet {
           background-size: contain !important;
           background-position: center center !important;
+          animation: pet-float-gentle 3.6s ease-in-out infinite !important;
+        }
+        .pip-art.gif-pet.state-pat {
+          animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important;
         }
         .pip-name {
           font-family: 'Fraunces', serif;
@@ -859,7 +914,7 @@ async function floatPetOnDesktop() {
 }
 
 function createHeartBurst(event) {
-  const container = $('#pet-particles');
+  const container = $('#pet-particles') || $('#mini-particles') || (pipWindowInstance && !pipWindowInstance.closed ? pipWindowInstance.document.getElementById('pip-particles') : null);
   if (!container) return;
   
   const hearts = ['♡', '♥', '✦', '✧'];
@@ -1134,10 +1189,17 @@ function executePaletteItem(index) {
 
 // 9. TOAST NOTIFICATION SYSTEM
 function showToast(message) {
+  const region = $('.toast-region');
+  if (!region) return;
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `<span>✦</span><span>${message}</span>`;
-  $('.toast-region').appendChild(toast);
+  const icon = document.createElement('span');
+  icon.textContent = '✦';
+  const text = document.createElement('span');
+  text.textContent = String(message ?? '');
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  region.appendChild(toast);
 
   setTimeout(() => {
     toast.classList.add('fade');
@@ -1397,7 +1459,7 @@ document.addEventListener('click', event => {
 
   // Reset data button
   if (event.target.id === 'reset-data-btn') {
-    localStorage.clear();
+    Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
     state.selectedPetId = 'hu-tao';
     state.favorites = new Set(['hu-tao', 'ganyu']);
     state.settings = { petSize: 'm', noise: true, animation: true, showMessages: true, launchGreeting: true, keepOnTop: false, petSounds: true, completionSounds: false };

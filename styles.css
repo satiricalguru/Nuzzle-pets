@@ -470,27 +470,39 @@ body.no-noise .app-noise { opacity: 0; }
 }
 
 /* Pet Animation States & Atlas Row Mappings */
-.pet-art.state-idle {
+.pet-art.state-idle,
+.mini-art.state-idle,
+.pip-art.state-idle {
   background-position-y: 1.5%;
   animation: pet-frames-6 1.2s steps(6) infinite, pet-float-gentle 3.6s ease-in-out infinite;
 }
-.pet-art.state-pat {
+.pet-art.state-pat,
+.mini-art.state-pat,
+.pip-art.state-pat {
   background-position-y: 38.5%; /* Row 3: waving */
   animation: pet-frames-4 0.7s steps(4) 3, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
 }
-.pet-art.state-work {
+.pet-art.state-work,
+.mini-art.state-work,
+.pip-art.state-work {
   background-position-y: 88.5%; /* Row 7: running */
   animation: pet-frames-6 0.75s steps(6) infinite, pet-float-gentle 2s ease-in-out infinite;
 }
-.pet-art.state-sleep {
+.pet-art.state-sleep,
+.mini-art.state-sleep,
+.pip-art.state-sleep {
   background-position-y: 75.5%; /* Row 6: waiting/rest */
   animation: pet-frames-6 1.8s steps(6) infinite, pet-float-gentle 5s ease-in-out infinite;
 }
-.pet-art.state-failed {
+.pet-art.state-failed,
+.mini-art.state-failed,
+.pip-art.state-failed {
   background-position-y: 63.5%; /* Row 5: failed */
   animation: pet-frames-8 1s steps(8) infinite, pet-float-gentle 2.4s ease-in-out infinite;
 }
-.pet-art.state-review {
+.pet-art.state-review,
+.mini-art.state-review,
+.pip-art.state-review {
   background-position-y: 100%; /* Row 8: review */
   animation: pet-frames-6 1s steps(6) infinite, pet-float-gentle 3s ease-in-out infinite;
 }
@@ -498,12 +510,16 @@ body.no-noise .app-noise { opacity: 0; }
 /* GIF-format pet overrides (CoPet animals) — GIFs auto-animate */
 .pet-art.gif-pet,
 .pet-tile-art.gif-pet,
-.library-art.gif-pet {
+.library-art.gif-pet,
+.mini-art.gif-pet,
+.pip-art.gif-pet {
   background-size: contain !important;
   background-position: center center !important;
   animation: pet-float-gentle 3.6s ease-in-out infinite !important;
 }
-.pet-art.gif-pet.state-pat { animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important; }
+.pet-art.gif-pet.state-pat,
+.mini-art.gif-pet.state-pat,
+.pip-art.gif-pet.state-pat { animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important; }
 .pet-tile:hover .pet-tile-art.gif-pet { animation: pet-float-gentle 2s ease-in-out infinite !important; }
 .library-card:hover .library-art.gif-pet { animation: pet-float-gentle 2s ease-in-out infinite !important; }
 

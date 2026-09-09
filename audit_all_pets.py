@@ -148,11 +148,27 @@ def run_deep_audit():
     server = None
     server_thread = None
     
-    def is_port_open(port):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            return s.connect_ex(('127.0.0.1', port)) == 0
+    def is_nuzzle_running(port):
+        import urllib.request
+        try:
+            with urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=0.8) as resp:
+                content = resp.read().decode("utf-8", errors="ignore")
+                return "Nuzzle — your agents" in content
+        except Exception:
+            return False
 
-    if not is_port_open(PORT):
+    if not is_nuzzle_running(PORT):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.bind(('127.0.0.1', PORT))
+            s.close()
+        except OSError:
+            s.close()
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(('127.0.0.1', 0))
+            PORT = s.getsockname()[1]
+            s.close()
+        print(f"  Starting internal static server on port {PORT}...")
         server = HTTPServer(('127.0.0.1', PORT), SimpleHTTPRequestHandler)
         server_thread = threading.Thread(target=server.serve_forever, daemon=True)
         server_thread.start()

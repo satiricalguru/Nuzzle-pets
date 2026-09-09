@@ -1,18 +1,34 @@
 import socket
 import threading
+import urllib.request
+import urllib.error
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
 
-def is_port_open(port):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        return s.connect_ex(('127.0.0.1', port)) == 0
+def is_nuzzle_running(port):
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=0.8) as resp:
+            content = resp.read().decode("utf-8", errors="ignore")
+            return "Nuzzle — your agents" in content
+    except Exception:
+        return False
 
 # Start internal server if not already running
 server = None
 server_thread = None
 PORT = 4173
 
-if not is_port_open(PORT):
+if not is_nuzzle_running(PORT):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(('127.0.0.1', PORT))
+        s.close()
+    except OSError:
+        s.close()
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('127.0.0.1', 0))
+        PORT = s.getsockname()[1]
+        s.close()
     print(f"Starting internal static server on port {PORT} for testing...")
     server = HTTPServer(('127.0.0.1', PORT), SimpleHTTPRequestHandler)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
@@ -118,6 +134,9 @@ try:
         assert mini_page.locator("#mini-art").is_visible()
         assert mini_page.locator("#mini-pat-btn").is_visible()
         mini_page.locator("#mini-pat-btn").click()
+        mini_page.wait_for_timeout(200)
+        assert "state-pat" in mini_page.locator("#mini-art").get_attribute("class")
+        assert mini_page.locator(".toast").count() >= 1
         mini_page.close()
 
         # 11. Narrow viewport layout verification

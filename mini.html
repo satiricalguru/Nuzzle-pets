@@ -201,6 +201,9 @@
       </div>
     </div>
 
+    <!-- TOAST REGION -->
+    <div class="toast-region" aria-live="polite"></div>
+
     <script src="/app.js"></script>
     <script>
       // Mini page specific wiring
@@ -220,12 +223,13 @@
           const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
           if (miniArt) {
             miniArt.style.backgroundImage = `url('${petUrl(pet)}')`;
-            miniArt.classList.toggle('gif-pet', pet.ext === 'gif');
+            miniArt.className = `mini-art state-${state.activePetState || 'idle'}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
           }
           if (miniName) miniName.textContent = pet.name;
           if (miniQuote) miniQuote.textContent = pet.quote;
           if (miniBadge) miniBadge.textContent = `✦ ${pet.note || pet.badge}`;
           if (miniVibeText) miniVibeText.textContent = `${pet.vibe} · ${pet.element}`;
+          if (miniStateText) miniStateText.textContent = `${state.activePetState || 'idle'} state`;
         }
 
         updateMiniUI();
@@ -233,11 +237,13 @@
         if (miniArt) {
           miniArt.addEventListener('click', () => {
             if (typeof patActivePet === 'function') patActivePet();
+            updateMiniUI();
           });
         }
         if (miniPatBtn) {
           miniPatBtn.addEventListener('click', () => {
             if (typeof patActivePet === 'function') patActivePet();
+            updateMiniUI();
           });
         }
 
