@@ -11,6 +11,7 @@
 
   <p>
     <a href="https://github.com/satiricalguru/Nuzzle-Codex-pets/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-coral?style=for-the-badge&color=ef7861" alt="MIT License" /></a>
+    <img src="https://img.shields.io/badge/Desktop-Tauri%202.0-blue?style=for-the-badge&color=24c8db" alt="Tauri 2.0 Desktop" />
     <img src="https://img.shields.io/badge/Pets-42%20Available-orange?style=for-the-badge&color=e58c42" alt="42 Pets Available" />
     <img src="https://img.shields.io/badge/Codex%20v2-16%20Look%20Directions-blue?style=for-the-badge&color=4b8bf5" alt="Codex v2 Look Directions" />
     <img src="https://img.shields.io/badge/Local--First-100%25-green?style=for-the-badge&color=66a76e" alt="Local First" />
@@ -20,6 +21,7 @@
   <p>
     <a href="#-showcase--previews">Showcase</a> •
     <a href="#-features">Features</a> •
+    <a href="#-desktop-companion-modes">Companion Modes</a> •
     <a href="#-supported-agents">Supported Agents</a> •
     <a href="#-built-in-pets-gallery">Built-in Pets</a> •
     <a href="#-anime-companions-collection">Anime Companions</a> •
@@ -51,16 +53,34 @@
 
 ## ✨ Features
 
+- 🪟 **Codex-Style Desktop Sprite Mode**: Pure transparent, borderless floating companion that stands directly on your macOS desktop without any white card wrappers, borders, or window chrome.
+- 🏃 **Direction-Aware Drag-to-Run Physics**: Moving or dragging your companion across the display dynamically triggers directional running animations (Row 1 right / Row 2 left) and smoothly returns to resting idle when stopped.
+- ⋯ **Compact Frosted Micro-Dock & Context Menu**: Right-click or tap `⋯` on the micro-dock to open a subtle frosted glass menu for walking/resting, cycling pets, and toggling between Sprite and Widget Card modes.
 - ⚡ **Real-Time Agent Reactions**: Companions react instantly to agent prompts, tool execution, thinking/waiting, completions, and error states.
 - 👀 **Codex v2 16-Direction Gaze Tracking**: Full 8×11 extended atlas support with 16 clockwise directional look frames (`000°` to `337.5°`).
 - 🎨 **Multi-Format Animation Engine**: High-performance CSS sprite-stepping engine rendering continuous animations for idle breathing, pat reactions, energetic work, and resting states.
-- 🪟 **Always-on-Top Floating Desktop Overlay**: Picture-in-Picture floating companion window that hovers over your IDE editor on macOS (`NSWindow.Level.floating`).
-- ♡ **Interactive Companion Stage**: Click or pat your active companion to trigger animated reactions, floating particle bursts, and synthesized Web Audio micro-chimes.
+- ♡ **Interactive Companion Stage**: Click or pat your active companion in the studio to trigger animated reactions, floating particle bursts, and synthesized Web Audio micro-chimes.
 - 🔄 **Dynamic Companion Switching**: Switch your featured companion from the Quick Dispatch Strip, Pet Library, or Command Palette with instant cross-view synchronization.
 - 📚 **Pet Library & Filtering**: Catalog of 42 companions with instant search and vibe filtering (`all`, `anime`, `cozy`, `chaos`).
 - ⌨️ **Command Palette (`⌘ K` / `Ctrl+K`)**: Fast keyboard-driven command palette with live query filtering, number shortcuts (`1`–`4`), arrow key navigation, and quick companion dispatching.
-- ⚙️ **Customizable Preferences**: Dedicated settings sub-tabs for **Appearance** (pet scale `S`/`M`/`L`, film grain overlay, animations), **Behavior** (agent messaging, start greeting, float mode), **Sound** (reaction micro-tones, completion alerts), and **Privacy** (100% local-first storage reset).
+- ⚙️ **Customizable Preferences**: Dedicated settings sub-tabs for **Appearance** (pet scale `S`/`M`/`L`, film grain overlay, animations, floating companion style), **Behavior** (agent messaging, start greeting, float mode), **Sound** (reaction micro-tones, completion alerts), and **Privacy** (100% local-first storage reset).
 - 🛡️ **100% Local-First & Zero Cloud**: All state, settings, and favorites are stored locally in your browser/device with zero telemetry, zero tokens leaving your machine, and atomic local writes.
+
+---
+
+## 🪟 Desktop Companion Modes
+
+Nuzzle offers two companion styles to fit your workflow:
+
+| Feature | 🏃 Sprite Mode *(Codex Default)* | 🪟 Widget Card Mode |
+| :--- | :--- | :--- |
+| **Visual Style** | Pure borderless transparent character sprite | Frosted glass card with stats & borders |
+| **Screen Footprint** | Minimal (~220×280px), zero background chrome | Card shell (~300×420px) |
+| **Physics & Motion** | Direction-aware running animations on drag | Idle breathing and status state animations |
+| **Controls** | Hover micro-dock with `⋯` frosted menu | Integrated button bar |
+| **Ideal For** | Coding alongside agents without clutter | Reviewing companion stats and active agent queues |
+
+> **Tip**: Toggle modes anytime by tapping `⋯` on the companion dock, via **Settings → Appearance**, or pressing `⌘ K` in the studio.
 
 ---
 
@@ -173,20 +193,40 @@ The sprite sheets follow the official Codex v2 11-row extended layout:
 
 ## 🚀 Quick Start
 
-This workspace is intentionally dependency-light with zero runtime build requirements.
+### 1. Run the Native Desktop Companion (Tauri 2.0)
 
-### 1. Run Locally
-
-Serve the project root with any static HTTP server:
+For the full macOS floating sprite experience with always-on-top positioning, borderless transparency, and drag-running physics:
 
 ```bash
-# Using Python 3
+# Install Tauri CLI & dependencies
+npm install
+
+# Run in development mode (builds frontend to dist/ and launches native app)
+npm run dev
+
+# Build production macOS application bundle (.dmg / .app)
+npm run build
+```
+
+---
+
+### 2. Run in the Browser (Zero-Install)
+
+Serve the companion studio with any static HTTP server:
+
+```bash
+# Using Python 3 built-in HTTP server
 python3 -m http.server 4173
+
+# Or with live local agent SSE event bridge:
+python3 server.py
 ```
 
 Then open **[http://localhost:4173](http://localhost:4173)** in your browser.
 
-### 2. Auto-Set All 42 Pets for Native Codex App
+---
+
+### 3. Install Companions to Native Codex App
 
 Automatically install and configure all 42 anime & CoPet companions directly into your local Codex directory (`~/.codex/pets/`):
 
@@ -194,15 +234,15 @@ Automatically install and configure all 42 anime & CoPet companions directly int
 python3 setup_codex.py
 ```
 
-### 3. Upgrade All Pets to Codex v2 with 16 Look Directions
+---
+
+### 4. Run Automated Test & Verification Suites
 
 ```bash
-python3 upgrade_pets_to_v2.py
-```
+# Run end-to-end Playwright UI verification (11 comprehensive test suites)
+python3 verify_app.py
 
-### 4. Run Deep Automated Verification Suite
-
-```bash
+# Audit all 42 sprite atlases, row dimensions, and metadata contracts
 python3 audit_all_pets.py
 ```
 
