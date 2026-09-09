@@ -1,6 +1,6 @@
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/satiricalguru/Nuzzle-Codex-pets/main/public/nuzzle-logo.png" alt="Nuzzle Logo" width="140" />
+  <img src="https://raw.githubusercontent.com/satiricalguru/Nuzzle-pets/main/public/nuzzle-logo.png" alt="Nuzzle Logo" width="140" />
 
   # 🐾 Nuzzle — Codex Pets
 
@@ -10,7 +10,7 @@
   </p>
 
   <p>
-    <a href="https://github.com/satiricalguru/Nuzzle-Codex-pets/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-coral?style=for-the-badge&color=ef7861" alt="MIT License" /></a>
+    <a href="https://github.com/satiricalguru/Nuzzle-pets/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-coral?style=for-the-badge&color=ef7861" alt="MIT License" /></a>
     <img src="https://img.shields.io/badge/Desktop-Tauri%202.0-blue?style=for-the-badge&color=24c8db" alt="Tauri 2.0 Desktop" />
     <img src="https://img.shields.io/badge/Pets-42%20Available-orange?style=for-the-badge&color=e58c42" alt="42 Pets Available" />
     <img src="https://img.shields.io/badge/Codex%20v2-16%20Look%20Directions-blue?style=for-the-badge&color=4b8bf5" alt="Codex v2 Look Directions" />
@@ -280,7 +280,7 @@ Nuzzle is built on the shoulders of brilliant open-source creators:
         <img src="https://github.com/satiricalguru.png" width="90" style="border-radius: 50%;" alt="satiricalguru" /><br />
         <sub><b>Jatin Pandey (satiricalguru)</b></sub>
       </a><br />
-      <small>Maintainer of <a href="https://github.com/satiricalguru/Nuzzle-Codex-pets">Nuzzle Studio</a></small>
+      <small>Maintainer of <a href="https://github.com/satiricalguru/Nuzzle-pets">Nuzzle Studio</a></small>
     </td>
   </tr>
 </table>
