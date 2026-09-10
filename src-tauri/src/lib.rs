@@ -66,6 +66,16 @@ fn set_companion_size(app: AppHandle, width: f64, height: f64) -> Result<(), Str
 }
 
 #[tauri::command]
+fn set_companion_position(app: AppHandle, x: f64, y: f64) -> Result<(), String> {
+    let window = app
+        .get_webview_window("companion")
+        .ok_or_else(|| "Companion window is unavailable".to_string())?;
+    window
+        .set_position(tauri::Position::Logical(tauri::LogicalPosition { x, y }))
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
 fn set_companion_ignore_cursor(app: AppHandle, ignore: bool) -> Result<(), String> {
     let window = app
         .get_webview_window("companion")
@@ -236,6 +246,7 @@ pub fn run() {
             show_studio,
             set_companion_always_on_top,
             set_companion_size,
+            set_companion_position,
             set_companion_ignore_cursor,
             get_runtime_status,
             get_runtime_events,

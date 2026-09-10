@@ -37,7 +37,7 @@
         position: fixed;
         top: 6px !important;
         bottom: auto !important;
-        left: 50% !important;
+        left: 100px !important;
         transform: translateX(-50%) !important;
         display: flex;
         flex-direction: column;
@@ -47,6 +47,10 @@
         pointer-events: none;
         width: max-content;
         max-width: 192px;
+        transition: left 0.15s ease;
+      }
+      body.mode-sprite.menu-left .toast-region {
+        left: 265px !important;
       }
       .toast {
         background: rgba(18, 16, 14, 0.82) !important;
@@ -132,12 +136,13 @@
         -webkit-backdrop-filter: none !important;
         padding: 34px 0 0;
         display: flex;
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
+        align-items: flex-start;
         justify-content: flex-start;
         position: relative;
         text-align: center;
         box-sizing: border-box;
+        overflow: visible;
       }
       body.mode-sprite .mini-topbar,
       body.mode-sprite .mini-badge,
@@ -147,12 +152,19 @@
         display: none !important;
       }
       body.mode-sprite .mini-stage {
+        width: 200px;
+        height: 186px;
+        flex-shrink: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         position: relative;
         margin: 0;
+        transition: margin 0.15s ease;
+      }
+      body.mode-sprite.menu-left .mini-stage {
+        margin-left: 165px;
       }
       body.mode-sprite .mini-art-wrapper {
         position: relative;
@@ -195,15 +207,23 @@
       /* Compact Floating Pill & Dropdown in Sprite Mode */
       body.mode-sprite .mini-hud {
         position: absolute;
-        top: 188px;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 4px;
+        top: auto;
+        left: 0;
+        width: 200px;
+        height: 28px;
         display: flex;
-        flex-direction: column;
         align-items: center;
+        justify-content: center;
         z-index: 100;
+        pointer-events: none;
+        transition: left 0.15s ease;
+      }
+      body.mode-sprite.menu-left .mini-hud {
+        left: 165px;
       }
       body.mode-sprite .mini-pill-dock {
+        pointer-events: auto;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -248,33 +268,44 @@
         letter-spacing: 0.5px;
       }
 
-      /* Dropdown Menu - Drops down below 3 dots, never covers the pet */
+      /* Side Flyout Menu - Opens to the side of pet, perfectly aligned above dock */
       body.mode-sprite .mini-dropdown-menu {
         display: none;
         position: absolute;
-        top: calc(100% + 6px);
-        bottom: auto;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 196px;
+        bottom: 0px;
+        top: auto;
+        right: auto;
+        transform: none;
         background: rgba(20, 18, 16, 0.96);
         backdrop-filter: blur(24px);
         -webkit-backdrop-filter: blur(24px);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 12px;
         padding: 5px;
-        min-width: 162px;
+        min-width: 156px;
         box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
         flex-direction: column;
         gap: 2px;
         z-index: 200;
-        animation: menu-drop-down 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+        pointer-events: auto;
+        animation: menu-slide-right 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      body.mode-sprite.menu-left .mini-dropdown-menu {
+        left: auto;
+        right: 196px;
+        animation: menu-slide-left 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       }
       body.mode-sprite .mini-hud.menu-open .mini-dropdown-menu {
         display: flex;
       }
-      @keyframes menu-drop-down {
-        from { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.96); }
-        to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+      @keyframes menu-slide-right {
+        from { opacity: 0; transform: translateX(-8px) scale(0.96); }
+        to { opacity: 1; transform: translateX(0) scale(1); }
+      }
+      @keyframes menu-slide-left {
+        from { opacity: 0; transform: translateX(8px) scale(0.96); }
+        to { opacity: 1; transform: translateX(0) scale(1); }
       }
       body.mode-sprite .mini-menu-item {
         display: flex;
@@ -614,6 +645,7 @@
         // Mode Management: 'sprite' (Codex-style) or 'card'
         let currentMode = localStorage.getItem('nuzzle_companion_mode') || 'sprite';
         let isWalking = false;
+        let isShiftedForMenu = false;
 
         function updateCompanionWindowSize() {
           if (!IS_NATIVE_APP) return;
@@ -621,8 +653,31 @@
             invokeNative('set_companion_size', { width: 280, height: 380 }).catch(() => {});
           } else {
             const isMenuOpen = miniHud && miniHud.classList.contains('menu-open');
-            const targetHeight = isMenuOpen ? 430 : 215;
-            invokeNative('set_companion_size', { width: 200, height: targetHeight }).catch(() => {});
+            if (isMenuOpen) {
+              const screenWidth = (window.screen && (window.screen.availWidth || window.screen.width)) || 1920;
+              const currentX = window.screenX !== undefined ? window.screenX : 0;
+              const currentY = window.screenY !== undefined ? window.screenY : 0;
+              const willOverflowRight = (currentX + 375) > screenWidth;
+
+              if (willOverflowRight) {
+                document.body.classList.add('menu-left');
+                isShiftedForMenu = true;
+                invokeNative('set_companion_position', { x: Math.max(0, currentX - 165), y: currentY }).catch(() => {});
+              } else {
+                document.body.classList.remove('menu-left');
+                isShiftedForMenu = false;
+              }
+              invokeNative('set_companion_size', { width: 365, height: 220 }).catch(() => {});
+            } else {
+              if (isShiftedForMenu) {
+                const currentX = window.screenX !== undefined ? window.screenX : 0;
+                const currentY = window.screenY !== undefined ? window.screenY : 0;
+                invokeNative('set_companion_position', { x: currentX + 165, y: currentY }).catch(() => {});
+                isShiftedForMenu = false;
+              }
+              document.body.classList.remove('menu-left');
+              invokeNative('set_companion_size', { width: 200, height: 220 }).catch(() => {});
+            }
           }
         }
 
@@ -630,6 +685,7 @@
         function toggleMenu(force) {
           if (!miniHud) return;
           const shouldOpen = typeof force === 'boolean' ? force : !miniHud.classList.contains('menu-open');
+          if (shouldOpen === miniHud.classList.contains('menu-open')) return;
           miniHud.classList.toggle('menu-open', shouldOpen);
           updateCompanionWindowSize();
         }
@@ -809,6 +865,9 @@
 
           if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
             handlePetMove(dx);
+            if (miniHud && miniHud.classList.contains('menu-open')) {
+              toggleMenu(false);
+            }
           }
         }, 30);
 
@@ -833,6 +892,9 @@
             dragStartX = e.screenX;
             dragStartY = e.screenY;
             handlePetMove(dx);
+            if (miniHud && miniHud.classList.contains('menu-open')) {
+              toggleMenu(false);
+            }
           }
         });
 
