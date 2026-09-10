@@ -31,12 +31,12 @@
         -webkit-user-select: none;
       }
       /* =========================================================
-         TOAST NOTIFICATION REGION (Sleek Floating Bottom Capsule)
+         SPEECH / STATUS NOTIFICATION REGION (Floating Above Pet)
          ========================================================= */
       .toast-region {
         position: fixed;
-        top: auto !important;
-        bottom: 12px !important;
+        top: 14px !important;
+        bottom: auto !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
         display: flex;
@@ -45,40 +45,73 @@
         gap: 4px;
         z-index: 1000;
         pointer-events: none;
-        width: auto;
-        max-width: 90%;
+        width: max-content;
+        max-width: 275px;
       }
       .toast {
-        background: rgba(22, 20, 18, 0.92) !important;
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.16) !important;
+        background: rgba(18, 16, 14, 0.68) !important;
+        backdrop-filter: blur(14px) saturate(130%);
+        -webkit-backdrop-filter: blur(14px) saturate(130%);
+        border: 1px solid rgba(255, 255, 255, 0.22) !important;
         border-radius: 999px !important;
-        padding: 4px 12px !important;
-        color: #f3eee6 !important;
+        padding: 4px 13px !important;
+        color: #fdfbf7 !important;
         font-size: 11px !important;
         font-weight: 500;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5) !important;
+        letter-spacing: -0.01em;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(0, 0, 0, 0.2) inset !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
         display: inline-flex !important;
         align-items: center;
         gap: 6px;
         white-space: nowrap;
         pointer-events: none !important;
-        animation: toast-slide-up 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+        animation: speech-pop-down 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+        position: relative;
+      }
+      .toast::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 50%;
+        width: 6px;
+        height: 6px;
+        background: rgba(18, 16, 14, 0.68);
+        border-right: 1px solid rgba(255, 255, 255, 0.22);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+        transform: translateX(-50%) rotate(45deg);
       }
       .toast span:first-child {
         color: var(--coral, #ef7861);
         font-size: 11px;
       }
-      @keyframes toast-slide-up {
-        from { opacity: 0; transform: translateY(8px) scale(0.95); }
-        to { opacity: 1; transform: translateY(0) scale(1); }
+      @keyframes speech-pop-down {
+        from {
+          opacity: 0;
+          transform: translateY(-8px) scale(0.92);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
       .toast.fade {
-        animation: toast-fade-out 0.22s ease both;
+        animation: speech-fade-up 0.2s ease both !important;
       }
-      @keyframes toast-fade-out {
-        to { opacity: 0; transform: translateY(4px) scale(0.95); }
+      @keyframes speech-fade-up {
+        to {
+          opacity: 0;
+          transform: translateY(-6px) scale(0.95);
+        }
+      }
+
+      /* Card Mode toast override (bottom-anchored) */
+      body.mode-card .toast-region {
+        top: auto !important;
+        bottom: 12px !important;
+      }
+      body.mode-card .toast::after {
+        display: none !important;
       }
 
       /* =========================================================
@@ -93,13 +126,14 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        padding: 10px 0 0;
+        padding: 50px 0 0;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
         position: relative;
         text-align: center;
+        box-sizing: border-box;
       }
       body.mode-sprite .mini-topbar,
       body.mode-sprite .mini-badge,
@@ -742,7 +776,26 @@
 
         // Toast single-instance & fast fade handling in mini mode
         const baseShowToast = window.showToast;
-        window.showToast = function(message) {
+        const ROUTINE_NOISE_PATTERNS = [
+          'received a prompt',
+          'is working',
+          'called a tool',
+          'is active',
+          'is thinking',
+          'is running a tool'
+        ];
+
+        window.showToast = function(message, options = {}) {
+          const text = String(message || '');
+          // Filter out routine agent noise (e.g. "Antigravity received a prompt") unless explicitly forced
+          const isRoutine = ROUTINE_NOISE_PATTERNS.some(p => text.toLowerCase().includes(p));
+          if (isRoutine && !options?.force) {
+            return;
+          }
+          if (options && options.important === false) {
+            return;
+          }
+
           const region = document.querySelector('.toast-region');
           if (region) {
             // Clear existing toasts so they never stack on screen
@@ -751,16 +804,28 @@
             }
           }
           if (typeof baseShowToast === 'function') {
-            baseShowToast(message);
+            baseShowToast(message, options);
           }
           if (region && region.lastElementChild) {
             const t = region.lastElementChild;
             const icon = t.querySelector('span:first-child');
-            if (icon) icon.textContent = '♡';
+            if (icon) {
+              if (options?.icon) {
+                icon.textContent = options.icon;
+              } else if (options?.type === 'done' || text.toLowerCase().includes('complete') || text.toLowerCase().includes('finish')) {
+                icon.textContent = '✓';
+              } else if (options?.type === 'error' || text.toLowerCase().includes('error') || text.toLowerCase().includes('fail')) {
+                icon.textContent = '!';
+              } else if (text.includes('pat') || text.includes('happy') || text.includes('companion') || text.includes('tea')) {
+                icon.textContent = '♡';
+              } else {
+                icon.textContent = '✦';
+              }
+            }
             setTimeout(() => {
               t.classList.add('fade');
               setTimeout(() => t.remove(), 250);
-            }, 1400);
+            }, options?.duration || 2600);
           }
         };
 

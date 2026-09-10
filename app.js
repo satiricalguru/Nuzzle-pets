@@ -1243,13 +1243,13 @@ function executePaletteItem(index) {
 }
 
 // 9. TOAST NOTIFICATION SYSTEM
-function showToast(message) {
+function showToast(message, options = {}) {
   const region = $('.toast-region');
   if (!region) return;
   const toast = document.createElement('div');
   toast.className = 'toast';
   const icon = document.createElement('span');
-  icon.textContent = '✦';
+  icon.textContent = options?.icon || (options?.type === 'done' ? '✓' : options?.type === 'error' ? '!' : '✦');
   const text = document.createElement('span');
   text.textContent = String(message ?? '');
   toast.appendChild(icon);
@@ -1259,7 +1259,7 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.add('fade');
     setTimeout(() => toast.remove(), 300);
-  }, 2300);
+  }, options?.duration || 2400);
 }
 
 // 10. NAVIGATION & VIEW CONTROLLER
@@ -1342,22 +1342,22 @@ const SIM_ACTIVITIES = [
 ];
 
 const AGENT_EVENT_STATES = {
-  prompt: { activityType: 'working', petState: 'work', icon: '✦', label: 'received a prompt' },
-  tool: { activityType: 'working', petState: 'work', icon: '✦', label: 'is running a tool' },
-  tool_call: { activityType: 'working', petState: 'work', icon: '✦', label: 'is running a tool' },
-  working: { activityType: 'working', petState: 'work', icon: '✦', label: 'is working' },
-  running: { activityType: 'working', petState: 'work', icon: '✦', label: 'is working' },
-  waiting: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'is waiting' },
-  wait: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'is waiting' },
-  thinking: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'is thinking' },
-  complete: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task' },
-  completed: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task' },
-  done: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task' },
-  success: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task' },
-  review: { activityType: 'done', petState: 'review', icon: '✓', label: 'finished a review' },
-  error: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error' },
-  failed: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error' },
-  failure: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error' }
+  prompt: { activityType: 'working', petState: 'work', icon: '✦', label: 'received a prompt', important: false },
+  tool: { activityType: 'working', petState: 'work', icon: '✦', label: 'is running a tool', important: false },
+  tool_call: { activityType: 'working', petState: 'work', icon: '✦', label: 'is running a tool', important: false },
+  working: { activityType: 'working', petState: 'work', icon: '✦', label: 'is working', important: false },
+  running: { activityType: 'working', petState: 'work', icon: '✦', label: 'is working', important: false },
+  waiting: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'needs your attention', important: true },
+  wait: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'needs your attention', important: true },
+  thinking: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'is thinking', important: false },
+  complete: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
+  completed: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
+  done: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
+  success: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
+  review: { activityType: 'done', petState: 'review', icon: '✓', label: 'finished a review', important: true },
+  error: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error', important: true },
+  failed: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error', important: true },
+  failure: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error', important: true }
 };
 
 function normalizeAgentEvent(payload = {}) {
@@ -1368,6 +1368,13 @@ function normalizeAgentEvent(payload = {}) {
   const title = String(payload.title || `${agent} ${config.label}`).trim().slice(0, 160);
   const sub = String(payload.sub || payload.detail || payload.tool || rawType).trim().slice(0, 160);
 
+  const isImportant = payload.important === true ||
+    (payload.important !== false && (
+      Boolean(config.important) ||
+      ['done', 'error', 'wait'].includes(config.activityType) ||
+      ['complete', 'completed', 'done', 'success', 'error', 'failed', 'failure', 'waiting', 'permission', 'review'].includes(rawType)
+    ));
+
   return {
     icon: String(payload.icon || config.icon).slice(0, 4),
     type: config.activityType,
@@ -1375,7 +1382,8 @@ function normalizeAgentEvent(payload = {}) {
     sub,
     time: String(payload.time || 'just now').slice(0, 40),
     petState: config.petState,
-    durationMs: Number.isFinite(payload.durationMs) ? Math.max(500, Math.min(payload.durationMs, 10000)) : 2400
+    durationMs: Number.isFinite(payload.durationMs) ? Math.max(500, Math.min(payload.durationMs, 10000)) : 2400,
+    important: isImportant
   };
 }
 
@@ -1395,7 +1403,11 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   } else {
     playChime('pop');
   }
-  if (toast) showToast(item.title);
+  // Only display toast notification for important milestone events (completions, errors, attention/permissions, reviews).
+  // Routine noise like "received a prompt" or "is working" is recorded in the activity stream without spamming popups over the pet.
+  if (toast && item.important) {
+    showToast(item.title, { icon: item.icon, type: item.type, important: true });
+  }
   return item;
 }
 
@@ -1406,7 +1418,8 @@ function simulateAgentEvent() {
     icon: item.icon,
     title: item.title,
     sub: item.sub,
-    time: item.time
+    time: item.time,
+    important: item.type === 'done'
   });
 }
 
