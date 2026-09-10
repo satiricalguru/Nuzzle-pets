@@ -7,7 +7,7 @@ and gallery posters for the Nuzzle README.md with perfect frame looping and smoo
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
-WORKSPACE_DIR = Path(__file__).parent.resolve()
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_PETS_DIR = WORKSPACE_DIR / "public" / "pets"
 ASSETS_DIR = WORKSPACE_DIR / "assets"
 ASSETS_DIR.mkdir(exist_ok=True)

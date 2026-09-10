@@ -219,7 +219,7 @@ Serve the companion studio with any static HTTP server:
 python3 -m http.server 4173
 
 # Or with live local agent SSE event bridge:
-python3 server.py
+python3 scripts/server.py
 ```
 
 Then open **[http://localhost:4173](http://localhost:4173)** in your browser.
@@ -231,7 +231,7 @@ Then open **[http://localhost:4173](http://localhost:4173)** in your browser.
 Automatically install and configure all 42 anime & CoPet companions directly into your local Codex directory (`~/.codex/pets/`):
 
 ```bash
-python3 setup_codex.py
+python3 scripts/setup_codex.py
 ```
 
 ---
@@ -240,10 +240,10 @@ python3 setup_codex.py
 
 ```bash
 # Run end-to-end Playwright UI verification (11 comprehensive test suites)
-python3 verify_app.py
+python3 scripts/verify_app.py
 
 # Audit all 42 sprite atlases, row dimensions, and metadata contracts
-python3 audit_all_pets.py
+python3 scripts/audit_all_pets.py
 ```
 
 ---

@@ -24,7 +24,7 @@ LOOK_DIRECTION_ANGLES = [
     180.0, 202.5, 225.0, 247.5, 270.0, 292.5, 315.0, 337.5
 ]
 
-WORKSPACE_DIR = Path(__file__).parent.resolve()
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_PETS_DIR = WORKSPACE_DIR / "public" / "pets"
 CODEX_PETS_DIR = Path.home() / ".codex" / "pets"
 

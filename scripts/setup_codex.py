@@ -11,7 +11,7 @@ from pathlib import Path
 
 CODEX_DIR = Path.home() / ".codex"
 CODEX_PETS_DIR = CODEX_DIR / "pets"
-WORKSPACE_DIR = Path(__file__).parent.resolve()
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_PETS_DIR = WORKSPACE_DIR / "public" / "pets"
 TMP_ANIME_PETS_DIR = Path("/tmp/codex-anime-pets/pets")
 

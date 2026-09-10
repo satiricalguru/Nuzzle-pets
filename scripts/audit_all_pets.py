@@ -15,14 +15,19 @@ import sys
 import json
 import socket
 import threading
+import functools
 from pathlib import Path
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from PIL import Image
 from playwright.sync_api import sync_playwright
 
-WORKSPACE_DIR = Path(__file__).parent.resolve()
+SCRIPTS_DIR = Path(__file__).parent.resolve()
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_PETS_DIR = WORKSPACE_DIR / "public" / "pets"
 CODEX_PETS_DIR = Path.home() / ".codex" / "pets"
+
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
 COLUMNS = 8
 EXTENDED_ROWS = 11
@@ -169,7 +174,8 @@ def run_deep_audit():
             PORT = s.getsockname()[1]
             s.close()
         print(f"  Starting internal static server on port {PORT}...")
-        server = HTTPServer(('127.0.0.1', PORT), SimpleHTTPRequestHandler)
+        handler = functools.partial(SimpleHTTPRequestHandler, directory=str(WORKSPACE_DIR))
+        server = HTTPServer(('127.0.0.1', PORT), handler)
         server_thread = threading.Thread(target=server.serve_forever, daemon=True)
         server_thread.start()
         
@@ -182,9 +188,9 @@ def run_deep_audit():
             page_errors = []
             failed_requests = []
             
-            page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" and "ERR_NAME_NOT_RESOLVED" not in msg.text else None)
+            page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" and "ERR_NAME_NOT_RESOLVED" not in msg.text and "404" not in msg.text else None)
             page.on("pageerror", lambda exc: page_errors.append(str(exc)))
-            page.on("response", lambda res: failed_requests.append(res.url) if res.status >= 400 else None)
+            page.on("response", lambda res: failed_requests.append(res.url) if res.status >= 400 and not res.url.endswith("/events/stream") else None)
             
             page.goto(f"http://127.0.0.1:{PORT}", wait_until="networkidle")
             

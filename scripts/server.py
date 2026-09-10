@@ -18,7 +18,7 @@ from pathlib import Path
 from socketserver import ThreadingMixIn
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
-WORKSPACE_DIR = Path(__file__).parent.resolve()
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 
 clients_lock = threading.Lock()
 clients = set()

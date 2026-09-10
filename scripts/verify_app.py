@@ -2,8 +2,12 @@ import socket
 import threading
 import urllib.request
 import urllib.error
+import functools
+from pathlib import Path
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
+
+WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 
 def is_nuzzle_running(port):
     try:
@@ -30,7 +34,8 @@ if not is_nuzzle_running(PORT):
         PORT = s.getsockname()[1]
         s.close()
     print(f"Starting internal static server on port {PORT} for testing...")
-    server = HTTPServer(('127.0.0.1', PORT), SimpleHTTPRequestHandler)
+    handler = functools.partial(SimpleHTTPRequestHandler, directory=str(WORKSPACE_DIR))
+    server = HTTPServer(('127.0.0.1', PORT), handler)
     server_thread = threading.Thread(target=server.serve_forever, daemon=True)
     server_thread.start()
 
