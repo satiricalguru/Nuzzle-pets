@@ -1100,7 +1100,9 @@ function renderLibrary(filter = 'all', search = '') {
     const isFav = state.favorites.has(pet.id);
     return `
       <article class="library-card ${isActive ? 'is-active-companion' : ''}" data-pet-id="${pet.id}">
-        <div class="library-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${artStyle(pet)}" data-action="select-companion" data-pet-id="${pet.id}" title="Click to make ${pet.name} your companion"></div>
+        <div class="library-art-stage" data-action="select-companion" data-pet-id="${pet.id}" title="Click to make ${pet.name} your companion">
+          <div class="library-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${artStyle(pet)}"></div>
+        </div>
         <div class="library-info">
           <div>
             <strong>${pet.name}</strong>
