@@ -1262,6 +1262,10 @@ function showToast(message, options = {}) {
   }, options?.duration || 2400);
 }
 
+window.showToast = showToast;
+window.nuzzle = window.nuzzle || {};
+window.nuzzle.showToast = showToast;
+
 // 10. NAVIGATION & VIEW CONTROLLER
 function setView(view) {
   state.currentView = view;
@@ -1403,10 +1407,8 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   } else {
     playChime('pop');
   }
-  // Only display toast notification for important milestone events (completions, errors, attention/permissions, reviews).
-  // Routine noise like "received a prompt" or "is working" is recorded in the activity stream without spamming popups over the pet.
-  if (toast && item.important) {
-    showToast(item.title, { icon: item.icon, type: item.type, important: true });
+  if (toast) {
+    showToast(item.title, { icon: item.icon, type: item.type, important: item.important });
   }
   return item;
 }

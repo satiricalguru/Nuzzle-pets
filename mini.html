@@ -35,7 +35,7 @@
          ========================================================= */
       .toast-region {
         position: fixed;
-        top: 14px !important;
+        top: 6px !important;
         bottom: auto !important;
         left: 50% !important;
         transform: translateX(-50%) !important;
@@ -46,25 +46,28 @@
         z-index: 1000;
         pointer-events: none;
         width: max-content;
-        max-width: 275px;
+        max-width: 192px;
       }
       .toast {
-        background: rgba(18, 16, 14, 0.68) !important;
+        background: rgba(18, 16, 14, 0.82) !important;
         backdrop-filter: blur(14px) saturate(130%);
         -webkit-backdrop-filter: blur(14px) saturate(130%);
-        border: 1px solid rgba(255, 255, 255, 0.22) !important;
-        border-radius: 999px !important;
-        padding: 4px 13px !important;
+        border: 1px solid rgba(255, 255, 255, 0.24) !important;
+        border-radius: 12px !important;
+        padding: 4px 9px !important;
         color: #fdfbf7 !important;
         font-size: 11px !important;
         font-weight: 500;
         letter-spacing: -0.01em;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.36), 0 0 0 1px rgba(0, 0, 0, 0.2) inset !important;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.2) inset !important;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
         display: inline-flex !important;
         align-items: center;
-        gap: 6px;
-        white-space: nowrap;
+        gap: 5px;
+        max-width: 188px;
+        line-height: 1.25;
+        text-align: center;
+        word-break: break-word;
         pointer-events: none !important;
         animation: speech-pop-down 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
         position: relative;
@@ -76,9 +79,9 @@
         left: 50%;
         width: 6px;
         height: 6px;
-        background: rgba(18, 16, 14, 0.68);
-        border-right: 1px solid rgba(255, 255, 255, 0.22);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(18, 16, 14, 0.78);
+        border-right: 1px solid rgba(255, 255, 255, 0.24);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.24);
         transform: translateX(-50%) rotate(45deg);
       }
       .toast span:first-child {
@@ -109,6 +112,7 @@
       body.mode-card .toast-region {
         top: auto !important;
         bottom: 12px !important;
+        max-width: 260px;
       }
       body.mode-card .toast::after {
         display: none !important;
@@ -126,7 +130,7 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        padding: 50px 0 0;
+        padding: 34px 0 0;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -152,8 +156,8 @@
       }
       body.mode-sprite .mini-art-wrapper {
         position: relative;
-        width: 175px;
-        height: 190px;
+        width: 156px;
+        height: 156px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -163,8 +167,8 @@
         cursor: grabbing;
       }
       body.mode-sprite .mini-art {
-        width: 160px;
-        height: 175px;
+        width: 150px;
+        height: 156px;
         background-color: transparent !important;
         background-repeat: no-repeat;
         background-size: 800% 900%;
@@ -173,12 +177,12 @@
         cursor: grab;
         image-rendering: -webkit-optimize-contrast;
         image-rendering: pixelated;
-        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.42));
+        filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.38));
         transition: transform 0.15s ease, filter 0.15s ease;
       }
       body.mode-sprite .mini-art:hover {
         transform: scale(1.03);
-        filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.55));
+        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
       }
       body.mode-sprite .mini-art:active {
         transform: scale(0.96);
@@ -190,8 +194,10 @@
 
       /* Compact Floating Pill & Dropdown in Sprite Mode */
       body.mode-sprite .mini-hud {
-        position: relative;
-        margin-top: 2px;
+        position: absolute;
+        bottom: 3px;
+        left: 50%;
+        transform: translateX(-50%);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -626,12 +632,18 @@
             if (modeIcon) modeIcon.textContent = '👻';
             if (modeText) modeText.textContent = 'Sprite mode';
             if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Desktop Sprite Mode';
+            if (IS_NATIVE_APP) {
+              invokeNative('set_companion_size', { width: 280, height: 380 }).catch(() => {});
+            }
           } else {
             miniBody.classList.remove('mode-card');
             miniBody.classList.add('mode-sprite');
             if (modeIcon) modeIcon.textContent = '🪟';
             if (modeText) modeText.textContent = 'Card mode';
             if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Widget Card Mode';
+            if (IS_NATIVE_APP) {
+              invokeNative('set_companion_size', { width: 200, height: 215 }).catch(() => {});
+            }
           }
         }
         setCompanionMode(currentMode);
@@ -774,59 +786,60 @@
           }
         });
 
-        // Toast single-instance & fast fade handling in mini mode
-        const baseShowToast = window.showToast;
-        const ROUTINE_NOISE_PATTERNS = [
-          'received a prompt',
-          'is working',
-          'called a tool',
-          'is active',
-          'is thinking',
-          'is running a tool'
-        ];
-
+        // Self-contained speech bubble & toast notification system in mini companion
         window.showToast = function(message, options = {}) {
-          const text = String(message || '');
-          // Filter out routine agent noise (e.g. "Antigravity received a prompt") unless explicitly forced
-          const isRoutine = ROUTINE_NOISE_PATTERNS.some(p => text.toLowerCase().includes(p));
-          if (isRoutine && !options?.force) {
-            return;
-          }
-          if (options && options.important === false) {
-            return;
-          }
+          const text = String(message || '').trim();
+          if (!text) return;
 
           const region = document.querySelector('.toast-region');
-          if (region) {
-            // Clear existing toasts so they never stack on screen
-            while (region.firstChild) {
-              region.removeChild(region.firstChild);
+          if (!region) return;
+
+          // Clear any active toasts so there's always one clean bubble
+          while (region.firstChild) {
+            region.removeChild(region.firstChild);
+          }
+
+          const toast = document.createElement('div');
+          toast.className = 'toast';
+
+          const iconSpan = document.createElement('span');
+          let icon = options?.icon || '';
+          if (!icon) {
+            if (options?.type === 'done' || text.toLowerCase().includes('complete') || text.toLowerCase().includes('finish') || text.toLowerCase().includes('done')) {
+              icon = '✓';
+            } else if (options?.type === 'error' || text.toLowerCase().includes('error') || text.toLowerCase().includes('fail')) {
+              icon = '!';
+            } else if (options?.type === 'pat' || text.includes('♡') || text.includes('pat') || text.includes('happy') || text.includes('purr')) {
+              icon = '♡';
+            } else {
+              icon = '✨';
             }
           }
-          if (typeof baseShowToast === 'function') {
-            baseShowToast(message, options);
+          iconSpan.textContent = icon;
+          toast.appendChild(iconSpan);
+
+          let cleanText = text;
+          if (cleanText.startsWith('✓ ') || cleanText.startsWith('! ') || cleanText.startsWith('♡ ') || cleanText.startsWith('✨ ') || cleanText.startsWith('✦ ')) {
+            cleanText = cleanText.substring(2).trim();
           }
-          if (region && region.lastElementChild) {
-            const t = region.lastElementChild;
-            const icon = t.querySelector('span:first-child');
-            if (icon) {
-              if (options?.icon) {
-                icon.textContent = options.icon;
-              } else if (options?.type === 'done' || text.toLowerCase().includes('complete') || text.toLowerCase().includes('finish')) {
-                icon.textContent = '✓';
-              } else if (options?.type === 'error' || text.toLowerCase().includes('error') || text.toLowerCase().includes('fail')) {
-                icon.textContent = '!';
-              } else if (text.includes('pat') || text.includes('happy') || text.includes('companion') || text.includes('tea')) {
-                icon.textContent = '♡';
-              } else {
-                icon.textContent = '✦';
-              }
-            }
+
+          const textSpan = document.createElement('span');
+          textSpan.className = 'toast-text';
+          textSpan.textContent = cleanText;
+          toast.appendChild(textSpan);
+
+          region.appendChild(toast);
+
+          // Auto fade after 3.2 seconds
+          const duration = options?.duration || 3200;
+          setTimeout(() => {
+            toast.classList.add('fade');
             setTimeout(() => {
-              t.classList.add('fade');
-              setTimeout(() => t.remove(), 250);
-            }, options?.duration || 2600);
-          }
+              if (toast.parentNode === region) {
+                toast.remove();
+              }
+            }, 250);
+          }, duration);
         };
 
         function updateMiniUI() {
@@ -846,15 +859,44 @@
         window.updateMiniUI = updateMiniUI;
         updateMiniUI();
 
-        // Patting triggers
+        // Patting triggers — in Codex Pets, tapping the pet speaks a dialogue above its head
         function handlePat() {
-          if (typeof patActivePet === 'function') patActivePet();
+          const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+          if (typeof patActivePet === 'function') {
+            patActivePet();
+          } else {
+            if (typeof setPetState === 'function') {
+              setPetState('pat', 2200);
+            } else {
+              state.activePetState = 'pat';
+            }
+            if (typeof createHeartBurst === 'function') createHeartBurst();
+            if (typeof playChime === 'function') playChime('pat');
+          }
+
+          // Companion speaks their quote or interactive phrase directly above their head
+          const cleanQuote = pet.quote ? pet.quote.replace(/^["“]|["”]$/g, '').trim() : '';
+          const phrases = [
+            cleanQuote ? `“${cleanQuote}”` : null,
+            `♡ ${pet.name} is happy!`,
+            `✨ Keep up the great coding!`,
+            `♡ (purrs softly)`
+          ].filter(Boolean);
+          const chosen = phrases[Math.floor(Math.random() * phrases.length)];
+          window.showToast(chosen, { icon: '♡', type: 'pat', force: true, duration: 3200 });
           updateMiniUI();
+        }
+
+        const miniArtWrapper = document.getElementById('mini-art-wrapper');
+        if (miniArtWrapper) {
+          miniArtWrapper.addEventListener('click', (e) => {
+            if (didDrag) return;
+            handlePat();
+          });
         }
 
         if (miniArt) {
           miniArt.addEventListener('click', (e) => {
-            // If the user was moving/dragging the companion, don't trigger pat
             if (didDrag) return;
             handlePat();
           });
