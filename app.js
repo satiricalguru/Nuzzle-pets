@@ -576,7 +576,7 @@ const state = {
     petSize: 'm',
     noise: true,
     animation: true,
-    showMessages: true,
+    showMessages: loadStored('nuzzle_agent_alerts', false),
     launchGreeting: true,
     keepOnTop: true,
     petSounds: true,
@@ -1392,12 +1392,7 @@ function normalizeAgentEvent(payload = {}) {
 }
 
 function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
-  const safePayload = state.settings.showMessages ? payload : {
-    ...payload,
-    title: `${payload.agentName || payload.agent || 'Agent'} activity`,
-    sub: payload.type || payload.kind || 'local event'
-  };
-  const item = normalizeAgentEvent(safePayload);
+  const item = normalizeAgentEvent(payload);
   state.activity.unshift(item);
   if (state.activity.length > 10) state.activity.pop();
   renderActivity();
@@ -1407,8 +1402,8 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   } else {
     playChime('pop');
   }
-  if (toast) {
-    showToast(item.title, { icon: item.icon, type: item.type, important: item.important });
+  if (toast && state.settings.showMessages) {
+    showToast(item.title, { icon: item.icon, type: item.type, important: item.important, isAgent: true });
   }
   return item;
 }
@@ -1531,6 +1526,15 @@ window.addEventListener('message', event => {
 if ('BroadcastChannel' in window) {
   const agentEventChannel = new BroadcastChannel('nuzzle-agent-events');
   agentEventChannel.addEventListener('message', event => dispatchAgentEvent(event.data || {}));
+
+  const agentAlertsChannel = new BroadcastChannel('nuzzle-agent-alerts');
+  agentAlertsChannel.addEventListener('message', event => {
+    if (typeof event.data?.agentAlerts === 'boolean') {
+      state.settings.showMessages = event.data.agentAlerts;
+      saveStored(STORAGE_KEYS.SETTINGS, state.settings);
+      document.body.classList.toggle('hide-agent-messages', !state.settings.showMessages);
+    }
+  });
 }
 
 // Server-Sent Events (SSE) Live Agent Bridge Listener
@@ -1702,7 +1706,7 @@ document.addEventListener('click', event => {
     Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
     state.selectedPetId = 'hu-tao';
     state.favorites = new Set(['hu-tao', 'ganyu']);
-    state.settings = { petSize: 'm', noise: true, animation: true, showMessages: true, launchGreeting: true, keepOnTop: true, petSounds: true, completionSounds: false };
+    state.settings = { petSize: 'm', noise: true, animation: true, showMessages: false, launchGreeting: true, keepOnTop: true, petSounds: true, completionSounds: false };
     state.agents = INITIAL_AGENTS.map(agent => ({ ...agent }));
     applySettings();
     renderFeaturedPet();
