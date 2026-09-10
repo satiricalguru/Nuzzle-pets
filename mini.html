@@ -186,15 +186,14 @@
         background-size: 800% 900%;
         border-radius: 0 !important;
         box-shadow: none !important;
+        filter: none;
         cursor: grab;
         image-rendering: -webkit-optimize-contrast;
         image-rendering: pixelated;
-        filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.38));
-        transition: transform 0.15s ease, filter 0.15s ease;
+        transition: transform 0.15s ease;
       }
       body.mode-sprite .mini-art:hover {
         transform: scale(1.03);
-        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
       }
       body.mode-sprite .mini-art:active {
         transform: scale(0.96);
