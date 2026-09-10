@@ -137,8 +137,8 @@ try:
         mini_page = browser.new_page(viewport={"width": 300, "height": 380})
         mini_page.goto(f"http://127.0.0.1:{PORT}/mini.html", wait_until="networkidle")
         assert mini_page.locator("#mini-art").is_visible()
-        assert mini_page.locator("#mini-pat-btn").is_visible()
-        mini_page.locator("#mini-pat-btn").click()
+        assert mini_page.locator("#mini-menu-trigger").is_visible()
+        mini_page.locator("#mini-art").click()
         mini_page.wait_for_timeout(200)
         assert "state-pat" in mini_page.locator("#mini-art").get_attribute("class")
         assert mini_page.locator(".toast").count() >= 1

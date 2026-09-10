@@ -195,7 +195,7 @@
       /* Compact Floating Pill & Dropdown in Sprite Mode */
       body.mode-sprite .mini-hud {
         position: absolute;
-        bottom: 3px;
+        bottom: 4px;
         left: 50%;
         transform: translateX(-50%);
         display: flex;
@@ -206,15 +206,15 @@
       body.mode-sprite .mini-pill-dock {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        background: rgba(22, 20, 18, 0.82);
+        justify-content: center;
+        background: rgba(22, 20, 18, 0.84);
         backdrop-filter: blur(14px);
         -webkit-backdrop-filter: blur(14px);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 999px;
-        padding: 3px 8px;
+        padding: 2px 7px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
-        opacity: 0.35;
+        opacity: 0.4;
         transform: translateY(2px);
         transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
       }
@@ -231,29 +231,19 @@
         border: none;
         border-radius: 999px;
         width: 26px;
-        height: 26px;
+        height: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
         cursor: pointer;
         transition: background 0.15s ease, transform 0.15s ease, color 0.15s ease;
       }
-      body.mode-sprite .mini-pat-btn {
-        color: var(--coral, #ef7861);
-        font-weight: 700;
-        font-size: 14px;
-      }
       body.mode-sprite .mini-pill-btn:hover {
         background: rgba(255, 255, 255, 0.16);
-        transform: scale(1.1);
-      }
-      body.mode-sprite .mini-pat-btn:hover {
-        background: rgba(239, 120, 97, 0.22);
-        color: #ff8c77;
+        transform: scale(1.08);
       }
       body.mode-sprite .mini-dropdown-trigger {
-        font-size: 15px;
+        font-size: 16px;
         line-height: 1;
         letter-spacing: 0.5px;
       }
@@ -262,7 +252,8 @@
       body.mode-sprite .mini-dropdown-menu {
         display: none;
         position: absolute;
-        top: calc(100% + 5px);
+        bottom: calc(100% + 6px);
+        top: auto;
         left: 50%;
         transform: translateX(-50%);
         background: rgba(22, 20, 18, 0.96);
@@ -282,7 +273,7 @@
         display: flex;
       }
       @keyframes menu-pop {
-        from { opacity: 0; transform: translateX(-50%) scale(0.94) translateY(-4px); }
+        from { opacity: 0; transform: translateX(-50%) scale(0.94) translateY(4px); }
         to { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
       }
       body.mode-sprite .mini-menu-item {
@@ -510,7 +501,6 @@
       <!-- Compact Floating Micro-Dock & Dropdown (Desktop Sprite Mode) -->
       <div class="mini-hud" id="mini-hud">
         <div class="mini-pill-dock" id="mini-pill-dock">
-          <button class="mini-pill-btn mini-pat-btn" id="mini-pat-btn" title="Pat companion (♡)">♡</button>
           <button class="mini-pill-btn mini-dropdown-trigger" id="mini-menu-trigger" title="Companion Menu">⋯</button>
         </div>
 
