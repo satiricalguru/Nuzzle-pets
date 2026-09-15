@@ -428,6 +428,10 @@ body.no-noise .app-noise { opacity: 0; }
   from { background-position-x: 0%; }
   to { background-position-x: 57.143%; }
 }
+@keyframes pet-frames-5 {
+  from { background-position-x: 0%; }
+  to { background-position-x: 71.429%; }
+}
 @keyframes pet-frames-6 {
   from { background-position-x: 0%; }
   to { background-position-x: 85.714%; }
@@ -488,7 +492,7 @@ body.no-animations .pet-tile-art { animation: none !important; }
   background-color: #f2ede5;
   background: radial-gradient(circle at 50% 32%, #faf6f0 0%, #ece5da 100%);
   background-repeat: no-repeat;
-  background-size: 800% 900%;
+  background-size: 800% var(--atlas-height, 900%);
   border-radius: 50%;
   border: 2px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 14px 28px rgba(77, 47, 30, .08), 0 2px 6px rgba(77, 47, 30, .04), inset 0 1px 2px rgba(255, 255, 255, 0.8);
@@ -514,7 +518,7 @@ body.no-animations .pet-tile-art { animation: none !important; }
 .pet-art.state-idle,
 .mini-art.state-idle,
 .pip-art.state-idle {
-  background-position-y: 0%; /* Row 0: idle */
+  background-position-y: var(--atlas-row-0, 0%); /* Row 0: idle */
   animation: pet-frames-6 1.2s steps(6) infinite, pet-float-gentle 3.6s ease-in-out infinite;
 }
 .pet-art.state-walk,
@@ -523,43 +527,49 @@ body.no-animations .pet-tile-art { animation: none !important; }
 .pet-art.state-run,
 .mini-art.state-run,
 .pip-art.state-run {
-  background-position-y: 12.5%; /* Row 1: running-right */
+  background-position-y: var(--atlas-row-1, 12.5%); /* Row 1: running-right */
   animation: pet-frames-8 0.65s steps(8) infinite, pet-walk-bob 0.65s ease-in-out infinite;
 }
 .pet-art.state-walk-left,
 .mini-art.state-walk-left,
 .pip-art.state-walk-left {
-  background-position-y: 25%; /* Row 2: running-left */
+  background-position-y: var(--atlas-row-2, 25%); /* Row 2: running-left */
   animation: pet-frames-8 0.65s steps(8) infinite, pet-walk-bob 0.65s ease-in-out infinite;
 }
 .pet-art.state-pat,
 .mini-art.state-pat,
 .pip-art.state-pat {
-  background-position-y: 37.5%; /* Row 3: waving */
+  background-position-y: var(--atlas-row-3, 37.5%); /* Row 3: waving */
   animation: pet-frames-4 0.7s steps(4) 3, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
+}
+.pet-art.state-jump,
+.mini-art.state-jump,
+.pip-art.state-jump {
+  background-position-y: var(--atlas-row-4, 50%); /* Row 4: jumping */
+  animation: pet-frames-5 0.8s steps(5) 2, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
 }
 .pet-art.state-work,
 .mini-art.state-work,
 .pip-art.state-work {
-  background-position-y: 87.5%; /* Row 7: running */
+  background-position-y: var(--atlas-row-7, 87.5%); /* Row 7: running */
   animation: pet-frames-6 0.75s steps(6) infinite, pet-float-gentle 2s ease-in-out infinite;
 }
 .pet-art.state-sleep,
 .mini-art.state-sleep,
 .pip-art.state-sleep {
-  background-position-y: 75%; /* Row 6: waiting/rest */
+  background-position-y: var(--atlas-row-6, 75%); /* Row 6: waiting/rest */
   animation: pet-frames-6 1.8s steps(6) infinite, pet-float-gentle 5s ease-in-out infinite;
 }
 .pet-art.state-failed,
 .mini-art.state-failed,
 .pip-art.state-failed {
-  background-position-y: 62.5%; /* Row 5: failed */
+  background-position-y: var(--atlas-row-5, 62.5%); /* Row 5: failed */
   animation: pet-frames-8 1s steps(8) infinite, pet-float-gentle 2.4s ease-in-out infinite;
 }
 .pet-art.state-review,
 .mini-art.state-review,
 .pip-art.state-review {
-  background-position-y: 100%; /* Row 8: review */
+  background-position-y: var(--atlas-row-8, 100%); /* Row 8: review */
   animation: pet-frames-6 1s steps(6) infinite, pet-float-gentle 3s ease-in-out infinite;
 }
 
@@ -573,9 +583,17 @@ body.no-animations .pet-tile-art { animation: none !important; }
   background-position: center center !important;
   animation: pet-float-gentle 3.6s ease-in-out infinite !important;
 }
+.pet-art.is-looking,
+.mini-art.is-looking,
+.pip-art.is-looking {
+  animation: pet-float-gentle 3.6s ease-in-out infinite !important;
+}
 .pet-art.gif-pet.state-pat,
 .mini-art.gif-pet.state-pat,
-.pip-art.gif-pet.state-pat { animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important; }
+.pip-art.gif-pet.state-pat,
+.pet-art.gif-pet.state-jump,
+.mini-art.gif-pet.state-jump,
+.pip-art.gif-pet.state-jump { animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important; }
 .pet-tile:hover .pet-tile-art.gif-pet { animation: pet-float-gentle 2s ease-in-out infinite !important; }
 .library-card:hover .library-art.gif-pet { animation: pet-float-gentle 2s ease-in-out infinite !important; }
 
@@ -894,7 +912,7 @@ body.no-animations .pet-tile-art { animation: none !important; }
   border-radius: 9px;
   background-color: #ebe6de;
   background-repeat: no-repeat;
-  background-size: 800% 900%;
+  background-size: 800% var(--atlas-height, 900%);
   background-position: 0 0%;
   image-rendering: pixelated;
   transition: background-position .2s ease;
@@ -1038,7 +1056,7 @@ body.no-animations .pet-tile-art { animation: none !important; }
   width: 120px;
   height: 130px;
   background-repeat: no-repeat;
-  background-size: 800% 900%;
+  background-size: 800% var(--atlas-height, 900%);
   background-position: 0 0%;
   image-rendering: pixelated;
   pointer-events: none;

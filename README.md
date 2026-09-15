@@ -6,14 +6,14 @@
 
   <p><strong>A living companion studio for every AI coding agent.</strong></p>
   <p>
-    Nuzzle combines the agent-aware interaction model and lifecycle event vocabulary from <a href="https://github.com/ChanceYu/CoPet"><strong>CoPet</strong></a> with the 8×9 / 8×11 Codex-compatible anime & animal pet sprite atlas collection from <a href="https://github.com/chenxin-dlut/codex-anime-pets"><strong>codex-anime-pets</strong></a>.
+    Nuzzle combines the agent-aware interaction model and lifecycle event vocabulary from <a href="https://github.com/ChanceYu/CoPet"><strong>CoPet</strong></a> with an 8×9 Codex-compatible anime & animal pet sprite atlas collection from <a href="https://github.com/chenxin-dlut/codex-anime-pets"><strong>codex-anime-pets</strong></a>.
   </p>
 
   <p>
     <a href="https://github.com/satiricalguru/Nuzzle-pets/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-coral?style=for-the-badge&color=ef7861" alt="MIT License" /></a>
     <img src="https://img.shields.io/badge/Desktop-Tauri%202.0-blue?style=for-the-badge&color=24c8db" alt="Tauri 2.0 Desktop" />
     <img src="https://img.shields.io/badge/Pets-42%20Available-orange?style=for-the-badge&color=e58c42" alt="42 Pets Available" />
-    <img src="https://img.shields.io/badge/Codex%20v2-16%20Look%20Directions-blue?style=for-the-badge&color=4b8bf5" alt="Codex v2 Look Directions" />
+    <img src="https://img.shields.io/badge/Codex-v1%20%2B%20v2%20Compatible-blue?style=for-the-badge&color=4b8bf5" alt="Codex v1 and v2 Compatible" />
     <img src="https://img.shields.io/badge/Local--First-100%25-green?style=for-the-badge&color=66a76e" alt="Local First" />
     <img src="https://img.shields.io/badge/Dependencies-0%20Runtime-yellow?style=for-the-badge&color=e7bc55" alt="Zero Dependencies" />
   </p>
@@ -25,7 +25,7 @@
     <a href="#-supported-agents">Supported Agents</a> •
     <a href="#-built-in-pets-gallery">Built-in Pets</a> •
     <a href="#-anime-companions-collection">Anime Companions</a> •
-    <a href="#-codex-v2-atlas-specifications">v2 Atlas Specs</a> •
+    <a href="#-current-codex-atlas-contract">Atlas Contract</a> •
     <a href="#-quick-start">Quick Start</a> •
     <a href="#-contributors--project-credits">Contributors</a> •
     <a href="#-license--disclaimers">License</a>
@@ -57,8 +57,9 @@
 - 🏃 **Direction-Aware Drag-to-Run Physics**: Moving or dragging your companion across the display dynamically triggers directional running animations (Row 1 right / Row 2 left) and smoothly returns to resting idle when stopped.
 - ⋯ **Compact Frosted Micro-Dock & Context Menu**: Right-click or tap `⋯` on the micro-dock to open a subtle frosted glass menu for walking/resting, cycling pets, and toggling between Sprite and Widget Card modes.
 - ⚡ **Real-Time Agent Reactions**: Companions react instantly to agent prompts, tool execution, thinking/waiting, completions, and error states.
-- 👀 **Codex v2 16-Direction Gaze Tracking**: Full 8×11 extended atlas support with 16 clockwise directional look frames (`000°` to `337.5°`).
-- 🎨 **Multi-Format Animation Engine**: High-performance CSS sprite-stepping engine rendering continuous animations for idle breathing, pat reactions, energetic work, and resting states.
+- 🧭 **Fail-Closed v2 Migration**: Nuzzle rejects synthetic whole-sprite shifts as fake gaze directions; v2 packaging stays disabled until genuinely authored directions pass deterministic and visual QA.
+- 👀 **Genuine v2 Cursor Gaze**: The v2 reference companion uses 16 authored clockwise look directions and follows the pointer without rotating or shifting the whole sprite.
+- 🎨 **Version-Aware Animation Engine**: The renderer supports both Codex v1 8×9 and v2 8×11 atlases while preserving idle, movement, pat, work, wait, failure, and review states.
 - ♡ **Interactive Companion Stage**: Click or pat your active companion in the studio to trigger animated reactions, floating particle bursts, and synthesized Web Audio micro-chimes.
 - 🔄 **Dynamic Companion Switching**: Switch your featured companion from the Quick Dispatch Strip, Pet Library, or Command Palette with instant cross-view synchronization.
 - 📚 **Pet Library & Filtering**: Catalog of 42 companions with instant search and vibe filtering (`all`, `anime`, `cozy`, `chaos`).
@@ -86,18 +87,20 @@ Nuzzle offers two companion styles to fit your workflow:
 
 ## 🤖 Supported Agents
 
-Nuzzle bridges lifecycle events across all leading AI coding assistants:
+Nuzzle runs as a desktop overlay alongside any macOS IDE. Automatic lifecycle reactions are implemented and tested for these eight local coding agents/CLIs:
 
 | Agent | Integration Model | Default Config Path |
 | :--- | :--- | :--- |
-| **Codex** | Native v2 Manifest + Hooks | `~/.codex/pets/`, `~/.codex/hooks.json` |
+| **Codex** | v1/v2 pet manifests + native hooks | `$CODEX_HOME/pets/`, `$CODEX_HOME/hooks.json` |
 | **Claude Code** | JSON hooks | `~/.claude/settings.json` |
 | **Antigravity** | JSON hooks + Floating overlay | `~/.gemini/config/hooks.json` |
 | **Cursor** | JSON hooks | `~/.cursor/hooks.json` |
-| **OpenCode** | JS plugin + config entry | `~/.config/opencode/plugins/copet.js` |
-| **Copilot CLI** | JSON hook file | `~/.copilot/hooks/copet.json` |
-| **Pi** | TypeScript extension | `~/.pi/agent/extensions/copet/index.ts` |
-| **Gemini** | JSON hooks | `~/.gemini/settings.json` |
+| **OpenCode** | JS plugin + config entry | `~/.config/opencode/plugins/nuzzle.js` |
+| **Gemini CLI** | Official JSON hook schema | `~/.gemini/settings.json` |
+| **GitHub Copilot CLI** | User-level JSON hook file | `${COPILOT_HOME:-~/.copilot}/hooks/nuzzle.json` |
+| **Pi** | Global TypeScript extension | `~/.pi/agent/extensions/nuzzle.ts` |
+
+If `CODEX_HOME` is not set, Nuzzle uses `~/.codex`. Integration writes are backed up, invalid JSON/TOML is never overwritten, and disconnect removes only Nuzzle-managed entries. Editors without a supported agent hook API can still use the floating pet and direct interactions, but cannot emit automatic lifecycle reactions.
 
 ---
 
@@ -140,7 +143,7 @@ Living animated pixel pets from the original CoPet companion collection with ful
 
 ## 🌸 Anime Companions Collection (22 Pets)
 
-8×9 / 8×11 sprite atlas anime companions packaged for Codex:
+Codex-compatible anime companions. Hu Tao is the v2 directional reference; the remaining catalog retains its validated v1 animation rows:
 
 | Companion | Preview | Vibe / Element | Lore & Personality |
 | :--- | :---: | :---: | :--- |
@@ -169,13 +172,13 @@ Living animated pixel pets from the original CoPet companion collection with ful
 
 ---
 
-## 📐 Codex v2 Atlas Specifications
+## 📐 Current Codex Atlas Contract
 
-The sprite sheets follow the official Codex v2 11-row extended layout:
+Nuzzle supports both Codex atlas contracts. Hu Tao is a genuine v2 atlas; the other 41 bundled pets currently use the v1 9-row layout:
 
-- **Dimensions**: `1536 × 2288` pixels (`8 columns × 11 rows`).
+- **Dimensions**: v1 is `1536 × 1872` (`8 columns × 9 rows`); v2 is `1536 × 2288` (`8 columns × 11 rows`).
 - **Cell Size**: `192 × 208` pixels per frame.
-- **Manifest**: `spriteVersionNumber: 2`, with 16 look direction angle descriptors.
+- **Manifest**: v1 omits `spriteVersionNumber`; v2 declares `spriteVersionNumber: 2`.
 - **Row Mappings**:
   - **Row 0**: `idle` (6 active frames) — *Gentle breathing and blinking*
   - **Row 1**: `running-right` (8 active frames) — *Moving right*
@@ -186,8 +189,8 @@ The sprite sheets follow the official Codex v2 11-row extended layout:
   - **Row 6**: `waiting` (6 active frames) — *Thinking & resting state*
   - **Row 7**: `running` (6 active frames) — *Active tool call / work state*
   - **Row 8**: `review` (6 frames) — *Code review & summary state*
-  - **Row 9**: `lookDirections` (`000°` to `157.5°`) — *Gaze angles 0° to 157.5°*
-  - **Row 10**: `lookDirections` (`180°` to `337.5°`) — *Gaze angles 180° to 337.5°*
+
+Codex v2 uses `1536 × 2288` pixels (`8 × 11`), adds a dedicated neutral frame and rows 9–10 for 16 clockwise directions. Nuzzle does not label shifted or duplicated v1 poses as v2.
 
 ---
 
@@ -206,7 +209,12 @@ npm run dev
 
 # Build production macOS application bundle (.dmg / .app)
 npm run build
+
+# Build one universal Intel + Apple Silicon DMG
+npm run build:universal
 ```
+
+For a distributable build, run `npm run release:macos`. With `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID` set, the script builds, Developer ID signs, notarizes, staples, and verifies the universal app and DMG. Without them it produces an explicitly ad-hoc-signed development build. The tag-triggered GitHub workflow uses the same universal target and expects the Apple certificate/notarization secrets documented in [Tauri's macOS signing guide](https://v2.tauri.app/distribute/sign/macos/).
 
 ---
 
@@ -228,11 +236,13 @@ Then open **[http://localhost:4173](http://localhost:4173)** in your browser.
 
 ### 3. Install Companions to Native Codex App
 
-Automatically install and configure all 42 anime & CoPet companions directly into your local Codex directory (`~/.codex/pets/`):
+Install all 42 validated companions into `$CODEX_HOME/pets/` (or `~/.codex/pets/` when `CODEX_HOME` is unset):
 
 ```bash
 python3 scripts/setup_codex.py
 ```
+
+Existing packages are preserved by default. Use `--force` only when you intend to replace them; Nuzzle backs up each replaced package first. Connect lifecycle hooks from **Nuzzle → Agents → Codex**, where JSON/TOML validation, backups, feature enablement, and hook trust are handled atomically.
 
 ---
 

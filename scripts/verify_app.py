@@ -1,43 +1,20 @@
-import socket
+import json
+import subprocess
+import sys
 import threading
 import urllib.request
-import urllib.error
-import functools
 from pathlib import Path
-from http.server import SimpleHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
 
 WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 
-def is_nuzzle_running(port):
-    try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}", timeout=0.8) as resp:
-            content = resp.read().decode("utf-8", errors="ignore")
-            return "Nuzzle — your agents" in content
-    except Exception:
-        return False
+subprocess.run([sys.executable, str(WORKSPACE_DIR / "scripts/build_frontend.py")], check=True)
+from server import NuzzleBridgeHandler, ThreadedHTTPServer
 
-# Start internal server if not already running
-server = None
-server_thread = None
-PORT = 4173
-
-if not is_nuzzle_running(PORT):
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        s.bind(('127.0.0.1', PORT))
-        s.close()
-    except OSError:
-        s.close()
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(('127.0.0.1', 0))
-        PORT = s.getsockname()[1]
-        s.close()
-    print(f"Starting internal static server on port {PORT} for testing...")
-    handler = functools.partial(SimpleHTTPRequestHandler, directory=str(WORKSPACE_DIR))
-    server = HTTPServer(('127.0.0.1', PORT), handler)
-    server_thread = threading.Thread(target=server.serve_forever, daemon=True)
-    server_thread.start()
+server = ThreadedHTTPServer(("127.0.0.1", 0), NuzzleBridgeHandler)
+PORT = server.server_port
+server_thread = threading.Thread(target=server.serve_forever, daemon=True)
+server_thread.start()
 
 try:
     with sync_playwright() as p:
@@ -50,7 +27,7 @@ try:
         page.on("response", lambda response: missing.append(response.url) if response.status == 404 else None)
         
         print(f"Navigating to Nuzzle local server at http://127.0.0.1:{PORT}...")
-        page.goto(f"http://127.0.0.1:{PORT}", wait_until="networkidle")
+        page.goto(f"http://127.0.0.1:{PORT}", wait_until="domcontentloaded")
 
         # 1. Title & Header Verification
         assert page.title() == "Nuzzle — your agents, with a little more life"
@@ -93,8 +70,24 @@ try:
         # 6. Agents View & Toggles
         print("Testing Agents View...")
         page.get_by_role("button", name="Agents").click()
-        assert page.locator("#agent-grid .agent-card").count() == 6
+        assert page.locator("#agent-grid .agent-card").count() == 8
         page.locator("#agent-grid .agent-card .toggle").first.click()
+
+        # V2 atlases retain all v1 state rows and expose 16 cursor-facing cells.
+        page.get_by_role("button", name="Overview").click()
+        page.evaluate("""
+            localStorage.setItem('nuzzle_selected_pet_v1', 'hu-tao');
+            const settings = JSON.parse(localStorage.getItem('nuzzle_settings_v1') || '{}');
+            settings.launchGreeting = false;
+            localStorage.setItem('nuzzle_settings_v1', JSON.stringify(settings));
+        """)
+        page.reload(wait_until="domcontentloaded")
+        hero = page.locator("#hero-pet-art")
+        assert page.evaluate("getComputedStyle(document.querySelector('#hero-pet-art')).backgroundSize") == "800% 1100%"
+        box = hero.bounding_box()
+        page.mouse.move(box["x"] + box["width"], box["y"] + box["height"] / 2)
+        assert "is-looking" in hero.get_attribute("class")
+        assert hero.evaluate("el => el.style.backgroundPositionY") == "90%"
 
         # 7. Settings View & Sub-Tabs
         print("Testing Settings Sub-Tabs...")
@@ -124,9 +117,24 @@ try:
 
         # 9. Local event bridge verification
         print("Testing local agent event bridge...")
-        page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'error', agent: 'Codex', title: 'Codex failed a test', sub: 'run_command · exit 1'})")
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{PORT}/events",
+            data=json.dumps({
+                "type": "error",
+                "agent": "Codex",
+                "title": "Codex failed a test",
+                "sub": "run_command · exit 1",
+            }).encode(),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=2) as response:
+            assert response.status == 200
+        page.wait_for_timeout(150)
         assert "Codex failed a test" in page.locator("#activity-list .activity-item").first.inner_text()
         assert "state-failed" in page.locator("#hero-pet-art").get_attribute("class")
+        page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'complete', agent: 'Codex'})")
+        assert "state-jump" in page.locator("#hero-pet-art").get_attribute("class")
 
         # 10. Floating Desktop Overlay & Mini View Verification
         print("Testing Floating Desktop Overlay & Mini Companion...")
@@ -135,18 +143,19 @@ try:
         assert page.locator("#topbar-float-btn").is_visible()
 
         mini_page = browser.new_page(viewport={"width": 300, "height": 380})
-        mini_page.goto(f"http://127.0.0.1:{PORT}/mini.html", wait_until="networkidle")
+        mini_page.goto(f"http://127.0.0.1:{PORT}/mini.html", wait_until="domcontentloaded")
         assert mini_page.locator("#mini-art").is_visible()
         assert mini_page.locator("#mini-menu-trigger").is_visible()
+        prior_toasts = mini_page.locator(".toast").count()
         mini_page.locator("#mini-art").click()
         mini_page.wait_for_timeout(200)
         assert "state-pat" in mini_page.locator("#mini-art").get_attribute("class")
-        assert mini_page.locator(".toast").count() >= 1
+        assert mini_page.locator(".toast").count() == prior_toasts + 1
         mini_page.close()
 
         # 11. Narrow viewport layout verification
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
-        mobile.goto(f"http://127.0.0.1:{PORT}", wait_until="networkidle")
+        mobile.goto(f"http://127.0.0.1:{PORT}", wait_until="domcontentloaded")
         assert mobile.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth")
         mobile.locator("button[data-view='library']").click()
         mobile.locator("#pet-search").fill("Anya")
@@ -158,6 +167,8 @@ try:
         page.get_by_role("button", name="Overview").click()
         page.screenshot(path=screenshot_path, full_page=True)
         
+        assert errors == [], f"Browser console/page errors: {errors}"
+        assert missing == [], f"Unexpected HTTP 404 responses: {missing}"
         print({
             "status": "ALL_TESTS_PASSED",
             "console_errors": errors,
@@ -166,6 +177,6 @@ try:
         })
         browser.close()
 finally:
-    if server:
-        server.shutdown()
-        server.server_close()
+    server.shutdown()
+    server.server_close()
+    server_thread.join(timeout=2)

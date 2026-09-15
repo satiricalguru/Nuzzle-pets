@@ -183,7 +183,7 @@
         height: 156px;
         background-color: transparent !important;
         background-repeat: no-repeat;
-        background-size: 800% 900%;
+        background-size: 800% var(--atlas-height, 900%);
         border-radius: 0 !important;
         box-shadow: none !important;
         filter: none;
@@ -425,7 +425,7 @@
         height: 145px;
         background-color: #f2ede5;
         background-repeat: no-repeat;
-        background-size: 800% 900%;
+        background-size: 800% var(--atlas-height, 900%);
         border-radius: 45% 45% 39% 39%;
         box-shadow: 0 10px 20px rgba(77, 47, 30, 0.12);
         cursor: pointer;
@@ -814,8 +814,11 @@
         let dragStartX = 0;
         let dragStartY = 0;
 
+        let lastHorizontalDirection = 1;
+
         function setRunningState(direction) {
-          const moveClass = direction < 0 ? 'walk-left' : 'walk';
+          if (Math.abs(direction) > 1) lastHorizontalDirection = Math.sign(direction);
+          const moveClass = lastHorizontalDirection < 0 ? 'walk-left' : 'walk';
           if (state.activePetState !== moveClass) {
             state.activePetState = moveClass;
             if (miniArt) {
@@ -922,7 +925,7 @@
           // Detect agent activity notifications
           const isAgentEvent = options?.isAgent || options?.source === 'agent' ||
             ['prompt', 'tool', 'working', 'wait', 'done', 'error'].includes(options?.type) ||
-            /^(Antigravity|Claude|Codex|Gemini|Cursor|Agent)\b/i.test(text);
+            /^(Antigravity|Claude|Codex|OpenCode|Cursor|Agent)\b/i.test(text);
 
           // By default agent alerts are OFF. Do not create toast unless enabled or explicitly forced
           if (isAgentEvent && !agentAlertsEnabled && !options?.force) {
@@ -983,7 +986,7 @@
         function updateMiniUI() {
           const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
           if (miniArt) {
-            miniArt.style.backgroundImage = `url('${petUrl(pet)}')`;
+            applyPetArtStyle(miniArt, pet);
             const activeState = state.activePetState || (isWalking ? 'walk' : 'idle');
             miniArt.className = `mini-art state-${activeState}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
           }
@@ -1033,12 +1036,6 @@
           });
         }
 
-        if (miniArt) {
-          miniArt.addEventListener('click', (e) => {
-            if (didDrag) return;
-            handlePat();
-          });
-        }
         if (miniPatBtn) {
           miniPatBtn.addEventListener('click', (e) => {
             e.stopPropagation();

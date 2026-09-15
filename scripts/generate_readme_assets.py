@@ -83,7 +83,7 @@ def create_hero_animated_gif():
         badge_rect = [width - 240, 22, width - 32, 42]
         draw.rounded_rectangle(badge_rect, radius=10, fill=(38, 38, 48, 255), outline=(60, 60, 75, 255), width=1)
         draw.ellipse([width - 230, 29, width - 222, 37], fill=(52, 211, 153, 255))
-        draw.text((width - 214, 26), "Codex v2 · 16 Directions", fill=(220, 220, 230, 255), font=font_status)
+        draw.text((width - 214, 26), "Codex v1 + v2", fill=(220, 220, 230, 255), font=font_status)
         
         draw.line([28, 52, width - 28, 52], fill=(36, 36, 46, 255), width=1)
         

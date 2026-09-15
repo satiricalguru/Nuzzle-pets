@@ -27,7 +27,8 @@ const PETS = [
     note: 'spirited · pyro',
     quote: '“If there’s work to do, I’ll haunt it.”',
     badge: 'currently your favorite',
-    favorite: true
+    favorite: true,
+    spriteVersion: 2
   },
   {
     id: 'furina',
@@ -532,15 +533,17 @@ const INITIAL_AGENTS = [
   { id: 'claude-code', name: 'Claude Code', key: 'claude', mark: '✦', desc: 'Lifecycle hooks through Claude Code settings.', active: false, available: true },
   { id: 'cursor', name: 'Cursor', key: 'cursor', mark: '⌁', desc: 'Cursor Agent prompt and tool lifecycle hooks.', active: false, available: true },
   { id: 'antigravity', name: 'Antigravity', key: 'antigravity', mark: '↗', desc: 'Antigravity invocation and tool lifecycle hooks.', active: false, available: true },
-  { id: 'gemini', name: 'Gemini', key: 'gemini', mark: '✧', desc: 'Multimodal prompt and response hooks.', active: false, available: true },
-  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: '◎', desc: 'A local OpenCode plugin forwards lifecycle events.', active: false, available: true }
+  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: '◎', desc: 'A local OpenCode plugin forwards lifecycle events.', active: false, available: true },
+  { id: 'gemini', name: 'Gemini CLI', key: 'gemini', mark: '◇', desc: 'Gemini prompt, tool, permission, completion, and error hooks.', active: false, available: true },
+  { id: 'copilot', name: 'GitHub Copilot CLI', key: 'copilot', mark: '◉', desc: 'Copilot CLI lifecycle hooks from the user hooks directory.', active: false, available: true },
+  { id: 'pi', name: 'Pi', key: 'pi', mark: 'π', desc: 'A global Pi extension forwards agent, tool, prompt, and completion events.', active: false, available: true }
 ];
 
 const SAMPLE_EVENTS = [
   { icon: '✦', type: 'working', title: 'Codex is refactoring styles.css', sub: 'tool call · write_file', time: 'now' },
   { icon: '✓', type: 'done', title: 'Claude Code finished a review', sub: '12 files · 4m ago', time: '04m' },
   { icon: '◌', type: 'wait', title: 'Cursor is thinking', sub: 'waiting for response', time: '07m' },
-  { icon: '✓', type: 'done', title: 'Gemini completed a summary', sub: 'task complete · 11m ago', time: '11m' },
+  { icon: '✓', type: 'done', title: 'OpenCode completed a summary', sub: 'task complete · 11m ago', time: '11m' },
   { icon: '↗', type: 'working', title: 'Antigravity planned agent roadmap', sub: 'workflow · execute_plan', time: '14m' }
 ];
 
@@ -664,7 +667,50 @@ function petUrl(pet) {
 }
 
 function artStyle(petOrFile) {
-  return `background-image:url('${petUrl(petOrFile)}')`;
+  const rows = typeof petOrFile === 'object' && petOrFile.spriteVersion === 2 ? 11 : 9;
+  const rowStep = 100 / (rows - 1);
+  const rowVariables = Array.from({ length: rows }, (_, row) => `--atlas-row-${row}:${(row * rowStep).toFixed(3)}%`).join(';');
+  return `background-image:url('${petUrl(petOrFile)}');--atlas-height:${rows * 100}%;${rowVariables}`;
+}
+
+function applyPetArtStyle(element, pet) {
+  if (!element) return;
+  const rows = pet?.spriteVersion === 2 ? 11 : 9;
+  const rowStep = 100 / (rows - 1);
+  element.style.backgroundImage = `url('${petUrl(pet)}')`;
+  element.style.setProperty('--atlas-height', `${rows * 100}%`);
+  for (let row = 0; row < 11; row += 1) {
+    if (row < rows) element.style.setProperty(`--atlas-row-${row}`, `${(row * rowStep).toFixed(3)}%`);
+    else element.style.removeProperty(`--atlas-row-${row}`);
+  }
+}
+
+function clearPetLookDirection(element) {
+  if (!element) return;
+  element.classList.remove('is-looking');
+  element.style.removeProperty('background-position-x');
+  element.style.removeProperty('background-position-y');
+}
+
+function setPetLookDirection(element, pet, clientX, clientY) {
+  if (!element || pet?.spriteVersion !== 2 || state.activePetState !== 'idle') {
+    clearPetLookDirection(element);
+    return;
+  }
+  const rect = element.getBoundingClientRect();
+  const dx = clientX - (rect.left + rect.width / 2);
+  const dy = clientY - (rect.top + rect.height / 2);
+  if (Math.hypot(dx, dy) < Math.min(rect.width, rect.height) * 0.16) {
+    clearPetLookDirection(element);
+    return;
+  }
+  const degrees = (Math.atan2(dx, -dy) * 180 / Math.PI + 360) % 360;
+  const directionIndex = Math.round(degrees / 22.5) % 16;
+  const row = directionIndex < 8 ? 9 : 10;
+  const column = directionIndex % 8;
+  element.classList.add('is-looking');
+  element.style.setProperty('background-position-x', `${(column * 100 / 7).toFixed(3)}%`);
+  element.style.setProperty('background-position-y', `${row * 10}%`);
 }
 
 // 5. PET SPRITE ANIMATION & INTERACTION ENGINE
@@ -721,7 +767,7 @@ function updatePipWindow() {
     const quote = pipWindowInstance.document.getElementById('pip-quote');
 
     if (art) {
-      art.style.backgroundImage = `url('${petUrl(pet)}')`;
+      applyPetArtStyle(art, pet);
       const gifClass = pet.ext === 'gif' ? ' gif-pet' : '';
       art.className = `pip-art state-${state.activePetState || 'idle'}${gifClass}`;
     }
@@ -777,6 +823,7 @@ async function floatPetOnDesktop() {
       const pipStyle = document.createElement('style');
       pipStyle.textContent = `
         @keyframes pet-frames-4 { from { background-position-x: 0%; } to { background-position-x: 57.143%; } }
+        @keyframes pet-frames-5 { from { background-position-x: 0%; } to { background-position-x: 71.429%; } }
         @keyframes pet-frames-6 { from { background-position-x: 0%; } to { background-position-x: 85.714%; } }
         @keyframes pet-frames-8 { from { background-position-x: 0%; } to { background-position-x: 114.286%; } }
         @keyframes pet-float-gentle {
@@ -820,7 +867,7 @@ async function floatPetOnDesktop() {
           height: 125px;
           background-color: #f2ede5;
           background-repeat: no-repeat;
-          background-size: 800% 900%;
+          background-size: 800% var(--atlas-height, 900%);
           border-radius: 45% 45% 39% 39%;
           box-shadow: 0 8px 16px rgba(77,47,30,0.1);
           cursor: pointer;
@@ -830,27 +877,31 @@ async function floatPetOnDesktop() {
         .pip-art:hover { transform: scale(1.05); }
         .pip-art:active { transform: scale(0.95); }
         .pip-art.state-idle {
-          background-position-y: 1.5%;
+          background-position-y: var(--atlas-row-0, 0%);
           animation: pet-frames-6 1.2s steps(6) infinite, pet-float-gentle 3.6s ease-in-out infinite;
         }
         .pip-art.state-pat {
-          background-position-y: 38.5%;
+          background-position-y: var(--atlas-row-3, 37.5%);
           animation: pet-frames-4 0.7s steps(4) 3, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
         }
+        .pip-art.state-jump {
+          background-position-y: var(--atlas-row-4, 50%);
+          animation: pet-frames-5 0.8s steps(5) 2, pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1;
+        }
         .pip-art.state-work {
-          background-position-y: 88.5%;
+          background-position-y: var(--atlas-row-7, 87.5%);
           animation: pet-frames-6 0.75s steps(6) infinite, pet-float-gentle 2s ease-in-out infinite;
         }
         .pip-art.state-sleep {
-          background-position-y: 75.5%;
+          background-position-y: var(--atlas-row-6, 75%);
           animation: pet-frames-6 1.8s steps(6) infinite, pet-float-gentle 5s ease-in-out infinite;
         }
         .pip-art.state-failed {
-          background-position-y: 63.5%;
+          background-position-y: var(--atlas-row-5, 62.5%);
           animation: pet-frames-8 1s steps(8) infinite, pet-float-gentle 2.4s ease-in-out infinite;
         }
         .pip-art.state-review {
-          background-position-y: 100%;
+          background-position-y: var(--atlas-row-8, 100%);
           animation: pet-frames-6 1s steps(6) infinite, pet-float-gentle 3s ease-in-out infinite;
         }
         .pip-art.gif-pet {
@@ -859,6 +910,9 @@ async function floatPetOnDesktop() {
           animation: pet-float-gentle 3.6s ease-in-out infinite !important;
         }
         .pip-art.gif-pet.state-pat {
+          animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important;
+        }
+        .pip-art.gif-pet.state-jump {
           animation: pet-pat-bounce 0.6s cubic-bezier(.34, 1.56, .64, 1) 1, pet-float-gentle 3.6s ease-in-out infinite !important;
         }
         .pip-name {
@@ -926,6 +980,8 @@ async function floatPetOnDesktop() {
       const cycleBtn = pip.document.getElementById('pip-cycle-btn');
 
       if (art) art.addEventListener('click', () => patActivePet());
+      pip.document.addEventListener('pointermove', event => setPetLookDirection(art, pet, event.clientX, event.clientY));
+      pip.document.addEventListener('pointerleave', () => clearPetLookDirection(art));
       if (patBtn) patBtn.addEventListener('click', () => patActivePet());
       if (cycleBtn) {
         cycleBtn.addEventListener('click', () => {
@@ -1040,9 +1096,10 @@ function renderFeaturedPet() {
   const heroQuote = $('#hero-pet-quote');
   const heroBadge = $('#hero-pet-badge');
   const heroVibe = $('#hero-pet-vibe');
+  const heroAtlas = $('#hero-pet-atlas');
 
   if (heroArt) {
-    heroArt.style.backgroundImage = `url('${petUrl(pet)}')`;
+    applyPetArtStyle(heroArt, pet);
     heroArt.setAttribute('aria-label', `${pet.name} companion sprite`);
     heroArt.classList.toggle('gif-pet', pet.ext === 'gif');
   }
@@ -1052,6 +1109,7 @@ function renderFeaturedPet() {
     heroBadge.innerHTML = `<span class="mini-spark">✦</span> ${state.favorites.has(pet.id) ? 'currently your favorite' : pet.badge}`;
   }
   if (heroVibe) heroVibe.textContent = `${pet.vibe} · ${pet.element}`;
+  if (heroAtlas) heroAtlas.textContent = pet.spriteVersion === 2 ? 'v2 · 8×11 atlas' : 'v1 · 8×9 atlas';
 }
 
 function renderPetStrip() {
@@ -1342,7 +1400,7 @@ const SIM_ACTIVITIES = [
   { icon: '✦', type: 'working', title: 'Codex generated component unit tests', sub: 'tool call · run_command', time: 'just now' },
   { icon: '✓', type: 'done', title: 'Claude Code resolved merge conflicts', sub: 'git integration · success', time: 'just now' },
   { icon: '⌁', type: 'working', title: 'Cursor applied inline AI edit', sub: 'fast diff · 3 chunks', time: 'just now' },
-  { icon: '✧', type: 'done', title: 'Gemini synthesized documentation', sub: 'multimodal · index.md', time: 'just now' }
+  { icon: '◎', type: 'done', title: 'OpenCode summarized documentation', sub: 'task complete · index.md', time: 'just now' }
 ];
 
 const AGENT_EVENT_STATES = {
@@ -1354,10 +1412,10 @@ const AGENT_EVENT_STATES = {
   waiting: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'needs your attention', important: true },
   wait: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'needs your attention', important: true },
   thinking: { activityType: 'wait', petState: 'sleep', icon: '◌', label: 'is thinking', important: false },
-  complete: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
-  completed: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
-  done: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
-  success: { activityType: 'done', petState: 'idle', icon: '✓', label: 'completed a task', important: true },
+  complete: { activityType: 'done', petState: 'jump', icon: '✓', label: 'completed a task', important: true },
+  completed: { activityType: 'done', petState: 'jump', icon: '✓', label: 'completed a task', important: true },
+  done: { activityType: 'done', petState: 'jump', icon: '✓', label: 'completed a task', important: true },
+  success: { activityType: 'done', petState: 'jump', icon: '✓', label: 'completed a task', important: true },
   review: { activityType: 'done', petState: 'review', icon: '✓', label: 'finished a review', important: true },
   error: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error', important: true },
   failed: { activityType: 'error', petState: 'failed', icon: '!', label: 'encountered an error', important: true },
@@ -1495,9 +1553,12 @@ async function pollNativeState() {
       invokeNative('get_desktop_state')
     ]);
     for (const entry of batch.events || []) {
+      const sequence = Number(entry.sequence) || 0;
+      if (sequence && sequence <= nativeEventSequence) continue;
       dispatchAgentEvent(entry.event || {});
+      nativeEventSequence = Math.max(nativeEventSequence, sequence);
     }
-    nativeEventSequence = batch.latestSequence || nativeEventSequence;
+    nativeEventSequence = Math.max(nativeEventSequence, Number(batch.latestSequence) || 0);
     if (desktopState.revision !== nativePetRevision) {
       nativePetRevision = desktopState.revision;
       applyNativePetSelection(desktopState.selectedPetId);
@@ -1518,6 +1579,16 @@ window.nuzzle.autoSetCodex = autoSetCodex;
 window.nuzzle.configureAgent = configureAgent;
 window.nuzzle.patActivePet = patActivePet;
 window.nuzzle.selectCompanion = selectCompanion;
+window.nuzzle.setPetLookDirection = setPetLookDirection;
+window.nuzzle.clearPetLookDirection = clearPetLookDirection;
+window.nuzzle.artStyle = artStyle;
+document.addEventListener('pointermove', event => {
+  const pet = PETS.find(item => item.id === state.selectedPetId) || PETS[0];
+  $$('.pet-art, .mini-art').forEach(art => setPetLookDirection(art, pet, event.clientX, event.clientY));
+});
+document.documentElement.addEventListener('mouseleave', () => {
+  $$('.pet-art, .mini-art').forEach(clearPetLookDirection);
+});
 window.addEventListener('nuzzle:agent-event', event => dispatchAgentEvent(event.detail || {}));
 window.addEventListener('message', event => {
   if (event.source !== window || event.data?.source !== 'nuzzle-agent') return;
@@ -1561,7 +1632,9 @@ if (!IS_NATIVE_APP && typeof window !== 'undefined' && 'EventSource' in window) 
 if (IS_NATIVE_APP && TAURI?.event?.listen) {
   TAURI.event.listen('nuzzle-agent-event', incoming => {
     const entry = incoming.payload || {};
-    nativeEventSequence = Math.max(nativeEventSequence, Number(entry.sequence) || 0);
+    const sequence = Number(entry.sequence) || 0;
+    if (sequence && sequence <= nativeEventSequence) return;
+    nativeEventSequence = Math.max(nativeEventSequence, sequence);
     dispatchAgentEvent(entry.event || entry);
   }).catch(error => console.warn('Native event listener failed:', error));
 }

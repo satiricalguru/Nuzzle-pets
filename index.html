@@ -30,7 +30,7 @@
         <div class="rail-spacer"></div>
         <div class="rail-status">
           <div class="status-orb" aria-hidden="true"><span></span></div>
-          <div><strong>Local & private</strong><small>Authenticated loopback hooks</small></div>
+          <div><strong>Local & private</strong><small>On-device settings and events</small></div>
           <button class="icon-button" data-toast="Agent events stay on your Mac and require a rotating local token." aria-label="Local-first privacy information">?</button>
         </div>
         <div class="rail-footer">
@@ -44,7 +44,7 @@
           <div class="breadcrumb"><span>companion studio</span><b>/</b><strong id="page-title">overview</strong></div>
           <div class="topbar-actions">
             <button class="status-pill float-pill" id="topbar-float-btn" title="Float pet on desktop over Antigravity IDE (Always on Top)"><span>❐</span> float pet</button>
-            <button class="status-pill" id="system-status-btn" data-toast="The native runtime listens only on authenticated localhost."><span class="pulse-dot"></span> checking native runtime</button>
+            <button class="status-pill" id="system-status-btn" data-toast="The native app uses an authenticated loopback runtime; browser preview can use the local bridge."><span class="pulse-dot"></span> browser preview</button>
             <button class="icon-button" id="notification-btn" data-toast="All agent activity is calm and up to date." aria-label="Notifications">♧<i></i></button>
             <button class="avatar-button" id="profile-btn" data-toast="Nuzzle Companion Studio (Local Session)" aria-label="User profile">JP</button>
           </div>
@@ -54,7 +54,7 @@
         <section class="view-panel active" id="overview-view" aria-labelledby="overview-heading">
           <div class="hero-intro reveal">
             <div>
-              <div class="eyebrow"><span class="eyebrow-line"></span> <span id="hero-datetime">Tuesday, August 25 · 10:55 AM</span> <span class="eyebrow-mono">LOCAL HOOKS ON</span></div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> <span id="hero-datetime">Tuesday, August 25 · 10:55 AM</span> <span class="eyebrow-mono">LOCAL-FIRST</span></div>
               <h1 id="overview-heading">Your agents are busy.<br /><i>Someone should keep them company.</i></h1>
               <p class="lede">Nuzzle turns the quiet moments between prompts, tools, and completions into something you can see — and pet.</p>
             </div>
@@ -81,13 +81,13 @@
                   </div>
                   <div class="pet-actions">
                     <button class="small-button" id="pet-me-button">♡ pet companion</button>
-                    <button class="small-button secondary" id="float-desktop-btn" title="Float pet on desktop over Antigravity IDE (Always on Top)">❐ float on desktop</button>
+                    <button class="small-button secondary" id="float-desktop-btn" title="Float pet above any coding IDE (Always on Top)">❐ float on desktop</button>
                     <button class="text-button" data-view-target="library">change pet <span>↗</span></button>
                   </div>
                 </div>
               </div>
               <div class="stage-ribbon">
-                <span>8×11 animated atlas</span>
+                <span id="hero-pet-atlas">v2 · 8×11 atlas</span>
                 <span>codex-compatible</span>
                 <span id="hero-pet-state-tag">idle state</span>
               </div>

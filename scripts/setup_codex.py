@@ -1,23 +1,31 @@
 #!/usr/bin/env python3
-"""
-setup_codex.py — Auto-configure Codex with all 42 Nuzzle / CoPet companions
-and setup lifecycle event hooks in ~/.codex/
+"""Safely install Nuzzle's validated Codex pet atlases.
+
+Hook configuration is owned by the native Nuzzle app, which can preserve and
+trust the current Codex hook schema. This script never edits hooks.json.
 """
 
+import argparse
 import os
 import json
 import shutil
+import tempfile
+import time
 from pathlib import Path
+from PIL import Image
 
-CODEX_DIR = Path.home() / ".codex"
-CODEX_PETS_DIR = CODEX_DIR / "pets"
 WORKSPACE_DIR = Path(__file__).resolve().parents[1]
 PUBLIC_PETS_DIR = WORKSPACE_DIR / "public" / "pets"
-TMP_ANIME_PETS_DIR = Path("/tmp/codex-anime-pets/pets")
+ATLAS_SIZES = {1: (1536, 1872), 2: (1536, 2288)}
+CELL_SIZE = (192, 208)
+ACTIVE_FRAMES = {
+    1: (6, 8, 8, 4, 5, 8, 6, 6, 6),
+    2: (7, 8, 8, 4, 5, 8, 6, 6, 6, 8, 8),
+}
 
 # Pet catalog metadata
 PETS_DATA = [
-  {"id": "hu-tao", "name": "Hu Tao", "ext": "webp", "desc": "Spirited pyro companion for Codex"},
+  {"id": "hu-tao", "name": "Hu Tao", "ext": "webp", "desc": "Spirited pyro companion for Codex", "spriteVersionNumber": 2},
   {"id": "furina", "name": "Furina", "ext": "webp", "desc": "Dramatic hydro companion for Codex"},
   {"id": "raiden", "name": "Raiden", "ext": "webp", "desc": "Focused electro companion for Codex"},
   {"id": "ganyu", "name": "Ganyu", "ext": "webp", "desc": "Gentle cryo companion for Codex"},
@@ -61,33 +69,127 @@ PETS_DATA = [
   {"id": "tiger", "name": "Fierce Tiger", "ext": "webp", "desc": "Apex hunter companion from CoPet"}
 ]
 
-def auto_set_codex():
-    print(f"🐾 Setting up Codex v2 companions in: {CODEX_PETS_DIR}")
-    from upgrade_pets_to_v2 import upgrade_all_pets
-    upgrade_all_pets()
 
-    # Setup Codex Hook forwarding
-    hooks_file = CODEX_DIR / "hooks.json"
-    print(f"🔗 Checking Codex hook config in: {hooks_file}")
-    
-    existing_hooks = {}
-    if hooks_file.exists():
-        try:
-            with open(hooks_file, "r") as f:
-                existing_hooks = json.load(f)
-        except Exception:
-            existing_hooks = {}
+def get_codex_dir():
+    configured = os.environ.get("CODEX_HOME")
+    return Path(configured).expanduser() if configured else Path.home() / ".codex"
 
-    # Add Nuzzle lifecycle notification hook
-    existing_hooks["nuzzle"] = {
-        "description": "Nuzzle Companion Studio Lifecycle Listener",
-        "url": "http://127.0.0.1:4173/events",
-        "events": ["prompt", "tool_use", "thinking", "completion", "error"]
+
+def validate_v1_atlas(path):
+    """Return a decoded v1 atlas only when its frame contract is valid."""
+    return validate_atlas(path, 1)
+
+
+def validate_atlas(path, sprite_version=1):
+    """Return a decoded atlas only when its declared frame contract is valid."""
+    expected_size = ATLAS_SIZES.get(sprite_version)
+    active_frames = ACTIVE_FRAMES.get(sprite_version)
+    if expected_size is None or active_frames is None:
+        raise ValueError(f"unsupported sprite version {sprite_version}")
+    with Image.open(path) as source:
+        if source.size != expected_size:
+            raise ValueError(f"expected {expected_size[0]}x{expected_size[1]}, got {source.width}x{source.height}")
+        image = source.convert("RGBA")
+
+    cell_width, cell_height = CELL_SIZE
+    atlas_alpha = image.getchannel("A")
+    for row, active_count in enumerate(active_frames):
+        for column in range(8):
+            alpha = atlas_alpha.crop((
+                column * cell_width,
+                row * cell_height,
+                (column + 1) * cell_width,
+                (row + 1) * cell_height,
+            ))
+            populated = alpha.getbbox() is not None
+            if column < active_count and not populated:
+                raise ValueError(f"required frame row {row}, column {column} is empty")
+            if column >= active_count and populated:
+                raise ValueError(f"unused frame row {row}, column {column} is populated")
+    return image
+
+
+def write_json_atomic(path, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = None
+    try:
+        with tempfile.NamedTemporaryFile("w", dir=path.parent, prefix=".nuzzle-", delete=False) as handle:
+            json.dump(payload, handle, indent=2)
+            handle.write("\n")
+            temporary = Path(handle.name)
+        os.replace(temporary, path)
+    finally:
+        if temporary:
+            temporary.unlink(missing_ok=True)
+
+
+def save_atlas_atomic(path, image):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=".nuzzle-", delete=False) as handle:
+        temporary = Path(handle.name)
+    try:
+        clean = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        clean.alpha_composite(image)
+        clean.save(temporary, format="WEBP", lossless=True, quality=100, method=6, exact=True)
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def backup_existing(target_dir, codex_dir):
+    timestamp = str(time.time_ns())
+    backup_dir = codex_dir / "nuzzle-backups" / "pets" / timestamp / target_dir.name
+    backup_dir.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(target_dir, backup_dir)
+    return backup_dir
+
+
+def install_pet(pet, codex_dir, force=False):
+    source = PUBLIC_PETS_DIR / f"{pet['id']}.{pet['ext']}"
+    if not source.is_file():
+        raise FileNotFoundError(source)
+    sprite_version = pet.get("spriteVersionNumber", 1)
+    image = validate_atlas(source, sprite_version)
+    target_dir = codex_dir / "pets" / pet["id"]
+    if target_dir.exists() and not force:
+        return "skipped", None
+    backup_dir = backup_existing(target_dir, codex_dir) if target_dir.exists() else None
+    target_dir.mkdir(parents=True, exist_ok=True)
+    save_atlas_atomic(target_dir / "spritesheet.webp", image)
+    manifest = {
+        "id": pet["id"],
+        "displayName": pet["name"],
+        "description": pet["desc"],
+        "spritesheetPath": "spritesheet.webp",
     }
+    if sprite_version == 2:
+        manifest["spriteVersionNumber"] = 2
+    write_json_atomic(target_dir / "pet.json", manifest)
+    return "installed", backup_dir
 
-    with open(hooks_file, "w") as f:
-        json.dump(existing_hooks, f, indent=2)
-    print("✅ Configured ~/.codex/hooks.json for automatic agent event reaction via http://127.0.0.1:4173/events!")
+
+def auto_set_codex(force=False):
+    codex_dir = get_codex_dir()
+    print(f"🐾 Installing validated companions in: {codex_dir / 'pets'}")
+    installed = 0
+    skipped = 0
+    for pet in PETS_DATA:
+        try:
+            result, backup = install_pet(pet, codex_dir, force=force)
+        except (FileNotFoundError, OSError, ValueError) as error:
+            raise SystemExit(f"Refusing to install {pet['id']}: {error}") from error
+        if result == "skipped":
+            skipped += 1
+            print(f"  · Kept existing {pet['name']} (use --force to replace with a backup)")
+        else:
+            installed += 1
+            suffix = f"; backup: {backup}" if backup else ""
+            print(f"  ✓ Installed {pet['name']}{suffix}")
+    print(f"\n✅ Installed {installed}; preserved {skipped} existing pet packages.")
+    print("Open Nuzzle → Agents → Codex to install and trust lifecycle hooks safely.")
+
 
 if __name__ == "__main__":
-    auto_set_codex()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--force", action="store_true", help="replace existing packages after backing them up")
+    auto_set_codex(force=parser.parse_args().force)

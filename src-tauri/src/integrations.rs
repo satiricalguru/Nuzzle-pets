@@ -11,7 +11,16 @@ use toml_edit::{value, DocumentMut, Item, Table};
 const MANAGED_MARKER: &str = "nuzzle-managed-hook";
 const HELPER_NAME: &str = "nuzzle-hook.sh";
 const OPENCODE_PLUGIN_ENTRY: &str = "./plugins/nuzzle.js";
-const ADAPTER_IDS: &[&str] = &["codex", "claude-code", "cursor", "opencode", "antigravity"];
+const ADAPTER_IDS: &[&str] = &[
+    "codex",
+    "claude-code",
+    "cursor",
+    "opencode",
+    "antigravity",
+    "gemini",
+    "copilot",
+    "pi",
+];
 
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -47,6 +56,7 @@ pub enum IntegrationError {
 pub struct IntegrationManager {
     root: PathBuf,
     home: PathBuf,
+    codex_dir: PathBuf,
     search_paths: Vec<PathBuf>,
 }
 
@@ -59,6 +69,10 @@ impl IntegrationManager {
 
     pub fn new(root: impl Into<PathBuf>, home: impl Into<PathBuf>) -> Self {
         let home = home.into();
+        let codex_dir = env::var_os("CODEX_HOME")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from)
+            .unwrap_or_else(|| home.join(".codex"));
         let mut search_paths: Vec<PathBuf> = env::var_os("PATH")
             .map(|value| env::split_paths(&value).collect())
             .unwrap_or_default();
@@ -77,6 +91,7 @@ impl IntegrationManager {
         Self {
             root: root.into(),
             home,
+            codex_dir,
             search_paths,
         }
     }
@@ -87,9 +102,26 @@ impl IntegrationManager {
         home: impl Into<PathBuf>,
         search_paths: Vec<PathBuf>,
     ) -> Self {
+        let home = home.into();
+        Self {
+            root: root.into(),
+            codex_dir: home.join(".codex"),
+            home,
+            search_paths,
+        }
+    }
+
+    #[cfg(test)]
+    fn new_with_codex_dir(
+        root: impl Into<PathBuf>,
+        home: impl Into<PathBuf>,
+        codex_dir: impl Into<PathBuf>,
+        search_paths: Vec<PathBuf>,
+    ) -> Self {
         Self {
             root: root.into(),
             home: home.into(),
+            codex_dir: codex_dir.into(),
             search_paths,
         }
     }
@@ -108,6 +140,9 @@ impl IntegrationManager {
         let installed = match id {
             "codex" => standard_hooks_installed(&path, id, CODEX_EVENTS)?,
             "claude-code" => standard_hooks_installed(&path, id, CLAUDE_EVENTS)?,
+            "gemini" => standard_hooks_installed(&path, id, GEMINI_EVENTS)?,
+            "copilot" => copilot_hooks_installed(&path, &self.helper_path())?,
+            "pi" => managed_source_installed(&path)?,
             "cursor" => cursor_hooks_installed(&path, &self.helper_path())?,
             "antigravity" => antigravity_hooks_installed(&path, &self.helper_path())?,
             "opencode" => opencode_installed(&path)?,
@@ -146,6 +181,9 @@ impl IntegrationManager {
         match id {
             "codex" => self.install_codex()?,
             "claude-code" => self.install_standard(id, CLAUDE_EVENTS)?,
+            "gemini" => self.install_gemini()?,
+            "copilot" => self.install_copilot()?,
+            "pi" => self.install_pi()?,
             "cursor" => self.install_cursor()?,
             "opencode" => self.install_opencode()?,
             "antigravity" => self.install_antigravity()?,
@@ -162,6 +200,9 @@ impl IntegrationManager {
                 self.remove_codex_trust()?;
             }
             "claude-code" => self.remove_standard(id, CLAUDE_EVENTS)?,
+            "gemini" => self.remove_standard(id, GEMINI_EVENTS)?,
+            "copilot" => self.remove_copilot()?,
+            "pi" => self.remove_managed_source("pi")?,
             "cursor" => self.remove_cursor()?,
             "opencode" => self.remove_opencode()?,
             "antigravity" => self.remove_antigravity()?,
@@ -175,10 +216,13 @@ impl IntegrationManager {
 
     fn config_path(&self, id: &str) -> Result<PathBuf, IntegrationError> {
         Ok(match id {
-            "codex" => self.home.join(".codex/hooks.json"),
+            "codex" => self.codex_dir.join("hooks.json"),
             "claude-code" => self.home.join(".claude/settings.json"),
             "cursor" => self.home.join(".cursor/hooks.json"),
             "antigravity" => self.home.join(".gemini/config/hooks.json"),
+            "gemini" => self.home.join(".gemini/settings.json"),
+            "copilot" => copilot_home(&self.home).join("hooks/nuzzle.json"),
+            "pi" => self.home.join(".pi/agent/extensions/nuzzle.ts"),
             "opencode" => opencode_dir(&self.home).join("plugins/nuzzle.js"),
             _ => return Err(IntegrationError::Unknown(id.to_string())),
         })
@@ -243,6 +287,82 @@ impl IntegrationManager {
         write_json_atomic(&path, &document)
     }
 
+    fn install_gemini(&self) -> Result<(), IntegrationError> {
+        let path = self.config_path("gemini")?;
+        self.backup("gemini", &path)?;
+        let mut document = read_json_optional(&path)?.unwrap_or_else(|| json!({}));
+        remove_managed_hooks(&mut document, "gemini");
+        merge_gemini_hooks(&mut document, &self.helper_path(), &path)?;
+        write_json_atomic(&path, &document)
+    }
+
+    fn install_copilot(&self) -> Result<(), IntegrationError> {
+        let path = self.config_path("copilot")?;
+        self.backup("copilot", &path)?;
+        let mut document = read_json_optional(&path)?.unwrap_or_else(|| json!({}));
+        let object = document
+            .as_object_mut()
+            .ok_or_else(|| IntegrationError::InvalidJson(path.clone()))?;
+        object.entry("version").or_insert_with(|| json!(1));
+        let hooks = object.entry("hooks").or_insert_with(|| json!({}));
+        let hooks = hooks
+            .as_object_mut()
+            .ok_or_else(|| IntegrationError::InvalidJson(path.clone()))?;
+        for event in COPILOT_EVENTS {
+            let entries = hooks
+                .entry(event.cli_event)
+                .or_insert_with(|| json!([]))
+                .as_array_mut()
+                .ok_or_else(|| IntegrationError::InvalidJson(path.clone()))?;
+            entries.retain(|entry| !entry_is_managed(entry, "copilot"));
+            entries.push(json!({
+                "type": "command",
+                "bash": hook_command("copilot", &self.helper_path(), event.kind),
+                "timeoutSec": 1
+            }));
+        }
+        write_json_atomic(&path, &document)
+    }
+
+    fn remove_copilot(&self) -> Result<(), IntegrationError> {
+        let path = self.config_path("copilot")?;
+        if !path.exists() {
+            return Ok(());
+        }
+        self.backup("copilot", &path)?;
+        let mut document = read_json_required(&path)?;
+        if let Some(hooks) = document.get_mut("hooks").and_then(Value::as_object_mut) {
+            for entries in hooks.values_mut().filter_map(Value::as_array_mut) {
+                entries.retain(|entry| !entry_is_managed(entry, "copilot"));
+            }
+        }
+        write_json_atomic(&path, &document)
+    }
+
+    fn install_pi(&self) -> Result<(), IntegrationError> {
+        let path = self.config_path("pi")?;
+        self.backup("pi", &path)?;
+        if path.exists() && !managed_source_installed(&path)? {
+            return Err(IntegrationError::Io(io::Error::new(
+                io::ErrorKind::AlreadyExists,
+                format!(
+                    "refusing to replace unmanaged extension at {}",
+                    path.display()
+                ),
+            )));
+        }
+        write_atomic(&path, pi_extension(&self.helper_path()).as_bytes())
+    }
+
+    fn remove_managed_source(&self, id: &str) -> Result<(), IntegrationError> {
+        let path = self.config_path(id)?;
+        if path.exists() && managed_source_installed(&path)? {
+            self.backup(id, &path)?;
+            fs::remove_file(path)?;
+        }
+        Ok(())
+    }
+
     fn install_codex(&self) -> Result<(), IntegrationError> {
         let hooks_path = self.config_path("codex")?;
         self.backup("codex", &hooks_path)?;
@@ -263,7 +383,7 @@ impl IntegrationManager {
         )?;
         write_json_atomic(&hooks_path, &document)?;
 
-        let config_path = self.home.join(".codex/config.toml");
+        let config_path = self.codex_dir.join("config.toml");
         self.backup("codex", &config_path)?;
         let original = match fs::read_to_string(&config_path) {
             Ok(content) => content,
@@ -286,7 +406,7 @@ impl IntegrationManager {
     }
 
     fn remove_codex_trust(&self) -> Result<(), IntegrationError> {
-        let config_path = self.home.join(".codex/config.toml");
+        let config_path = self.codex_dir.join("config.toml");
         if !config_path.exists() {
             return Ok(());
         }
@@ -456,6 +576,18 @@ fn spec(id: &str) -> Result<AdapterSpec, IntegrationError> {
             display_name: "Antigravity",
             executables: &["agy"],
         }),
+        "gemini" => Ok(AdapterSpec {
+            display_name: "Gemini CLI",
+            executables: &["gemini"],
+        }),
+        "copilot" => Ok(AdapterSpec {
+            display_name: "GitHub Copilot CLI",
+            executables: &["copilot"],
+        }),
+        "pi" => Ok(AdapterSpec {
+            display_name: "Pi",
+            executables: &["pi"],
+        }),
         _ => Err(IntegrationError::Unknown(id.to_string())),
     }
 }
@@ -512,6 +644,11 @@ const CLAUDE_EVENTS: &[HookEvent] = &[
         kind: "tool.after",
     },
     HookEvent {
+        cli_event: "PostToolUseFailure",
+        matcher: Some("*"),
+        kind: "session.error",
+    },
+    HookEvent {
         cli_event: "PermissionRequest",
         matcher: Some("*"),
         kind: "permission.waiting",
@@ -523,6 +660,72 @@ const CLAUDE_EVENTS: &[HookEvent] = &[
     },
     HookEvent {
         cli_event: "Stop",
+        matcher: None,
+        kind: "session.stop",
+    },
+];
+
+const GEMINI_EVENTS: &[HookEvent] = &[
+    HookEvent {
+        cli_event: "BeforeAgent",
+        matcher: None,
+        kind: "user.prompt",
+    },
+    HookEvent {
+        cli_event: "BeforeTool",
+        matcher: Some(".*"),
+        kind: "tool.before",
+    },
+    HookEvent {
+        cli_event: "AfterTool",
+        matcher: Some(".*"),
+        kind: "tool.after",
+    },
+    HookEvent {
+        cli_event: "Notification",
+        matcher: None,
+        kind: "permission.waiting",
+    },
+    HookEvent {
+        cli_event: "AfterAgent",
+        matcher: None,
+        kind: "session.stop",
+    },
+];
+
+const COPILOT_EVENTS: &[HookEvent] = &[
+    HookEvent {
+        cli_event: "userPromptSubmitted",
+        matcher: None,
+        kind: "user.prompt",
+    },
+    HookEvent {
+        cli_event: "preToolUse",
+        matcher: None,
+        kind: "tool.before",
+    },
+    HookEvent {
+        cli_event: "postToolUse",
+        matcher: None,
+        kind: "tool.after",
+    },
+    HookEvent {
+        cli_event: "permissionRequest",
+        matcher: None,
+        kind: "permission.waiting",
+    },
+    HookEvent {
+        cli_event: "notification",
+        matcher: Some("permission_prompt|elicitation_dialog"),
+        kind: "permission.waiting",
+    },
+    HookEvent {
+        cli_event: "errorOccurred",
+        matcher: None,
+        kind: "session.error",
+    },
+    HookEvent {
+        cli_event: "agentStop",
         matcher: None,
         kind: "session.stop",
     },
@@ -620,6 +823,42 @@ fn merge_standard_hooks(
     Ok(())
 }
 
+fn merge_gemini_hooks(
+    document: &mut Value,
+    helper: &Path,
+    path: &Path,
+) -> Result<(), IntegrationError> {
+    let object = document
+        .as_object_mut()
+        .ok_or_else(|| IntegrationError::InvalidJson(path.to_path_buf()))?;
+    let hooks = object.entry("hooks").or_insert_with(|| json!({}));
+    let hooks = hooks
+        .as_object_mut()
+        .ok_or_else(|| IntegrationError::InvalidJson(path.to_path_buf()))?;
+    for event in GEMINI_EVENTS {
+        let mut group = json!({
+            "sequential": true,
+            "hooks": [{
+                "type": "command",
+                "command": hook_command("gemini", helper, event.kind),
+                "name": "Nuzzle activity bridge",
+                "timeout": 1000,
+                "description": "Updates the local Nuzzle companion without changing Gemini behavior"
+            }]
+        });
+        if let Some(matcher) = event.matcher {
+            group["matcher"] = json!(matcher);
+        }
+        hooks
+            .entry(event.cli_event)
+            .or_insert_with(|| json!([]))
+            .as_array_mut()
+            .ok_or_else(|| IntegrationError::InvalidJson(path.to_path_buf()))?
+            .push(group);
+    }
+    Ok(())
+}
+
 fn remove_managed_hooks(document: &mut Value, id: &str) {
     let Some(hooks) = document.get_mut("hooks").and_then(Value::as_object_mut) else {
         return;
@@ -640,12 +879,14 @@ fn remove_managed_hooks(document: &mut Value, id: &str) {
 }
 
 fn entry_is_managed(entry: &Value, id: &str) -> bool {
-    entry
-        .get("command")
-        .and_then(Value::as_str)
-        .is_some_and(|command| {
-            command.contains(HELPER_NAME) && command.contains(&format!(" {id} "))
-        })
+    ["command", "bash", "exec"].iter().any(|field| {
+        entry
+            .get(*field)
+            .and_then(Value::as_str)
+            .is_some_and(|command| {
+                command.contains(HELPER_NAME) && command.contains(&format!(" {id} "))
+            })
+    })
 }
 
 fn standard_hooks_installed(
@@ -725,6 +966,39 @@ fn antigravity_hooks_installed(path: &Path, helper: &Path) -> Result<bool, Integ
     }))
 }
 
+fn copilot_hooks_installed(path: &Path, helper: &Path) -> Result<bool, IntegrationError> {
+    let Some(document) = read_json_optional(path)? else {
+        return Ok(false);
+    };
+    let Some(hooks) = document.get("hooks").and_then(Value::as_object) else {
+        return Ok(false);
+    };
+    Ok(COPILOT_EVENTS.iter().all(|event| {
+        hooks
+            .get(event.cli_event)
+            .and_then(Value::as_array)
+            .is_some_and(|entries| {
+                entries.iter().any(|entry| {
+                    entry
+                        .get("bash")
+                        .and_then(Value::as_str)
+                        .is_some_and(|command| {
+                            command.contains(&helper.to_string_lossy().to_string())
+                                && command.contains(" copilot ")
+                                && command.contains(event.kind)
+                        })
+                })
+            })
+    }))
+}
+
+fn managed_source_installed(path: &Path) -> Result<bool, IntegrationError> {
+    if !path.is_file() {
+        return Ok(false);
+    }
+    Ok(fs::read_to_string(path)?.contains(MANAGED_MARKER))
+}
+
 fn opencode_installed(plugin_path: &Path) -> Result<bool, IntegrationError> {
     if !plugin_path.is_file() {
         return Ok(false);
@@ -786,6 +1060,9 @@ hook_output() {
 if [ "$agent" = "claude-code" ] && printf '%s' "$compact_input" | grep -q '"cursor_version"[[:space:]]*:'; then
   hook_output
   exit 0
+fi
+if [ "$kind" = "tool.after" ] && printf '%s' "$compact_input" | grep -Eq '"(exit_code|exitCode)"[[:space:]]*:[[:space:]]*-?[1-9][0-9]*|"is_error"[[:space:]]*:[[:space:]]*true|"success"[[:space:]]*:[[:space:]]*false|"status"[[:space:]]*:[[:space:]]*"(failed|error)"'; then
+  kind="session.error"
 fi
 tool="$(json_field tool_name)"
 [ -n "$tool" ] || tool="$(json_field tool)"
@@ -854,6 +1131,34 @@ export const NuzzlePlugin = async () => ({
   "permission.ask": async () => post("permission.waiting")
 });
 "#
+}
+
+fn pi_extension(helper: &Path) -> String {
+    let helper = serde_json::to_string(&helper.to_string_lossy()).unwrap_or_else(|_| "\"\"".into());
+    format!(
+        r#"// nuzzle-managed-hook
+import {{ spawn }} from "node:child_process";
+
+const helper = {helper};
+
+function post(kind: string, event: unknown = {{}}) {{
+  try {{
+    const child = spawn(helper, ["pi", kind], {{ stdio: ["pipe", "ignore", "ignore"] }});
+    child.on("error", () => {{}});
+    child.stdin.on("error", () => {{}});
+    child.stdin.end(JSON.stringify(event));
+  }} catch {{}}
+}}
+
+export default function (pi: any) {{
+  pi.on("agent_start", async (event: unknown) => post("user.prompt", event));
+  pi.on("tool_execution_start", async (event: any) => post("tool.before", event));
+  pi.on("tool_execution_end", async (event: any) => post(event?.isError ? "session.error" : "tool.after", event));
+  pi.on("ui_prompt_start", async (event: unknown) => post("permission.waiting", event));
+  pi.on("agent_settled", async (event: unknown) => post("session.stop", event));
+}}
+"#
+    )
 }
 
 #[derive(Serialize)]
@@ -989,7 +1294,6 @@ fn apply_codex_trust(
 }
 
 fn remove_trusted_hashes(config: &mut DocumentMut, hooks_path: &Path) {
-    let prefix = format!("{}:", hooks_path.display());
     let Some(state) = config
         .get_mut("hooks")
         .and_then(Item::as_table_mut)
@@ -1000,7 +1304,15 @@ fn remove_trusted_hashes(config: &mut DocumentMut, hooks_path: &Path) {
     };
     let keys: Vec<String> = state
         .iter()
-        .filter(|(key, _)| key.starts_with(&prefix))
+        .filter(|(key, _)| {
+            CODEX_EVENTS.iter().any(|event| {
+                *key == format!(
+                    "{}:{}:0:0",
+                    hooks_path.display(),
+                    codex_event_label(event.cli_event)
+                )
+            })
+        })
         .map(|(key, _)| key.to_string())
         .collect();
     for key in keys {
@@ -1043,6 +1355,13 @@ fn opencode_dir(home: &Path) -> PathBuf {
         return PathBuf::from(path).join("opencode");
     }
     home.join(".config/opencode")
+}
+
+fn copilot_home(home: &Path) -> PathBuf {
+    env::var_os("COPILOT_HOME")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(".copilot"))
 }
 
 fn read_json_optional(path: &Path) -> Result<Option<Value>, IntegrationError> {
@@ -1200,5 +1519,123 @@ mod tests {
             Some(CODEX_EVENTS.len())
         );
         assert!(root.join("backups/codex").is_dir());
+    }
+
+    #[test]
+    fn codex_paths_can_use_a_custom_codex_home() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let codex_dir = temp.path().join("custom-codex");
+        let manager =
+            IntegrationManager::new_with_codex_dir(home.join(".nuzzle"), &home, &codex_dir, vec![]);
+
+        assert_eq!(
+            manager.config_path("codex").unwrap(),
+            codex_dir.join("hooks.json")
+        );
+    }
+
+    #[test]
+    fn codex_uninstall_preserves_unrelated_trust_for_the_same_hooks_file() {
+        let hooks_path = PathBuf::from("/tmp/hooks.json");
+        let managed_key = format!("{}:user_prompt_submit:0:0", hooks_path.display());
+        let unrelated_key = format!("{}:custom_hook:0:0", hooks_path.display());
+        let source = format!(
+            "[hooks.state.\"{managed_key}\"]\ntrusted_hash = \"managed\"\n\n[hooks.state.\"{unrelated_key}\"]\ntrusted_hash = \"keep\"\n"
+        );
+        let mut config = source.parse::<DocumentMut>().unwrap();
+
+        remove_trusted_hashes(&mut config, &hooks_path);
+
+        let state = config["hooks"]["state"].as_table().unwrap();
+        assert!(!state.contains_key(&managed_key));
+        assert_eq!(state[&unrelated_key]["trusted_hash"].as_str(), Some("keep"));
+    }
+
+    #[test]
+    fn gemini_install_uses_millisecond_timeouts_and_preserves_settings() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("gemini"));
+        let settings = home.join(".gemini/settings.json");
+        ensure_parent(&settings).unwrap();
+        fs::write(&settings, r#"{"theme":"dark","hooks":{}}"#).unwrap();
+        let manager = IntegrationManager::new_with_paths(root, home, vec![bin]);
+
+        assert!(manager.install("gemini").unwrap().healthy);
+        let content = read_json_required(&settings).unwrap();
+        assert_eq!(content["theme"], "dark");
+        assert_eq!(
+            content["hooks"]["BeforeTool"][0]["hooks"][0]["timeout"],
+            1000
+        );
+
+        assert!(!manager.uninstall("gemini").unwrap().installed);
+        assert_eq!(read_json_required(&settings).unwrap()["theme"], "dark");
+    }
+
+    #[test]
+    fn copilot_install_is_scoped_to_its_user_hook_file() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("copilot"));
+        let hooks = home.join(".copilot/hooks/nuzzle.json");
+        ensure_parent(&hooks).unwrap();
+        fs::write(&hooks, r#"{"version":1,"ownerNote":"keep","hooks":{}}"#).unwrap();
+        let manager = IntegrationManager::new_with_paths(root, home, vec![bin]);
+
+        assert!(manager.install("copilot").unwrap().healthy);
+        let content = read_json_required(&hooks).unwrap();
+        assert_eq!(content["ownerNote"], "keep");
+        assert_eq!(content["hooks"]["preToolUse"][0]["timeoutSec"], 1);
+
+        assert!(!manager.uninstall("copilot").unwrap().installed);
+        assert_eq!(read_json_required(&hooks).unwrap()["ownerNote"], "keep");
+    }
+
+    #[test]
+    fn pi_install_never_replaces_an_unmanaged_extension() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("pi"));
+        let extension = home.join(".pi/agent/extensions/nuzzle.ts");
+        ensure_parent(&extension).unwrap();
+        fs::write(&extension, "// user-owned extension\n").unwrap();
+        let manager = IntegrationManager::new_with_paths(root, home, vec![bin]);
+
+        assert!(manager.install("pi").is_err());
+        assert_eq!(
+            fs::read_to_string(extension).unwrap(),
+            "// user-owned extension\n"
+        );
+    }
+
+    #[test]
+    fn pi_install_writes_and_removes_only_the_managed_extension() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("pi"));
+        let extension = home.join(".pi/agent/extensions/nuzzle.ts");
+        let manager = IntegrationManager::new_with_paths(root, home, vec![bin]);
+
+        assert!(manager.install("pi").unwrap().healthy);
+        let source = fs::read_to_string(&extension).unwrap();
+        assert!(source.contains(MANAGED_MARKER));
+        assert!(source.contains("tool_execution_end"));
+
+        assert!(!manager.uninstall("pi").unwrap().installed);
+        assert!(!extension.exists());
     }
 }
