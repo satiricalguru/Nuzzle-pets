@@ -9,6 +9,7 @@
     <style>
       :root {
         --mini-pet-size: 160px;
+        --pet-scale: 1;
       }
       html,
       body,
@@ -126,7 +127,7 @@
         -webkit-backdrop-filter: none !important;
         padding: 16px 0 0;
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: flex-start;
         justify-content: flex-start;
         position: relative;
@@ -143,27 +144,30 @@
       }
       body.mode-sprite .mini-stage {
         width: 200px;
-        height: 156px;
+        min-height: 156px;
+        height: calc(156px * max(1, var(--pet-scale, 1)));
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
+        justify-content: flex-end;
         position: relative;
         margin: 0;
-        transition: margin 0.15s ease;
+        transition: margin 0.15s ease, height 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       body.mode-sprite.menu-left .mini-stage {
         margin-left: 165px;
       }
       body.mode-sprite .mini-art-wrapper {
         position: relative;
-        width: 156px;
-        height: 156px;
+        width: calc(156px * max(1, var(--pet-scale, 1)));
+        height: calc(156px * max(1, var(--pet-scale, 1)));
+        max-width: 100%;
         display: flex;
-        align-items: center;
+        align-items: flex-end;
         justify-content: center;
         cursor: grab;
+        transition: width 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), height 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       body.mode-sprite .mini-art-wrapper:active {
         cursor: grabbing;
@@ -180,13 +184,15 @@
         cursor: grab;
         image-rendering: -webkit-optimize-contrast;
         image-rendering: pixelated;
-        transition: transform 0.15s ease;
+        transform: scale(var(--pet-scale, 1));
+        transform-origin: center bottom;
+        transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
       body.mode-sprite .mini-art:hover {
-        transform: scale(1.03);
+        transform: scale(calc(var(--pet-scale, 1) * 1.04));
       }
       body.mode-sprite .mini-art:active {
-        transform: scale(0.96);
+        transform: scale(calc(var(--pet-scale, 1) * 0.96));
       }
       body.mode-sprite .mini-art.gif-pet {
         background-size: contain !important;
@@ -195,8 +201,8 @@
 
       /* Compact Floating Pill & Dropdown in Sprite Mode */
       body.mode-sprite .mini-hud {
-        position: absolute;
-        bottom: 6px;
+        position: relative;
+        bottom: auto;
         top: auto;
         left: 0;
         width: 200px;
@@ -206,6 +212,7 @@
         justify-content: center;
         z-index: 100;
         pointer-events: none;
+        margin-top: 4px;
         transition: left 0.15s ease;
       }
       body.mode-sprite.menu-left .mini-hud {
@@ -222,7 +229,7 @@
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 999px;
         padding: 2px 7px;
-        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
         opacity: 0.4;
         transform: translateY(0);
         transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
@@ -339,6 +346,41 @@
         background: rgba(234, 90, 71, 0.2);
         color: #ff7f6e;
       }
+      body.mode-sprite .mini-size-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4px;
+        padding: 2px 6px 5px;
+      }
+      body.mode-sprite .mini-size-chip {
+        flex: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 0;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: #d8d2c8;
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.12s ease;
+      }
+      body.mode-sprite .mini-size-chip:hover {
+        background: rgba(255, 255, 255, 0.16);
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.3);
+        transform: translateY(-1px);
+      }
+      body.mode-sprite .mini-size-chip.is-active {
+        background: var(--coral, #ef7861);
+        color: #ffffff;
+        border-color: var(--coral, #ef7861);
+        box-shadow: 0 2px 8px rgba(239, 120, 97, 0.45);
+      }
 
     </style>
   </head>
@@ -368,6 +410,16 @@
             <span class="menu-icon" id="switch-menu-icon"></span>
             <span>Next pet</span>
           </button>
+          <button class="mini-menu-item" id="mini-size-btn" role="menuitem" title="Cycle pet size (S / M / L / XL)">
+            <span class="menu-icon" id="size-menu-icon"></span>
+            <span id="size-menu-text">Pet size: M</span>
+          </button>
+          <div class="mini-size-row" id="mini-size-row" role="group" aria-label="Pet size options">
+            <button type="button" class="mini-size-chip" data-size="s" title="Small (75%)">S</button>
+            <button type="button" class="mini-size-chip is-active" data-size="m" title="Medium (100%)">M</button>
+            <button type="button" class="mini-size-chip" data-size="l" title="Large (130%)">L</button>
+            <button type="button" class="mini-size-chip" data-size="xl" title="Extra Large (160%)">XL</button>
+          </div>
           <button class="mini-menu-item" id="mini-agent-alerts-btn" role="menuitem" title="Toggle agent messages above pet">
             <span class="menu-icon" id="agent-alerts-menu-icon"></span>
             <span id="agent-alerts-menu-text">Agent alerts: Off</span>
@@ -399,6 +451,7 @@
         const miniMenuTrigger = document.getElementById('mini-menu-trigger');
         const miniWalkBtn = document.getElementById('mini-walk-btn');
         const miniSwitchBtn = document.getElementById('mini-switch-btn');
+        const miniSizeBtn = document.getElementById('mini-size-btn');
         const miniAgentAlertsBtn = document.getElementById('mini-agent-alerts-btn');
         const miniPipBtn = document.getElementById('mini-pip-btn');
         const miniHideBtn = document.getElementById('mini-hide-btn');
@@ -408,6 +461,7 @@
           walk: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><path d="m9 20 3-6 3 2 3 5"/><path d="m6 17 3-3 3 1"/><path d="M14 11V8l4 2"/></svg>',
           rest: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>',
           next: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>',
+          size: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="M9 21H3v-6"/><path d="m3 21 7-7"/></svg>',
           bellOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/><path d="M8.6 8.6a6 6 0 0 0-.6 3.4c0 7-3 9-3 9h14.4"/><path d="M18 13.8c0-3-1.6-5.4-4-6.4"/></svg>',
           bellOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
           studio: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
@@ -416,6 +470,64 @@
 
         // Ensure legacy card mode is cleaned up from storage
         localStorage.removeItem('nuzzle_companion_mode');
+
+        // Pet Size Scaling Engine (Small: 0.75x, Medium: 1.0x, Large: 1.3x, Extra Large: 1.6x)
+        const SIZE_SCALE_MAP = { s: 0.75, m: 1.0, l: 1.3, xl: 1.6 };
+        const SIZE_LABELS = { s: 'Small (75%)', m: 'Medium (100%)', l: 'Large (130%)', xl: 'Extra Large (160%)' };
+        const SIZE_ORDER = ['s', 'm', 'l', 'xl'];
+
+        let currentPetSize = localStorage.getItem('nuzzle_pet_size') || 'm';
+        try {
+          const savedSettings = JSON.parse(localStorage.getItem('nuzzle_settings_v1') || '{}');
+          if (savedSettings.petSize && SIZE_SCALE_MAP[savedSettings.petSize]) {
+            currentPetSize = savedSettings.petSize;
+          }
+        } catch {}
+
+        function applyCompanionSize(sizeKey, showFeedback = false) {
+          const validKey = SIZE_SCALE_MAP[sizeKey] ? sizeKey : 'm';
+          currentPetSize = validKey;
+          const scale = SIZE_SCALE_MAP[validKey];
+
+          document.documentElement.style.setProperty('--pet-scale', scale);
+          document.body.style.setProperty('--pet-scale', scale);
+
+          const sizeText = document.getElementById('size-menu-text');
+          if (sizeText) {
+            sizeText.textContent = `Pet size: ${validKey.toUpperCase()}`;
+          }
+
+          document.querySelectorAll('.mini-size-chip').forEach(chip => {
+            chip.classList.toggle('is-active', chip.dataset.size === validKey);
+          });
+
+          localStorage.setItem('nuzzle_pet_size', validKey);
+          try {
+            const currentSettings = JSON.parse(localStorage.getItem('nuzzle_settings_v1') || '{}');
+            currentSettings.petSize = validKey;
+            localStorage.setItem('nuzzle_settings_v1', JSON.stringify(currentSettings));
+          } catch {}
+
+          if ('BroadcastChannel' in window) {
+            try {
+              const channel = new BroadcastChannel('nuzzle-pet-size-sync');
+              channel.postMessage({ petSize: validKey, scale });
+            } catch {}
+          }
+
+          if (miniArt) {
+            miniArt.animate([
+              { transform: `scale(${scale * 1.14})` },
+              { transform: `scale(${scale})` }
+            ], { duration: 240, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+          }
+
+          updateCompanionWindowSize();
+
+          if (showFeedback) {
+            showToast(`Pet size: ${SIZE_LABELS[validKey] || validKey.toUpperCase()}`, { icon: '✨', force: true, duration: 2200 });
+          }
+        }
 
         // Agent Alerts Setting (Default OFF)
         let agentAlertsEnabled = localStorage.getItem('nuzzle_agent_alerts') === 'true';
@@ -437,6 +549,9 @@
 
         function updateCompanionWindowSize() {
           if (!IS_NATIVE_APP) return;
+          const currentScale = SIZE_SCALE_MAP[currentPetSize] || 1.0;
+          const scaledPetH = Math.round(156 * Math.max(1, currentScale));
+          const baseHeight = 16 + scaledPetH + 4 + 28 + 12; /* padding + pet + gap + HUD + buffer */
           const isMenuOpen = miniHud && miniHud.classList.contains('menu-open');
           if (isMenuOpen) {
             const screenWidth = (window.screen && (window.screen.availWidth || window.screen.width)) || 1920;
@@ -452,7 +567,7 @@
               document.body.classList.remove('menu-left');
               isShiftedForMenu = false;
             }
-            invokeNative('set_companion_size', { width: 365, height: 214 }).catch(() => {});
+            invokeNative('set_companion_size', { width: 365, height: baseHeight }).catch(() => {});
           } else {
             if (isShiftedForMenu) {
               const currentX = window.screenX !== undefined ? window.screenX : 0;
@@ -461,7 +576,7 @@
               isShiftedForMenu = false;
             }
             document.body.classList.remove('menu-left');
-            invokeNative('set_companion_size', { width: 200, height: 214 }).catch(() => {});
+            invokeNative('set_companion_size', { width: 200, height: baseHeight }).catch(() => {});
           }
         }
         updateCompanionWindowSize();
@@ -498,8 +613,9 @@
           }
         });
 
-        // Close menu after clicking any dropdown item
+        // Close menu after clicking dropdown items (except size buttons so user can see resize)
         document.querySelectorAll('.mini-dropdown-menu .mini-menu-item').forEach(item => {
+          if (item.id === 'mini-size-btn') return;
           item.addEventListener('click', () => {
             toggleMenu(false);
           });
@@ -508,6 +624,8 @@
         function initMenuIcons() {
           const switchIcon = document.getElementById('switch-menu-icon');
           if (switchIcon) switchIcon.innerHTML = ICONS.next;
+          const sizeIcon = document.getElementById('size-menu-icon');
+          if (sizeIcon) sizeIcon.innerHTML = ICONS.size;
           const pipIcon = document.getElementById('pip-menu-icon');
           if (pipIcon) pipIcon.innerHTML = ICONS.studio;
           const hideIcon = document.getElementById('hide-menu-icon');
@@ -517,6 +635,27 @@
           updateAgentAlertsUI();
         }
         initMenuIcons();
+        applyCompanionSize(currentPetSize, false);
+
+        // Pet size controls
+        if (miniSizeBtn) {
+          miniSizeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currIdx = SIZE_ORDER.indexOf(currentPetSize);
+            const nextIdx = (currIdx + 1) % SIZE_ORDER.length;
+            applyCompanionSize(SIZE_ORDER[nextIdx], true);
+          });
+        }
+
+        document.querySelectorAll('.mini-size-chip').forEach(chip => {
+          chip.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const sizeKey = chip.dataset.size;
+            if (sizeKey) {
+              applyCompanionSize(sizeKey, true);
+            }
+          });
+        });
 
         if (miniAgentAlertsBtn) {
           miniAgentAlertsBtn.addEventListener('click', (e) => {
@@ -829,6 +968,10 @@
             try { state.selectedPetId = JSON.parse(e.newValue) || 'hu-tao'; }
             catch { state.selectedPetId = 'hu-tao'; }
             updateMiniUI();
+          } else if (e.key === 'nuzzle_pet_size') {
+            if (e.newValue && e.newValue !== currentPetSize) {
+              applyCompanionSize(e.newValue, false);
+            }
           }
         });
 
@@ -838,6 +981,13 @@
             if (event.data?.petId) {
               state.selectedPetId = event.data.petId;
               updateMiniUI();
+            }
+          });
+
+          const sizeChannel = new BroadcastChannel('nuzzle-pet-size-sync');
+          sizeChannel.addEventListener('message', event => {
+            if (event.data?.petSize && event.data.petSize !== currentPetSize) {
+              applyCompanionSize(event.data.petSize, false);
             }
           });
         }
