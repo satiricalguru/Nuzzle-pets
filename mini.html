@@ -112,16 +112,6 @@
         }
       }
 
-      /* Card Mode toast override (bottom-anchored) */
-      body.mode-card .toast-region {
-        top: auto !important;
-        bottom: 12px !important;
-        max-width: 260px;
-      }
-      body.mode-card .toast::after {
-        display: none !important;
-      }
-
       /* =========================================================
          MODE: SPRITE (Codex-Style Borderless Transparent Overlay)
          ========================================================= */
@@ -134,7 +124,7 @@
         box-shadow: none !important;
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
-        padding: 34px 0 0;
+        padding: 16px 0 0;
         display: flex;
         flex-direction: row;
         align-items: flex-start;
@@ -153,12 +143,12 @@
       }
       body.mode-sprite .mini-stage {
         width: 200px;
-        height: 186px;
+        height: 156px;
         flex-shrink: 0;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         position: relative;
         margin: 0;
         transition: margin 0.15s ease;
@@ -206,7 +196,7 @@
       /* Compact Floating Pill & Dropdown in Sprite Mode */
       body.mode-sprite .mini-hud {
         position: absolute;
-        bottom: 4px;
+        bottom: 6px;
         top: auto;
         left: 0;
         width: 200px;
@@ -234,7 +224,7 @@
         padding: 2px 7px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.42);
         opacity: 0.4;
-        transform: translateY(2px);
+        transform: translateY(0);
         transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
       }
       body.mode-sprite .mini-container:hover .mini-pill-dock,
@@ -272,7 +262,7 @@
         display: none;
         position: absolute;
         left: 196px;
-        bottom: 0px;
+        bottom: 4px;
         top: auto;
         right: auto;
         transform: none;
@@ -350,190 +340,17 @@
         color: #ff7f6e;
       }
 
-      /* In card mode, hide sprite pill/dropdown */
-      body.mode-card .mini-hud {
-        display: none !important;
-      }
-
-      /* =========================================================
-         MODE: CARD (Original Widget Card UI)
-         ========================================================= */
-      body.mode-card .mini-container {
-        width: 100%;
-        max-width: 280px;
-        background: rgba(254, 252, 248, 0.94);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(224, 216, 204, 0.8);
-        border-radius: 20px;
-        padding: 16px 14px;
-        box-shadow: 0 16px 36px rgba(77, 47, 30, 0.14), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-        text-align: center;
-        position: relative;
-      }
-      body.mode-card .mini-topbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 8px;
-        font-size: 11px;
-        color: var(--muted, #7c7267);
-      }
-      body.mode-card .mini-brand {
-        font-family: var(--display, serif);
-        font-weight: 600;
-        font-size: 13px;
-        color: var(--ink, #1f1d1a);
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      }
-      body.mode-card .mini-brand span { color: var(--accent, #ea5a47); }
-      body.mode-card .mini-controls {
-        display: flex;
-        gap: 4px;
-      }
-      body.mode-card .mini-btn {
-        background: rgba(0,0,0,0.04);
-        border: 1px solid rgba(0,0,0,0.06);
-        border-radius: 6px;
-        padding: 2px 6px;
-        font-size: 11px;
-        cursor: pointer;
-        color: var(--ink, #1f1d1a);
-        transition: background 0.15s ease;
-      }
-      body.mode-card .mini-btn:hover { background: rgba(0,0,0,0.08); }
-      body.mode-card .mini-stage {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        margin: 6px 0;
-        position: relative;
-      }
-      body.mode-card .mini-art-wrapper {
-        position: relative;
-        width: 140px;
-        height: 155px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      body.mode-card .mini-art {
-        width: 130px;
-        height: 145px;
-        background-color: #f2ede5;
-        background-repeat: no-repeat;
-        background-size: 800% var(--atlas-height, 900%);
-        border-radius: 45% 45% 39% 39%;
-        box-shadow: 0 10px 20px rgba(77, 47, 30, 0.12);
-        cursor: pointer;
-        transition: transform 0.15s ease;
-      }
-      body.mode-card .mini-art:hover { transform: scale(1.04); }
-      body.mode-card .mini-art:active { transform: scale(0.96); }
-      body.mode-card .mini-art.gif-pet {
-        background-size: contain !important;
-        background-position: center center !important;
-      }
-      body.mode-card .mini-name {
-        font-family: var(--display, serif);
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--ink, #1f1d1a);
-        margin: 0;
-      }
-      body.mode-card .mini-badge {
-        font-size: 11px;
-        color: var(--accent, #ea5a47);
-        font-weight: 600;
-      }
-      body.mode-card .mini-quote {
-        font-size: 11px;
-        font-style: italic;
-        color: var(--muted, #7c7267);
-        margin: 2px 0 6px;
-        line-height: 1.3;
-        min-height: 28px;
-      }
-      body.mode-card .mini-card-actions {
-        display: flex;
-        gap: 6px;
-        justify-content: center;
-        align-items: center;
-      }
-      body.mode-card .mini-card-pat-btn {
-        background: var(--accent, #ea5a47);
-        color: #fff;
-        border: none;
-        border-radius: 12px;
-        padding: 6px 14px;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        box-shadow: 0 4px 10px rgba(234, 90, 71, 0.25);
-        transition: transform 0.15s ease, background 0.15s ease;
-      }
-      body.mode-card .mini-card-pat-btn:hover { background: #d94936; transform: translateY(-1px); }
-      body.mode-card .mini-card-pat-btn:active { transform: translateY(1px); }
-      body.mode-card .mini-card-pip-btn {
-        background: rgba(0,0,0,0.05);
-        color: var(--ink, #1f1d1a);
-        border: 1px solid rgba(0,0,0,0.08);
-        border-radius: 12px;
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.15s ease;
-      }
-      body.mode-card .mini-card-pip-btn:hover { background: rgba(0,0,0,0.09); }
-      body.mode-card .mini-status-bar {
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid rgba(0,0,0,0.06);
-        display: flex;
-        justify-content: space-between;
-        font-size: 10px;
-        color: var(--muted, #7c7267);
-      }
-      body.mode-card .mini-status-bar span { display: flex; align-items: center; gap: 4px; }
-      body.mode-card .mini-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #52a447;
-        box-shadow: 0 0 6px rgba(82, 164, 71, 0.6);
-      }
-      /* Hide card actions in sprite mode */
-      body.mode-sprite .mini-card-actions {
-        display: none !important;
-      }
     </style>
   </head>
   <body class="mini-body mode-sprite transparent-bg" id="mini-body">
     <div class="mini-container" id="mini-container" data-tauri-drag-region>
       <div class="pet-particles" id="mini-particles" aria-hidden="true"></div>
-      
-      <!-- Card Topbar (Visible in Card Mode) -->
-      <div class="mini-topbar" data-tauri-drag-region>
-        <div class="mini-brand" data-tauri-drag-region>Nuzzle<span>·</span> companion</div>
-        <div class="mini-controls">
-          <button class="mini-btn" id="mini-switch-btn-card" title="Cycle to next pet">next ↻</button>
-          <button class="mini-btn" id="mini-mode-toggle-card" title="Switch to Desktop Sprite Mode">👻 sprite</button>
-          <button class="mini-btn" id="mini-pip-top-btn" title="Hide the floating companion">hide ×</button>
-        </div>
-      </div>
 
       <!-- Stage / Character Sprite -->
       <div class="mini-stage" data-tauri-drag-region>
-        <div class="mini-badge" id="mini-badge">✦ active companion</div>
         <div class="mini-art-wrapper" id="mini-art-wrapper" data-tauri-drag-region>
           <div class="mini-art state-idle" id="mini-art" data-tauri-drag-region title="Left-click to pat, right-click for menu, drag to move!"></div>
         </div>
-        <h2 class="mini-name" id="mini-name">Hu Tao</h2>
-        <div class="mini-quote" id="mini-quote">“If there's work to do, I'll haunt it.”</div>
       </div>
 
       <!-- Compact Floating Micro-Dock & Dropdown (Desktop Sprite Mode) -->
@@ -556,10 +373,6 @@
             <span id="agent-alerts-menu-text">Agent alerts: Off</span>
           </button>
           <div class="menu-divider"></div>
-          <button class="mini-menu-item" id="mini-mode-toggle-btn" role="menuitem">
-            <span class="menu-icon" id="mode-menu-icon"></span>
-            <span id="mode-menu-text">Card mode</span>
-          </button>
           <button class="mini-menu-item" id="mini-pip-btn" role="menuitem">
             <span class="menu-icon" id="pip-menu-icon"></span>
             <span>Open studio</span>
@@ -570,18 +383,6 @@
             <span>Hide companion</span>
           </button>
         </div>
-      </div>
-
-      <!-- Card Mode Actions (Visible only in Card Mode) -->
-      <div class="mini-card-actions" id="mini-card-actions">
-        <button class="mini-card-pat-btn" id="mini-card-pat-btn">♡ pat companion</button>
-        <button class="mini-card-pip-btn" id="mini-card-pip-btn" title="Open Nuzzle Studio">⌂ open studio</button>
-      </div>
-
-      <!-- Card Status Bar (Visible in Card Mode) -->
-      <div class="mini-status-bar">
-        <span><i class="mini-dot"></i> <span id="mini-state-text">idle state</span></span>
-        <span id="mini-vibe-text">local & quiet</span>
       </div>
     </div>
 
@@ -594,24 +395,13 @@
       document.addEventListener('DOMContentLoaded', () => {
         const miniBody = document.getElementById('mini-body');
         const miniArt = document.getElementById('mini-art');
-        const miniName = document.getElementById('mini-name');
-        const miniQuote = document.getElementById('mini-quote');
-        const miniBadge = document.getElementById('mini-badge');
-        const miniStateText = document.getElementById('mini-state-text');
-        const miniVibeText = document.getElementById('mini-vibe-text');
         const miniHud = document.getElementById('mini-hud');
         const miniMenuTrigger = document.getElementById('mini-menu-trigger');
         const miniWalkBtn = document.getElementById('mini-walk-btn');
         const miniSwitchBtn = document.getElementById('mini-switch-btn');
-        const miniSwitchBtnCard = document.getElementById('mini-switch-btn-card');
         const miniAgentAlertsBtn = document.getElementById('mini-agent-alerts-btn');
-        const miniModeToggleBtn = document.getElementById('mini-mode-toggle-btn');
-        const miniModeToggleCard = document.getElementById('mini-mode-toggle-card');
         const miniPipBtn = document.getElementById('mini-pip-btn');
-        const miniPipTopBtn = document.getElementById('mini-pip-top-btn');
         const miniHideBtn = document.getElementById('mini-hide-btn');
-        const miniCardPatBtn = document.getElementById('mini-card-pat-btn');
-        const miniCardPipBtn = document.getElementById('mini-card-pip-btn');
 
         // Clean Vector SVG Icons
         const ICONS = {
@@ -620,11 +410,12 @@
           next: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>',
           bellOff: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/><path d="m2 2 20 20"/><path d="M8.6 8.6a6 6 0 0 0-.6 3.4c0 7-3 9-3 9h14.4"/><path d="M18 13.8c0-3-1.6-5.4-4-6.4"/></svg>',
           bellOn: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>',
-          cardMode: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
-          spriteMode: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg>',
           studio: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
           hide: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
         };
+
+        // Ensure legacy card mode is cleaned up from storage
+        localStorage.removeItem('nuzzle_companion_mode');
 
         // Agent Alerts Setting (Default OFF)
         let agentAlertsEnabled = localStorage.getItem('nuzzle_agent_alerts') === 'true';
@@ -641,44 +432,39 @@
           }
         }
 
-        // Mode Management: 'sprite' (Codex-style) or 'card'
-        let currentMode = localStorage.getItem('nuzzle_companion_mode') || 'sprite';
         let isWalking = false;
         let isShiftedForMenu = false;
 
         function updateCompanionWindowSize() {
           if (!IS_NATIVE_APP) return;
-          if (currentMode === 'card') {
-            invokeNative('set_companion_size', { width: 280, height: 380 }).catch(() => {});
+          const isMenuOpen = miniHud && miniHud.classList.contains('menu-open');
+          if (isMenuOpen) {
+            const screenWidth = (window.screen && (window.screen.availWidth || window.screen.width)) || 1920;
+            const currentX = window.screenX !== undefined ? window.screenX : 0;
+            const currentY = window.screenY !== undefined ? window.screenY : 0;
+            const willOverflowRight = (currentX + 375) > screenWidth;
+
+            if (willOverflowRight) {
+              document.body.classList.add('menu-left');
+              isShiftedForMenu = true;
+              invokeNative('set_companion_position', { x: Math.max(0, currentX - 165), y: currentY }).catch(() => {});
+            } else {
+              document.body.classList.remove('menu-left');
+              isShiftedForMenu = false;
+            }
+            invokeNative('set_companion_size', { width: 365, height: 214 }).catch(() => {});
           } else {
-            const isMenuOpen = miniHud && miniHud.classList.contains('menu-open');
-            if (isMenuOpen) {
-              const screenWidth = (window.screen && (window.screen.availWidth || window.screen.width)) || 1920;
+            if (isShiftedForMenu) {
               const currentX = window.screenX !== undefined ? window.screenX : 0;
               const currentY = window.screenY !== undefined ? window.screenY : 0;
-              const willOverflowRight = (currentX + 375) > screenWidth;
-
-              if (willOverflowRight) {
-                document.body.classList.add('menu-left');
-                isShiftedForMenu = true;
-                invokeNative('set_companion_position', { x: Math.max(0, currentX - 165), y: currentY }).catch(() => {});
-              } else {
-                document.body.classList.remove('menu-left');
-                isShiftedForMenu = false;
-              }
-              invokeNative('set_companion_size', { width: 365, height: 220 }).catch(() => {});
-            } else {
-              if (isShiftedForMenu) {
-                const currentX = window.screenX !== undefined ? window.screenX : 0;
-                const currentY = window.screenY !== undefined ? window.screenY : 0;
-                invokeNative('set_companion_position', { x: currentX + 165, y: currentY }).catch(() => {});
-                isShiftedForMenu = false;
-              }
-              document.body.classList.remove('menu-left');
-              invokeNative('set_companion_size', { width: 200, height: 220 }).catch(() => {});
+              invokeNative('set_companion_position', { x: currentX + 165, y: currentY }).catch(() => {});
+              isShiftedForMenu = false;
             }
+            document.body.classList.remove('menu-left');
+            invokeNative('set_companion_size', { width: 200, height: 214 }).catch(() => {});
           }
         }
+        updateCompanionWindowSize();
 
         // Dropdown toggle management
         function toggleMenu(force) {
@@ -719,29 +505,6 @@
           });
         });
 
-        function setCompanionMode(mode) {
-          currentMode = mode;
-          localStorage.setItem('nuzzle_companion_mode', mode);
-          const modeIcon = document.getElementById('mode-menu-icon');
-          const modeText = document.getElementById('mode-menu-text');
-
-          if (mode === 'card') {
-            miniBody.classList.remove('mode-sprite');
-            miniBody.classList.add('mode-card');
-            if (modeIcon) modeIcon.innerHTML = ICONS.spriteMode;
-            if (modeText) modeText.textContent = 'Sprite mode';
-            if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Desktop Sprite Mode';
-          } else {
-            miniBody.classList.remove('mode-card');
-            miniBody.classList.add('mode-sprite');
-            if (modeIcon) modeIcon.innerHTML = ICONS.cardMode;
-            if (modeText) modeText.textContent = 'Card mode';
-            if (miniModeToggleBtn) miniModeToggleBtn.title = 'Switch to Widget Card Mode';
-          }
-          updateCompanionWindowSize();
-        }
-        setCompanionMode(currentMode);
-
         function initMenuIcons() {
           const switchIcon = document.getElementById('switch-menu-icon');
           if (switchIcon) switchIcon.innerHTML = ICONS.next;
@@ -751,8 +514,6 @@
           if (hideIcon) hideIcon.innerHTML = ICONS.hide;
           const walkIcon = document.getElementById('walk-menu-icon');
           if (walkIcon) walkIcon.innerHTML = isWalking ? ICONS.rest : ICONS.walk;
-          const modeIcon = document.getElementById('mode-menu-icon');
-          if (modeIcon) modeIcon.innerHTML = currentMode === 'card' ? ICONS.spriteMode : ICONS.cardMode;
           updateAgentAlertsUI();
         }
         initMenuIcons();
@@ -768,21 +529,6 @@
               channel.postMessage({ agentAlerts: agentAlertsEnabled });
             }
             showToast(agentAlertsEnabled ? 'Agent alerts enabled' : 'Agent alerts turned off', { force: true, duration: 2500 });
-          });
-        }
-
-        if (miniModeToggleBtn) {
-          miniModeToggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            setCompanionMode(currentMode === 'sprite' ? 'card' : 'sprite');
-            showToast(`Switched to ${currentMode === 'sprite' ? 'Desktop Sprite' : 'Widget Card'} mode!`, { force: true });
-          });
-        }
-        if (miniModeToggleCard) {
-          miniModeToggleCard.addEventListener('click', (e) => {
-            e.stopPropagation();
-            setCompanionMode('sprite');
-            showToast('Switched to Desktop Sprite mode!', { force: true });
           });
         }
 
@@ -990,11 +736,6 @@
             const activeState = state.activePetState || (isWalking ? 'walk' : 'idle');
             miniArt.className = `mini-art state-${activeState}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
           }
-          if (miniName) miniName.textContent = pet.name;
-          if (miniQuote) miniQuote.textContent = pet.quote;
-          if (miniBadge) miniBadge.textContent = `✦ ${pet.note || pet.badge}`;
-          if (miniVibeText) miniVibeText.textContent = `${pet.vibe} · ${pet.element}`;
-          if (miniStateText) miniStateText.textContent = `${state.activePetState || 'idle'} state`;
         }
 
         window.updateMiniUI = updateMiniUI;
@@ -1036,19 +777,6 @@
           });
         }
 
-        if (miniPatBtn) {
-          miniPatBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            handlePat();
-          });
-        }
-        if (miniCardPatBtn) {
-          miniCardPatBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            handlePat();
-          });
-        }
-
         // Cycle to next companion
         function cycleNextPet() {
           const idx = PETS.findIndex(p => p.id === state.selectedPetId);
@@ -1061,12 +789,6 @@
 
         if (miniSwitchBtn) {
           miniSwitchBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            cycleNextPet();
-          });
-        }
-        if (miniSwitchBtnCard) {
-          miniSwitchBtnCard.addEventListener('click', (e) => {
             e.stopPropagation();
             cycleNextPet();
           });
@@ -1094,18 +816,6 @@
             openStudio();
           });
         }
-        if (miniCardPipBtn) {
-          miniCardPipBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            openStudio();
-          });
-        }
-        if (miniPipTopBtn) {
-          miniPipTopBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            hideCompanion();
-          });
-        }
         if (miniHideBtn) {
           miniHideBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1120,9 +830,6 @@
             catch { state.selectedPetId = 'hu-tao'; }
             updateMiniUI();
           }
-          if (e.key === 'nuzzle_companion_mode' && e.newValue) {
-            setCompanionMode(e.newValue);
-          }
         });
 
         if ('BroadcastChannel' in window) {
@@ -1131,9 +838,6 @@
             if (event.data?.petId) {
               state.selectedPetId = event.data.petId;
               updateMiniUI();
-            }
-            if (event.data?.companionMode) {
-              setCompanionMode(event.data.companionMode);
             }
           });
         }

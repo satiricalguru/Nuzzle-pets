@@ -14,6 +14,20 @@ async function invokeNative(command, args = {}) {
   return TAURI.core.invoke(command, args);
 }
 
+function capitalize(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function capitalizeSegments(str, delimiter = '·') {
+  if (!str || typeof str !== 'string') return '';
+  return str.split(delimiter).map(s => {
+    const trimmed = s.trim();
+    if (!trimmed) return '';
+    return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+  }).join(' · ');
+}
+
 // 1. DATA MODELS & CATALOG
 const PETS = [
   // ── Anime Companions (Clean transparent WebP sprite atlases) ──────
@@ -528,23 +542,34 @@ const PETS = [
   }
 ];
 
+const AGENT_LOGOS = {
+  codex: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="OpenAI Codex"><path d="M22.282 9.821a6 6 0 0 0-.516-4.91a6.05 6.05 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a6 6 0 0 0-3.998 2.9a6.05 6.05 0 0 0 .743 7.097a5.98 5.98 0 0 0 .51 4.911a6.05 6.05 0 0 0 6.515 2.9A6 6 0 0 0 13.26 24a6.06 6.06 0 0 0 5.772-4.206a6 6 0 0 0 3.997-2.9a6.06 6.06 0 0 0-.747-7.073M13.26 22.43a4.48 4.48 0 0 1-2.876-1.04l.141-.081l4.779-2.758a.8.8 0 0 0 .392-.681v-6.737l2.02 1.168a.07.07 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494M3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085l4.783 2.759a.77.77 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646M2.34 7.896a4.5 4.5 0 0 1 2.366-1.973V11.6a.77.77 0 0 0 .388.677l5.815 3.354l-2.02 1.168a.08.08 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.872zm16.597 3.855l-5.833-3.387L15.119 7.2a.08.08 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667m2.01-3.023l-.141-.085l-4.774-2.782a.78.78 0 0 0-.785 0L9.409 9.23V6.897a.07.07 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.8.8 0 0 0-.393.681zm1.097-2.365l2.602-1.5l2.607 1.5v2.999l-2.597 1.5l-2.607-1.5Z"/></svg>`,
+  claude: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="Claude Code"><path d="m4.714 15.956l4.718-2.648l.079-.23l-.08-.128h-.23l-.79-.048l-2.695-.073l-2.337-.097l-2.265-.122l-.57-.121l-.535-.704l.055-.353l.48-.321l.685.06l1.518.104l2.277.157l1.651.098l2.447.255h.389l.054-.158l-.133-.097l-.103-.098l-2.356-1.596l-2.55-1.688l-1.336-.972l-.722-.491L2 6.223l-.158-1.008l.656-.722l.88.06l.224.061l.893.686l1.906 1.476l2.49 1.833l.364.304l.146-.104l.018-.072l-.164-.274l-1.354-2.446l-1.445-2.49l-.644-1.032l-.17-.619a3 3 0 0 1-.103-.729L6.287.133L6.7 0l.995.134l.42.364l.619 1.415L9.735 4.14l1.555 3.03l.455.898l.243.832l.09.255h.159V9.01l.127-1.706l.237-2.095l.23-2.695l.08-.76l.376-.91l.747-.492l.583.28l.48.685l-.067.444l-.286 1.851l-.558 2.903l-.365 1.942h.213l.243-.242l.983-1.306l1.652-2.064l.728-.82l.85-.904l.547-.431h1.032l.759 1.129l-.34 1.166l-1.063 1.347l-.88 1.142l-1.263 1.7l-.79 1.36l.074.11l.188-.02l2.853-.606l1.542-.28l1.84-.315l.832.388l.09.395l-.327.807l-1.967.486l-2.307.462l-3.436.813l-.043.03l.049.061l1.548.146l.662.036h1.62l3.018.225l.79.522l.473.638l-.08.485l-1.213.62l-1.64-.389l-3.825-.91l-1.31-.329h-.183v.11l1.093 1.068l2.003 1.81l2.508 2.33l.127.578l-.321.455l-.34-.049l-2.204-1.657l-.85-.747l-1.925-1.62h-.127v.17l.443.649l2.343 3.521l.122 1.08l-.17.353l-.607.213l-.668-.122l-1.372-1.924l-1.415-2.168l-1.141-1.943l-.14.08l-.674 7.254l-.316.37l-.728.28l-.607-.461l-.322-.747l.322-1.476l.388-1.924l.316-1.53l.285-1.9l.17-.632l-.012-.042l-.14.018l-1.432 1.967l-2.18 2.945l-1.724 1.845l-.413.164l-.716-.37l.066-.662l.401-.589l2.386-3.036l1.439-1.882l.929-1.086l-.006-.158h-.055L4.138 18.56l-1.13.146l-.485-.456l.06-.746l.231-.243l1.907-1.312Z"/></svg>`,
+  cursor: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="Cursor"><path d="M11.503.131L1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"/></svg>`,
+  antigravity: `<svg viewBox="0 0 256 262" width="22" height="22" aria-label="Google Antigravity"><path fill="#4285f4" d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622l38.755 30.023l2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"/><path fill="#34a853" d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055c-34.523 0-63.824-22.773-74.269-54.25l-1.531.13l-40.298 31.187l-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"/><path fill="#fbbc05" d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82c0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602z"/><path fill="#eb4335" d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0C79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"/></svg>`,
+  opencode: `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="OpenCode"><rect x="2" y="3" width="20" height="18" rx="4"/><polyline points="7 10 10 13 7 16"/><line x1="13" y1="16" x2="17" y2="16"/></svg>`,
+  gemini: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="Gemini CLI"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68q.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58a12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68q-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96q2.19.93 3.81 2.55t2.55 3.81"/></svg>`,
+  copilot: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="GitHub Copilot CLI"><path d="M23.922 16.997C23.061 18.492 18.063 22.02 12 22.02S.939 18.492.078 16.997A.6.6 0 0 1 0 16.741v-2.869a1 1 0 0 1 .053-.22c.372-.935 1.347-2.292 2.605-2.656c.167-.429.414-1.055.644-1.517a10 10 0 0 1-.052-1.086c0-1.331.282-2.499 1.132-3.368c.397-.406.89-.717 1.474-.952C7.255 2.937 9.248 1.98 11.978 1.98s4.767.957 6.166 2.093c.584.235 1.077.546 1.474.952c.85.869 1.132 2.037 1.132 3.368c0 .368-.014.733-.052 1.086c.23.462.477 1.088.644 1.517c1.258.364 2.233 1.721 2.605 2.656a.8.8 0 0 1 .053.22v2.869a.6.6 0 0 1-.078.256m-11.75-5.992h-.344a4 4 0 0 1-.355.508c-.77.947-1.918 1.492-3.508 1.492c-1.725 0-2.989-.359-3.782-1.259a2 2 0 0 1-.085-.104L4 11.746v6.585c1.435.779 4.514 2.179 8 2.179s6.565-1.4 8-2.179v-6.585l-.098-.104s-.033.045-.085.104c-.793.9-2.057 1.259-3.782 1.259c-1.59 0-2.738-.545-3.508-1.492a4 4 0 0 1-.355-.508m2.328 3.25c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1s-1-.451-1-1v-2c0-.549.451-1 1-1m-5 0c.549 0 1 .451 1 1v2c0 .549-.451 1-1 1s-1-.451-1-1v-2c0-.549.451-1 1-1m3.313-6.185c.136 1.057.403 1.913.878 2.497c.442.544 1.134.938 2.344.938c1.573 0 2.292-.337 2.657-.751c.384-.435.558-1.15.558-2.361c0-1.14-.243-1.847-.705-2.319c-.477-.488-1.319-.862-2.824-1.025c-1.487-.161-2.192.138-2.533.529c-.269.307-.437.808-.438 1.578v.021q0 .397.063.893m-1.626 0q.063-.496.063-.894v-.02c-.001-.77-.169-1.271-.438-1.578c-.341-.391-1.046-.69-2.533-.529c-1.505.163-2.347.537-2.824 1.025c-.462.472-.705 1.179-.705 2.319c0 1.211.175 1.926.558 2.361c.365.414 1.084.751 2.657.751c1.21 0 1.902-.394 2.344-.938c.475-.584.742-1.44.878-2.497"/></svg>`,
+  pi: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="Inflection Pi"><path d="M4 5.5h16v2.2h-2.2v8.5a3.8 3.8 0 0 1-3.8 3.8c-1.8 0-3.2-.8-3.8-2.2h2.2c.4.6 1 .8 1.6.8a1.6 1.6 0 0 0 1.6-1.6V7.7H9.2v11.8H6.8V7.7H4V5.5Z"/></svg>`
+};
+
 const INITIAL_AGENTS = [
-  { id: 'codex', name: 'Codex', key: 'codex', mark: 'C', desc: 'Prompt, tool, approval, completion, and error hooks.', active: false, available: true },
-  { id: 'claude-code', name: 'Claude Code', key: 'claude', mark: '✦', desc: 'Lifecycle hooks through Claude Code settings.', active: false, available: true },
-  { id: 'cursor', name: 'Cursor', key: 'cursor', mark: '⌁', desc: 'Cursor Agent prompt and tool lifecycle hooks.', active: false, available: true },
-  { id: 'antigravity', name: 'Antigravity', key: 'antigravity', mark: '↗', desc: 'Antigravity invocation and tool lifecycle hooks.', active: false, available: true },
-  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: '◎', desc: 'A local OpenCode plugin forwards lifecycle events.', active: false, available: true },
-  { id: 'gemini', name: 'Gemini CLI', key: 'gemini', mark: '◇', desc: 'Gemini prompt, tool, permission, completion, and error hooks.', active: false, available: true },
-  { id: 'copilot', name: 'GitHub Copilot CLI', key: 'copilot', mark: '◉', desc: 'Copilot CLI lifecycle hooks from the user hooks directory.', active: false, available: true },
-  { id: 'pi', name: 'Pi', key: 'pi', mark: 'π', desc: 'A global Pi extension forwards agent, tool, prompt, and completion events.', active: false, available: true }
+  { id: 'codex', name: 'Codex', key: 'codex', mark: AGENT_LOGOS.codex, desc: 'Prompt, tool, approval, completion, and error hooks.', active: false, available: true },
+  { id: 'claude-code', name: 'Claude Code', key: 'claude', mark: AGENT_LOGOS.claude, desc: 'Lifecycle hooks through Claude Code settings.', active: false, available: true },
+  { id: 'cursor', name: 'Cursor', key: 'cursor', mark: AGENT_LOGOS.cursor, desc: 'Cursor Agent prompt and tool lifecycle hooks.', active: false, available: true },
+  { id: 'antigravity', name: 'Antigravity', key: 'antigravity', mark: AGENT_LOGOS.antigravity, desc: 'Antigravity invocation and tool lifecycle hooks.', active: false, available: true },
+  { id: 'opencode', name: 'OpenCode', key: 'opencode', mark: AGENT_LOGOS.opencode, desc: 'A local OpenCode plugin forwards lifecycle events.', active: false, available: true },
+  { id: 'gemini', name: 'Gemini CLI', key: 'gemini', mark: AGENT_LOGOS.gemini, desc: 'Gemini prompt, tool, permission, completion, and error hooks.', active: false, available: true },
+  { id: 'copilot', name: 'GitHub Copilot CLI', key: 'copilot', mark: AGENT_LOGOS.copilot, desc: 'Copilot CLI lifecycle hooks from the user hooks directory.', active: false, available: true },
+  { id: 'pi', name: 'Pi', key: 'pi', mark: AGENT_LOGOS.pi, desc: 'A global Pi extension forwards agent, tool, prompt, and completion events.', active: false, available: true }
 ];
 
 const SAMPLE_EVENTS = [
-  { icon: '✦', type: 'working', title: 'Codex is refactoring styles.css', sub: 'tool call · write_file', time: 'now' },
+  { icon: '✦', type: 'working', title: 'Codex is refactoring styles.css', sub: 'Tool call · write_file', time: 'Now' },
   { icon: '✓', type: 'done', title: 'Claude Code finished a review', sub: '12 files · 4m ago', time: '04m' },
-  { icon: '◌', type: 'wait', title: 'Cursor is thinking', sub: 'waiting for response', time: '07m' },
-  { icon: '✓', type: 'done', title: 'OpenCode completed a summary', sub: 'task complete · 11m ago', time: '11m' },
-  { icon: '↗', type: 'working', title: 'Antigravity planned agent roadmap', sub: 'workflow · execute_plan', time: '14m' }
+  { icon: '◌', type: 'wait', title: 'Cursor is thinking', sub: 'Waiting for response', time: '07m' },
+  { icon: '✓', type: 'done', title: 'OpenCode completed a summary', sub: 'Task complete · 11m ago', time: '11m' },
+  { icon: '↗', type: 'working', title: 'Antigravity planned agent roadmap', sub: 'Workflow · execute_plan', time: '14m' }
 ];
 
 // 2. STATE STORE & LOCALSTORAGE PERSISTENCE
@@ -583,8 +608,7 @@ const state = {
     launchGreeting: true,
     keepOnTop: true,
     petSounds: true,
-    completionSounds: false,
-    companionMode: loadStored('nuzzle_companion_mode', 'sprite')
+    completionSounds: false
   }),
   agents: INITIAL_AGENTS.map(agent => ({ ...agent })),
   activity: [...SAMPLE_EVENTS],
@@ -1106,10 +1130,11 @@ function renderFeaturedPet() {
   if (heroName) heroName.textContent = pet.name;
   if (heroQuote) heroQuote.textContent = pet.quote;
   if (heroBadge) {
-    heroBadge.innerHTML = `<span class="mini-spark">✦</span> ${state.favorites.has(pet.id) ? 'currently your favorite' : pet.badge}`;
+    const badgeText = state.favorites.has(pet.id) ? 'Currently your favorite' : capitalize(pet.badge);
+    heroBadge.innerHTML = `<span class="mini-spark">✦</span> ${badgeText}`;
   }
-  if (heroVibe) heroVibe.textContent = `${pet.vibe} · ${pet.element}`;
-  if (heroAtlas) heroAtlas.textContent = pet.spriteVersion === 2 ? 'v2 · 8×11 atlas' : 'v1 · 8×9 atlas';
+  if (heroVibe) heroVibe.textContent = `${capitalize(pet.vibe)} · ${capitalize(pet.element)}`;
+  if (heroAtlas) heroAtlas.textContent = pet.spriteVersion === 2 ? 'V2 · 8×11 atlas' : 'V1 · 8×9 atlas';
 }
 
 function renderPetStrip() {
@@ -1126,7 +1151,7 @@ function renderPetStrip() {
         <div class="pet-tile-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${artStyle(pet)}"></div>
         <div class="pet-tile-copy">
           <strong>${pet.name}</strong>
-          <small>${pet.note}</small>
+          <small>${capitalizeSegments(pet.note)}</small>
         </div>
         <button class="pet-tile-fav ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-label="Favorite ${pet.name}" title="Favorite ${pet.name}">♥</button>
       </div>
@@ -1164,7 +1189,7 @@ function renderLibrary(filter = 'all', search = '') {
         <div class="library-info">
           <div>
             <strong>${pet.name}</strong>
-            <small>${pet.note}</small>
+            <small>${capitalizeSegments(pet.note)}</small>
           </div>
           <button class="library-heart ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-label="Favorite ${pet.name}" title="Favorite ${pet.name}">♥</button>
         </div>
@@ -1185,7 +1210,7 @@ function renderAgents() {
   grid.innerHTML = state.agents.map(agent => `
     <article class="agent-card">
       <div class="agent-card-top">
-        <div class="agent-logo ${agent.key}">${agent.mark}</div>
+        <div class="agent-logo ${agent.key}">${AGENT_LOGOS[agent.key] || agent.mark}</div>
         <button class="toggle ${agent.active ? 'on' : ''}" data-agent-toggle="${agent.id}" aria-label="${agent.active ? 'Disconnect' : 'Connect'} ${agent.name}" ${!agent.available && !agent.active ? 'disabled' : ''}>
           <span></span>
         </button>
@@ -1193,8 +1218,8 @@ function renderAgents() {
       <h3>${agent.name}</h3>
       <p>${agent.desc}</p>
       <div class="agent-card-foot">
-        <span><i class="${agent.healthy ? 'green-dot' : 'status-dot-muted'}"></i> ${agent.active ? 'connected' : agent.available ? 'detected' : 'not detected'}</span>
-        <button data-action="configure-agent" data-agent-id="${agent.id}" ${!agent.available && !agent.active ? 'disabled' : ''}>${agent.active ? 'disconnect' : 'connect'} ↗</button>
+        <span><i class="${agent.healthy ? 'green-dot' : 'status-dot-muted'}"></i> ${agent.active ? 'Connected' : agent.available ? 'Detected' : 'Not detected'}</span>
+        <button data-action="configure-agent" data-agent-id="${agent.id}" ${!agent.available && !agent.active ? 'disabled' : ''}>${agent.active ? 'Disconnect' : 'Connect'} ↗</button>
       </div>
       <small class="agent-health-message">${agent.message || 'Checking native integration…'}</small>
     </article>
@@ -1229,7 +1254,7 @@ function renderActivity() {
         <strong>${escapeHtml(item.title)}</strong>
         <small>${escapeHtml(item.sub)}</small>
       </div>
-      <span class="activity-time">${escapeHtml(item.time)}</span>
+      <span class="activity-time">${escapeHtml(capitalize(item.time))}</span>
     </div>
   `).join('');
 }
@@ -1241,7 +1266,6 @@ const PALETTE_ACTIONS = [
   { id: 'view-agents', category: 'Navigation', title: 'Manage Agents & Integrations', icon: '⌘', shortcut: '3', action: () => setView('agents') },
   { id: 'view-settings', category: 'Navigation', title: 'Open Settings & Preferences', icon: '◌', shortcut: '4', action: () => setView('settings') },
   { id: 'act-float', category: 'Desktop', title: 'Float Companion on Desktop (Always on Top)', icon: '❐', shortcut: 'F', action: () => floatPetOnDesktop() },
-  { id: 'act-toggle-mode', category: 'Desktop', title: 'Toggle Desktop Sprite / Card Mode (Codex Style)', icon: '👻', shortcut: 'M', action: () => toggleCompanionMode() },
   { id: 'act-codex-setup', category: 'Codex Integration', title: 'Auto-Set 42 Companions in Codex (~/.codex/pets)', icon: '⌘', shortcut: 'C', action: () => autoSetCodex() },
   { id: 'act-pat', category: 'Pet Actions', title: 'Pet Active Companion', icon: '♡', action: () => patActivePet() },
   { id: 'act-sim', category: 'Agent Actions', title: 'Simulate Agent Tool Call', icon: '⚡︎', action: () => simulateAgentEvent() },
@@ -1309,7 +1333,7 @@ function showToast(message, options = {}) {
   const icon = document.createElement('span');
   icon.textContent = options?.icon || (options?.type === 'done' ? '✓' : options?.type === 'error' ? '!' : '✦');
   const text = document.createElement('span');
-  text.textContent = String(message ?? '');
+  text.textContent = capitalize(String(message ?? ''));
   toast.appendChild(icon);
   toast.appendChild(text);
   region.appendChild(toast);
@@ -1330,7 +1354,7 @@ function setView(view) {
   $$('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
   $$('.view-panel').forEach(panel => panel.classList.toggle('active', panel.id === `${view}-view`));
   const pageTitle = $('#page-title');
-  if (pageTitle) pageTitle.textContent = view;
+  if (pageTitle) pageTitle.textContent = capitalize(view);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1352,13 +1376,8 @@ function applySettings() {
   }
 
   // Size buttons UI
-  $$('.size-option:not(.mode-option)').forEach(btn => {
+  $$('.size-option').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.size === state.settings.petSize);
-  });
-
-  // Companion Mode UI
-  $$('.mode-option').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.mode === (state.settings.companionMode || 'sprite'));
   });
 
   // Toggles UI
@@ -1368,19 +1387,6 @@ function applySettings() {
       toggle.classList.toggle('on', Boolean(state.settings[key]));
     }
   });
-}
-
-function toggleCompanionMode() {
-  const nextMode = (state.settings.companionMode || 'sprite') === 'sprite' ? 'card' : 'sprite';
-  state.settings.companionMode = nextMode;
-  saveStored(STORAGE_KEYS.SETTINGS, state.settings);
-  localStorage.setItem('nuzzle_companion_mode', nextMode);
-  if ('BroadcastChannel' in window) {
-    const channel = new BroadcastChannel('nuzzle-pet-selection');
-    channel.postMessage({ companionMode: nextMode });
-  }
-  applySettings();
-  showToast(`Switched companion mode to ${nextMode === 'sprite' ? 'Desktop Sprite' : 'Widget Card'}!`);
 }
 
 function setSettingsTab(tabName) {
@@ -1397,10 +1403,10 @@ function setSettingsTab(tabName) {
 
 // 12. LIVE ACTIVITY SIMULATOR
 const SIM_ACTIVITIES = [
-  { icon: '✦', type: 'working', title: 'Codex generated component unit tests', sub: 'tool call · run_command', time: 'just now' },
-  { icon: '✓', type: 'done', title: 'Claude Code resolved merge conflicts', sub: 'git integration · success', time: 'just now' },
-  { icon: '⌁', type: 'working', title: 'Cursor applied inline AI edit', sub: 'fast diff · 3 chunks', time: 'just now' },
-  { icon: '◎', type: 'done', title: 'OpenCode summarized documentation', sub: 'task complete · index.md', time: 'just now' }
+  { icon: '✦', type: 'working', title: 'Codex generated component unit tests', sub: 'Tool call · run_command', time: 'Just now' },
+  { icon: '✓', type: 'done', title: 'Claude Code resolved merge conflicts', sub: 'Git integration · success', time: 'Just now' },
+  { icon: '⌁', type: 'working', title: 'Cursor applied inline AI edit', sub: 'Fast diff · 3 chunks', time: 'Just now' },
+  { icon: '◎', type: 'done', title: 'OpenCode summarized documentation', sub: 'Task complete · index.md', time: 'Just now' }
 ];
 
 const AGENT_EVENT_STATES = {
@@ -1440,9 +1446,9 @@ function normalizeAgentEvent(payload = {}) {
   return {
     icon: String(payload.icon || config.icon).slice(0, 4),
     type: config.activityType,
-    title,
+    title: capitalize(title),
     sub,
-    time: String(payload.time || 'just now').slice(0, 40),
+    time: capitalize(String(payload.time || 'Just now').slice(0, 40)),
     petState: config.petState,
     durationMs: Number.isFinite(payload.durationMs) ? Math.max(500, Math.min(payload.durationMs, 10000)) : 2400,
     important: isImportant
@@ -1525,7 +1531,7 @@ async function refreshNativeIntegrations() {
     renderAgents();
     const runtime = await invokeNative('get_runtime_status');
     const status = $('#system-status-btn');
-    if (status) status.lastChild.textContent = ` native runtime · ${runtime.acceptedEvents} events`;
+    if (status) status.lastChild.textContent = ` Native runtime · ${runtime.acceptedEvents} events`;
     const mode = $('.eyebrow-mono');
     if (mode) mode.textContent = 'NATIVE HOOKS READY';
   } catch (error) {
@@ -1564,7 +1570,7 @@ async function pollNativeState() {
       applyNativePetSelection(desktopState.selectedPetId);
     }
     const status = $('#system-status-btn');
-    if (status) status.lastChild.textContent = ` native runtime · ${nativeEventSequence} events`;
+    if (status) status.lastChild.textContent = ` Native runtime · ${nativeEventSequence} events`;
   } catch (error) {
     console.warn('Native state poll failed:', error);
   } finally {
@@ -1747,24 +1753,8 @@ document.addEventListener('click', event => {
   }
 
   // Mode option picker (Sprite vs Card)
-  const modeOpt = event.target.closest('.mode-option');
-  if (modeOpt) {
-    const newMode = modeOpt.dataset.mode;
-    state.settings.companionMode = newMode;
-    saveStored(STORAGE_KEYS.SETTINGS, state.settings);
-    localStorage.setItem('nuzzle_companion_mode', newMode);
-    if ('BroadcastChannel' in window) {
-      const channel = new BroadcastChannel('nuzzle-pet-selection');
-      channel.postMessage({ companionMode: newMode });
-    }
-    applySettings();
-    playChime('pop');
-    showToast(`Companion floating style: ${newMode === 'sprite' ? 'Desktop Sprite (Codex)' : 'Widget Card'}`);
-    return;
-  }
-
   // Size option picker
-  const sizeOpt = event.target.closest('.size-option:not(.mode-option)');
+  const sizeOpt = event.target.closest('.size-option');
   if (sizeOpt) {
     state.settings.petSize = sizeOpt.dataset.size;
     saveStored(STORAGE_KEYS.SETTINGS, state.settings);
