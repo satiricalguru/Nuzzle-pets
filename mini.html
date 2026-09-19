@@ -116,6 +116,9 @@
       /* =========================================================
          MODE: SPRITE (Codex-Style Borderless Transparent Overlay)
          ========================================================= */
+      body.mode-sprite {
+        display: block !important;
+      }
       body.mode-sprite .mini-container {
         width: 100%;
         height: 100%;
@@ -223,13 +226,11 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(22, 20, 18, 0.84);
-        backdrop-filter: blur(14px);
-        -webkit-backdrop-filter: blur(14px);
+        background: rgba(22, 20, 18, 0.92);
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 999px;
         padding: 2px 7px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
         opacity: 0.4;
         transform: translateY(0);
         transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
@@ -239,7 +240,7 @@
       body.mode-sprite .mini-hud.menu-open .mini-pill-dock {
         opacity: 1;
         transform: translateY(0);
-        background: rgba(22, 20, 18, 0.94);
+        background: rgba(22, 20, 18, 0.96);
       }
       body.mode-sprite .mini-pill-btn {
         background: transparent;
@@ -264,23 +265,21 @@
         letter-spacing: 0.5px;
       }
 
-      /* Side Flyout Menu - Opens to the side of pet, perfectly aligned above dock */
+      /* Side Flyout Menu - Opens to the side of pet, positioned cleanly from top of container */
       body.mode-sprite .mini-dropdown-menu {
         display: none;
         position: absolute;
         left: 196px;
-        bottom: 4px;
-        top: auto;
+        top: 12px;
+        bottom: auto;
         right: auto;
         transform: none;
-        background: rgba(20, 18, 16, 0.96);
-        backdrop-filter: blur(24px);
-        -webkit-backdrop-filter: blur(24px);
+        background: #181614;
         border: 1px solid rgba(255, 255, 255, 0.16);
         border-radius: 12px;
         padding: 5px;
         min-width: 156px;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
         flex-direction: column;
         gap: 2px;
         z-index: 200;
@@ -288,11 +287,12 @@
         animation: menu-slide-right 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       }
       body.mode-sprite.menu-left .mini-dropdown-menu {
-        left: auto;
-        right: 196px;
+        left: 5px;
+        right: auto;
         animation: menu-slide-left 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       }
-      body.mode-sprite .mini-hud.menu-open .mini-dropdown-menu {
+      body.mode-sprite .mini-hud.menu-open ~ .mini-dropdown-menu,
+      body.mode-sprite .mini-dropdown-menu.menu-open {
         display: flex;
       }
       @keyframes menu-slide-right {
@@ -395,46 +395,47 @@
         </div>
       </div>
 
-      <!-- Compact Floating Micro-Dock & Dropdown (Desktop Sprite Mode) -->
+      <!-- Compact Floating Micro-Dock (Desktop Sprite Mode) -->
       <div class="mini-hud" id="mini-hud">
         <div class="mini-pill-dock" id="mini-pill-dock">
           <button class="mini-pill-btn mini-dropdown-trigger" id="mini-menu-trigger" title="Companion Menu">⋯</button>
         </div>
+      </div>
 
-        <div class="mini-dropdown-menu" id="mini-dropdown-menu" role="menu">
-          <button class="mini-menu-item" id="mini-walk-btn" role="menuitem">
-            <span class="menu-icon" id="walk-menu-icon"></span>
-            <span id="walk-menu-text">Toggle walk</span>
-          </button>
-          <button class="mini-menu-item" id="mini-switch-btn" role="menuitem">
-            <span class="menu-icon" id="switch-menu-icon"></span>
-            <span>Next pet</span>
-          </button>
-          <button class="mini-menu-item" id="mini-size-btn" role="menuitem" title="Cycle pet size (S / M / L / XL)">
-            <span class="menu-icon" id="size-menu-icon"></span>
-            <span id="size-menu-text">Pet size: M</span>
-          </button>
-          <div class="mini-size-row" id="mini-size-row" role="group" aria-label="Pet size options">
-            <button type="button" class="mini-size-chip" data-size="s" title="Small (75%)">S</button>
-            <button type="button" class="mini-size-chip is-active" data-size="m" title="Medium (100%)">M</button>
-            <button type="button" class="mini-size-chip" data-size="l" title="Large (130%)">L</button>
-            <button type="button" class="mini-size-chip" data-size="xl" title="Extra Large (160%)">XL</button>
-          </div>
-          <button class="mini-menu-item" id="mini-agent-alerts-btn" role="menuitem" title="Toggle agent messages above pet">
-            <span class="menu-icon" id="agent-alerts-menu-icon"></span>
-            <span id="agent-alerts-menu-text">Agent alerts: Off</span>
-          </button>
-          <div class="menu-divider"></div>
-          <button class="mini-menu-item" id="mini-pip-btn" role="menuitem">
-            <span class="menu-icon" id="pip-menu-icon"></span>
-            <span>Open studio</span>
-          </button>
-          <div class="menu-divider"></div>
-          <button class="mini-menu-item item-danger" id="mini-hide-btn" role="menuitem">
-            <span class="menu-icon" id="hide-menu-icon"></span>
-            <span>Hide companion</span>
-          </button>
+      <!-- Side Flyout Menu -->
+      <div class="mini-dropdown-menu" id="mini-dropdown-menu" role="menu">
+        <button class="mini-menu-item" id="mini-walk-btn" role="menuitem">
+          <span class="menu-icon" id="walk-menu-icon"></span>
+          <span id="walk-menu-text">Toggle walk</span>
+        </button>
+        <button class="mini-menu-item" id="mini-switch-btn" role="menuitem">
+          <span class="menu-icon" id="switch-menu-icon"></span>
+          <span>Next pet</span>
+        </button>
+        <button class="mini-menu-item" id="mini-size-btn" role="menuitem" title="Cycle pet size (S / M / L / XL)">
+          <span class="menu-icon" id="size-menu-icon"></span>
+          <span id="size-menu-text">Pet size: M</span>
+        </button>
+        <div class="mini-size-row" id="mini-size-row" role="group" aria-label="Pet size options">
+          <button type="button" class="mini-size-chip" data-size="s" title="Small (75%)">S</button>
+          <button type="button" class="mini-size-chip is-active" data-size="m" title="Medium (100%)">M</button>
+          <button type="button" class="mini-size-chip" data-size="l" title="Large (130%)">L</button>
+          <button type="button" class="mini-size-chip" data-size="xl" title="Extra Large (160%)">XL</button>
         </div>
+        <button class="mini-menu-item" id="mini-agent-alerts-btn" role="menuitem" title="Toggle agent messages above pet">
+          <span class="menu-icon" id="agent-alerts-menu-icon"></span>
+          <span id="agent-alerts-menu-text">Agent alerts: Off</span>
+        </button>
+        <div class="menu-divider"></div>
+        <button class="mini-menu-item" id="mini-pip-btn" role="menuitem">
+          <span class="menu-icon" id="pip-menu-icon"></span>
+          <span>Open studio</span>
+        </button>
+        <div class="menu-divider"></div>
+        <button class="mini-menu-item item-danger" id="mini-hide-btn" role="menuitem">
+          <span class="menu-icon" id="hide-menu-icon"></span>
+          <span>Hide companion</span>
+        </button>
       </div>
     </div>
 
@@ -448,6 +449,7 @@
         const miniBody = document.getElementById('mini-body');
         const miniArt = document.getElementById('mini-art');
         const miniHud = document.getElementById('mini-hud');
+        const miniDropdownMenu = document.getElementById('mini-dropdown-menu');
         const miniMenuTrigger = document.getElementById('mini-menu-trigger');
         const miniWalkBtn = document.getElementById('mini-walk-btn');
         const miniSwitchBtn = document.getElementById('mini-switch-btn');
@@ -567,7 +569,8 @@
               document.body.classList.remove('menu-left');
               isShiftedForMenu = false;
             }
-            invokeNative('set_companion_size', { width: 365, height: baseHeight }).catch(() => {});
+            const openHeight = Math.max(baseHeight, 295);
+            invokeNative('set_companion_size', { width: 365, height: openHeight }).catch(() => {});
           } else {
             if (isShiftedForMenu) {
               const currentX = window.screenX !== undefined ? window.screenX : 0;
@@ -587,6 +590,7 @@
           const shouldOpen = typeof force === 'boolean' ? force : !miniHud.classList.contains('menu-open');
           if (shouldOpen === miniHud.classList.contains('menu-open')) return;
           miniHud.classList.toggle('menu-open', shouldOpen);
+          if (miniDropdownMenu) miniDropdownMenu.classList.toggle('menu-open', shouldOpen);
           updateCompanionWindowSize();
         }
 
@@ -608,7 +612,12 @@
 
         // Click outside closes menu
         document.addEventListener('click', (e) => {
-          if (miniHud && !miniHud.contains(e.target)) {
+          if (
+            miniHud &&
+            !miniHud.contains(e.target) &&
+            miniDropdownMenu &&
+            !miniDropdownMenu.contains(e.target)
+          ) {
             toggleMenu(false);
           }
         });
