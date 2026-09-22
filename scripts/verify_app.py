@@ -18,7 +18,14 @@ server_thread.start()
 
 try:
     with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+        try:
+            browser = p.chromium.launch(headless=True)
+        except Exception as bundled_error:
+            chrome = Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+            if not chrome.is_file():
+                raise bundled_error
+            print("Bundled Playwright Chromium unavailable; using installed Google Chrome.")
+            browser = p.chromium.launch(headless=True, executable_path=str(chrome))
         page = browser.new_page(viewport={"width": 1440, "height": 1000}, device_scale_factor=1)
         errors = []
         missing = []
@@ -135,6 +142,26 @@ try:
         assert "state-failed" in page.locator("#hero-pet-art").get_attribute("class")
         page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'complete', agent: 'Codex'})")
         assert "state-jump" in page.locator("#hero-pet-art").get_attribute("class")
+
+        # Routine progress bubbles are occasional, while important events always surface.
+        page.evaluate("document.querySelectorAll('.toast').forEach(node => node.remove())")
+        page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'tool', agent: 'RateLimitAgent'})")
+        page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'tool', agent: 'RateLimitAgent'})")
+        progress_toasts = page.locator(".toast").count()
+        assert progress_toasts == 1, f"expected one rate-limited progress toast, got {progress_toasts}"
+        page.evaluate("window.nuzzle.dispatchAgentEvent({type: 'complete', agent: 'RateLimitAgent'})")
+        important_toasts = page.locator(".toast").count()
+        assert important_toasts == 2, f"expected important event to bypass rate limit, got {important_toasts}"
+
+        # Verify every flagship integration drives the same pet lifecycle contract.
+        print("Testing supported agent lifecycle responses...")
+        for agent in ("Codex", "Antigravity", "OpenCode"):
+            page.evaluate("agent => window.nuzzle.dispatchAgentEvent({type: 'tool', agent})", agent)
+            assert "state-work" in page.locator("#hero-pet-art").get_attribute("class")
+            page.evaluate("agent => window.nuzzle.dispatchAgentEvent({type: 'waiting', agent})", agent)
+            assert "state-sleep" in page.locator("#hero-pet-art").get_attribute("class")
+            page.evaluate("agent => window.nuzzle.dispatchAgentEvent({type: 'complete', agent})", agent)
+            assert "state-jump" in page.locator("#hero-pet-art").get_attribute("class")
 
         # 10. Floating Desktop Overlay & Mini View Verification
         print("Testing Floating Desktop Overlay & Mini Companion...")

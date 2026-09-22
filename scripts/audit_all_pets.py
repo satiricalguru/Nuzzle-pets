@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from PIL import Image
 
+from optimize_pets import webp_is_lossless
 from setup_codex import PETS_DATA, PUBLIC_PETS_DIR, get_codex_dir, validate_atlas
 
 
@@ -40,9 +41,13 @@ def audit_sources():
         except (OSError, ValueError) as error:
             errors.append(f"{pet['id']}: {error}")
             continue
-        residue_count = transparent_rgb_residue(path)
-        if residue_count:
-            residue.append((pet["id"], residue_count))
+        # Lossy WebP stores RGB and alpha independently, so fully transparent
+        # decoder RGB is intentionally unspecified and never rendered. Codex
+        # installation re-encodes a cleared RGBA image losslessly below.
+        if webp_is_lossless(path):
+            residue_count = transparent_rgb_residue(path)
+            if residue_count:
+                residue.append((pet["id"], residue_count))
 
     print(f"Source atlases structurally valid: {len(PETS_DATA) - len(errors)}/{len(PETS_DATA)}")
     if residue:

@@ -532,7 +532,7 @@
         }
 
         // Agent Alerts Setting (Default OFF)
-        let agentAlertsEnabled = localStorage.getItem('nuzzle_agent_alerts') === 'true';
+        let agentAlertsEnabled = localStorage.getItem('nuzzle_agent_alerts') !== 'false';
 
         function updateAgentAlertsUI() {
           const icon = document.getElementById('agent-alerts-menu-icon');

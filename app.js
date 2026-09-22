@@ -597,19 +597,21 @@ function saveStored(key, val) {
   }
 }
 
+const DEFAULT_SETTINGS = {
+  petSize: 'm',
+  noise: true,
+  animation: true,
+  showMessages: loadStored('nuzzle_agent_alerts', true),
+  launchGreeting: true,
+  keepOnTop: true,
+  petSounds: true,
+  completionSounds: false
+};
+
 const state = {
   selectedPetId: loadStored(STORAGE_KEYS.SELECTED_PET, 'hu-tao'),
   favorites: new Set(loadStored(STORAGE_KEYS.FAVORITES, ['hu-tao', 'ganyu'])),
-  settings: loadStored(STORAGE_KEYS.SETTINGS, {
-    petSize: 'm',
-    noise: true,
-    animation: true,
-    showMessages: loadStored('nuzzle_agent_alerts', false),
-    launchGreeting: true,
-    keepOnTop: true,
-    petSounds: true,
-    completionSounds: false
-  }),
+  settings: { ...DEFAULT_SETTINGS, ...loadStored(STORAGE_KEYS.SETTINGS, {}) },
   agents: INITIAL_AGENTS.map(agent => ({ ...agent })),
   activity: [...SAMPLE_EVENTS],
   currentView: 'overview',
@@ -1087,7 +1089,7 @@ function selectCompanion(petId) {
   renderFeaturedPet();
   renderPetStrip();
   const activeFilter = $('.filter-button.active')?.dataset.filter || 'all';
-  renderLibrary(activeFilter, $('#pet-search')?.value || '');
+  if (state.currentView === 'library') renderLibrary(activeFilter, $('#pet-search')?.value || '');
   setPetState('pat', 1500);
   createHeartBurst();
   playChime('pat');
@@ -1109,7 +1111,7 @@ function toggleFavorite(petId) {
   renderFeaturedPet();
   renderPetStrip();
   const filter = $('.filter-button.active')?.dataset.filter || 'all';
-  renderLibrary(filter, $('#pet-search')?.value || '');
+  if (state.currentView === 'library') renderLibrary(filter, $('#pet-search')?.value || '');
 }
 
 // 7. RENDER FUNCTIONS
@@ -1355,6 +1357,9 @@ function setView(view) {
   $$('.view-panel').forEach(panel => panel.classList.toggle('active', panel.id === `${view}-view`));
   const pageTitle = $('#page-title');
   if (pageTitle) pageTitle.textContent = capitalize(view);
+  if (view === 'library') {
+    renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
+  }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1377,6 +1382,7 @@ function applySettings() {
   document.body.classList.toggle('no-noise', !state.settings.noise);
   document.body.classList.toggle('no-animations', !state.settings.animation);
   document.body.classList.toggle('hide-agent-messages', !state.settings.showMessages);
+  localStorage.setItem('nuzzle_agent_alerts', state.settings.showMessages ? 'true' : 'false');
 
   if (IS_NATIVE_APP) {
     invokeNative('set_companion_always_on_top', { enabled: Boolean(state.settings.keepOnTop) })
@@ -1463,6 +1469,18 @@ function normalizeAgentEvent(payload = {}) {
   };
 }
 
+const progressToastAt = new Map();
+
+function shouldShowAgentToast(item, payload) {
+  if (item.important) return true;
+  const agent = String(payload.agentName || payload.agent || 'Agent').trim().toLowerCase();
+  const now = Date.now();
+  const lastShown = progressToastAt.get(agent) || 0;
+  if (now - lastShown < 45000) return false;
+  progressToastAt.set(agent, now);
+  return true;
+}
+
 function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   const item = normalizeAgentEvent(payload);
   state.activity.unshift(item);
@@ -1474,7 +1492,7 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   } else {
     playChime('pop');
   }
-  if (toast && state.settings.showMessages) {
+  if (toast && state.settings.showMessages && shouldShowAgentToast(item, payload)) {
     showToast(item.title, { icon: item.icon, type: item.type, important: item.important, isAgent: true });
   }
   return item;
@@ -1553,7 +1571,9 @@ function applyNativePetSelection(petId) {
   saveStored(STORAGE_KEYS.SELECTED_PET, petId);
   renderFeaturedPet();
   renderPetStrip();
-  renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
+  if (state.currentView === 'library') {
+    renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
+  }
   updatePipWindow();
   if (typeof window.updateMiniUI === 'function') window.updateMiniUI();
 }
@@ -1777,12 +1797,12 @@ document.addEventListener('click', event => {
     Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
     state.selectedPetId = 'hu-tao';
     state.favorites = new Set(['hu-tao', 'ganyu']);
-    state.settings = { petSize: 'm', noise: true, animation: true, showMessages: false, launchGreeting: true, keepOnTop: true, petSounds: true, completionSounds: false };
+    state.settings = { ...DEFAULT_SETTINGS, showMessages: true };
     state.agents = INITIAL_AGENTS.map(agent => ({ ...agent }));
     applySettings();
     renderFeaturedPet();
     renderPetStrip();
-    renderLibrary();
+    if (state.currentView === 'library') renderLibrary();
     renderAgents();
     showToast('Preferences restored to defaults.');
     return;
@@ -1880,7 +1900,6 @@ document.addEventListener('keydown', event => {
 // 15. INITIALIZATION
 renderFeaturedPet();
 renderPetStrip();
-renderLibrary();
 renderAgents();
 renderActivity();
 applySettings();
@@ -1888,7 +1907,7 @@ refreshNativeIntegrations();
 pollNativeState();
 updateDateTime();
 setInterval(updateDateTime, 30000);
-if (IS_NATIVE_APP) setInterval(pollNativeState, 250);
+if (IS_NATIVE_APP) setInterval(pollNativeState, 1000);
 
 if ('BroadcastChannel' in window) {
   try {

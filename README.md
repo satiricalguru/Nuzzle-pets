@@ -57,6 +57,8 @@
 - 🏃 **Direction-Aware Drag-to-Run Physics**: Moving or dragging your companion across the display dynamically triggers directional running animations (Row 1 right / Row 2 left) and smoothly returns to resting idle when stopped.
 - ⋯ **Compact Frosted Micro-Dock & Context Menu**: Right-click or tap `⋯` on the micro-dock to open a subtle frosted glass menu for walking/resting, cycling pets, and toggling between Sprite and Widget Card modes.
 - ⚡ **Real-Time Agent Reactions**: Companions react instantly to agent prompts, tool execution, thinking/waiting, completions, and error states.
+- 💬 **Quiet Progress Cadence**: Important completions, failures, and approval waits always surface; routine progress messages are rate-limited per agent so the companion speaks occasionally instead of on every hook.
+- 📦 **Release-Optimized Assets**: High-quality WebP atlases retain exact alpha geometry while cutting the bundled catalog by roughly two thirds; the full library is loaded only when opened.
 - 🧭 **Fail-Closed v2 Migration**: Nuzzle rejects synthetic whole-sprite shifts as fake gaze directions; v2 packaging stays disabled until genuinely authored directions pass deterministic and visual QA.
 - 👀 **Genuine v2 Cursor Gaze**: The v2 reference companion uses 16 authored clockwise look directions and follows the pointer without rotating or shifting the whole sprite.
 - 🎨 **Version-Aware Animation Engine**: The renderer supports both Codex v1 8×9 and v2 8×11 atlases while preserving idle, movement, pat, work, wait, failure, and review states.
@@ -95,7 +97,7 @@ Nuzzle runs as a desktop overlay alongside any macOS IDE. Automatic lifecycle re
 | **Claude Code** | JSON hooks | `~/.claude/settings.json` |
 | **Antigravity** | JSON hooks + Floating overlay | `~/.gemini/config/hooks.json` |
 | **Cursor** | JSON hooks | `~/.cursor/hooks.json` |
-| **OpenCode** | JS plugin + config entry | `~/.config/opencode/plugins/nuzzle.js` |
+| **OpenCode** | Auto-discovered local JS plugin | `~/.config/opencode/plugins/nuzzle.js` |
 | **Gemini CLI** | Official JSON hook schema | `~/.gemini/settings.json` |
 | **GitHub Copilot CLI** | User-level JSON hook file | `${COPILOT_HOME:-~/.copilot}/hooks/nuzzle.json` |
 | **Pi** | Global TypeScript extension | `~/.pi/agent/extensions/nuzzle.ts` |
@@ -254,6 +256,9 @@ python3 scripts/verify_app.py
 
 # Audit all 42 sprite atlases, row dimensions, and metadata contracts
 python3 scripts/audit_all_pets.py
+
+# Verify that release atlases have passed the size optimization gate
+npm run pets:check-size
 ```
 
 ---

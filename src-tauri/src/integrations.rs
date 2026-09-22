@@ -472,6 +472,7 @@ impl IntegrationManager {
             .as_object_mut()
             .ok_or_else(|| IntegrationError::InvalidJson(path.clone()))?;
         let mut integration = serde_json::Map::new();
+        integration.insert("enabled".into(), Value::Bool(true));
         for event in ANTIGRAVITY_EVENTS {
             let handler = json!({
                 "type": "command",
@@ -505,30 +506,13 @@ impl IntegrationManager {
 
     fn install_opencode(&self) -> Result<(), IntegrationError> {
         let plugin_path = self.config_path("opencode")?;
-        let config_path = opencode_dir(&self.home).join("opencode.json");
         self.backup("opencode", &plugin_path)?;
-        self.backup("opencode", &config_path)?;
         write_atomic(&plugin_path, opencode_plugin().as_bytes())?;
-        let mut document = read_json_optional(&config_path)?.unwrap_or_else(|| json!({}));
-        let object = document
-            .as_object_mut()
-            .ok_or_else(|| IntegrationError::InvalidJson(config_path.clone()))?;
-        let plugins = object.entry("plugin").or_insert_with(|| json!([]));
-        let plugins = plugins
-            .as_array_mut()
-            .ok_or_else(|| IntegrationError::InvalidJson(config_path.clone()))?;
-        if !plugins
-            .iter()
-            .any(|entry| entry.as_str() == Some(OPENCODE_PLUGIN_ENTRY))
-        {
-            plugins.push(json!(OPENCODE_PLUGIN_ENTRY));
-        }
-        write_json_atomic(&config_path, &document)
+        self.remove_legacy_opencode_config_entry()
     }
 
     fn remove_opencode(&self) -> Result<(), IntegrationError> {
         let plugin_path = self.config_path("opencode")?;
-        let config_path = opencode_dir(&self.home).join("opencode.json");
         if plugin_path.exists() {
             let content = fs::read_to_string(&plugin_path)?;
             if content.contains(MANAGED_MARKER) {
@@ -536,12 +520,31 @@ impl IntegrationManager {
                 fs::remove_file(&plugin_path)?;
             }
         }
-        if config_path.exists() {
-            self.backup("opencode", &config_path)?;
-            let mut document = read_json_required(&config_path)?;
-            if let Some(plugins) = document.get_mut("plugin").and_then(Value::as_array_mut) {
-                plugins.retain(|entry| entry.as_str() != Some(OPENCODE_PLUGIN_ENTRY));
+        self.remove_legacy_opencode_config_entry()?;
+        Ok(())
+    }
+
+    fn remove_legacy_opencode_config_entry(&self) -> Result<(), IntegrationError> {
+        let config_path = opencode_dir(&self.home).join("opencode.json");
+        if !config_path.exists() {
+            return Ok(());
+        }
+        let original = fs::read(&config_path)?;
+        let mut document: Value = serde_json::from_slice(&original)
+            .map_err(|_| IntegrationError::InvalidJson(config_path.clone()))?;
+        let object = document
+            .as_object_mut()
+            .ok_or_else(|| IntegrationError::InvalidJson(config_path.clone()))?;
+        let mut changed = false;
+        for key in ["plugin", "plugins"] {
+            if let Some(entries) = object.get_mut(key).and_then(Value::as_array_mut) {
+                let before = entries.len();
+                entries.retain(|entry| entry.as_str() != Some(OPENCODE_PLUGIN_ENTRY));
+                changed |= entries.len() != before;
             }
+        }
+        if changed {
+            self.backup("opencode", &config_path)?;
             write_json_atomic(&config_path, &document)?;
         }
         Ok(())
@@ -1004,24 +1007,7 @@ fn opencode_installed(plugin_path: &Path) -> Result<bool, IntegrationError> {
         return Ok(false);
     }
     let source = fs::read_to_string(plugin_path)?;
-    if !source.contains(MANAGED_MARKER) {
-        return Ok(false);
-    }
-    let config_path = plugin_path
-        .parent()
-        .and_then(Path::parent)
-        .map(|dir| dir.join("opencode.json"))
-        .unwrap_or_else(|| PathBuf::from("opencode.json"));
-    Ok(read_json_optional(&config_path)?.is_some_and(|document| {
-        document
-            .get("plugin")
-            .and_then(Value::as_array)
-            .is_some_and(|plugins| {
-                plugins
-                    .iter()
-                    .any(|entry| entry.as_str() == Some(OPENCODE_PLUGIN_ENTRY))
-            })
-    }))
+    Ok(source.contains(MANAGED_MARKER))
 }
 
 fn hook_command(id: &str, helper: &Path, kind: &str) -> String {
@@ -1061,12 +1047,13 @@ if [ "$agent" = "claude-code" ] && printf '%s' "$compact_input" | grep -q '"curs
   hook_output
   exit 0
 fi
-if [ "$kind" = "tool.after" ] && printf '%s' "$compact_input" | grep -Eq '"(exit_code|exitCode)"[[:space:]]*:[[:space:]]*-?[1-9][0-9]*|"is_error"[[:space:]]*:[[:space:]]*true|"success"[[:space:]]*:[[:space:]]*false|"status"[[:space:]]*:[[:space:]]*"(failed|error)"'; then
+if [ "$kind" = "tool.after" ] && printf '%s' "$compact_input" | grep -Eq '"(exit_code|exitCode)"[[:space:]]*:[[:space:]]*-?[1-9][0-9]*|"is_error"[[:space:]]*:[[:space:]]*true|"success"[[:space:]]*:[[:space:]]*false|"status"[[:space:]]*:[[:space:]]*"(failed|error)"|"error"[[:space:]]*:[[:space:]]*"[^"[:space:]][^"]*"'; then
   kind="session.error"
 fi
 tool="$(json_field tool_name)"
 [ -n "$tool" ] || tool="$(json_field tool)"
 [ -n "$tool" ] || tool="$(json_field toolName)"
+[ -n "$tool" ] || tool="$(json_field name)"
 runtime="${NUZZLE_RUNTIME_DIR:-$HOME/.nuzzle/runtime}"
 endpoint="$(cat "$runtime/event-endpoint" 2>/dev/null)" || { hook_output; exit 0; }
 token="$(cat "$runtime/event-token" 2>/dev/null)" || { hook_output; exit 0; }
@@ -1431,6 +1418,10 @@ fn now_ms() -> u128 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use crate::runtime::RuntimeManager;
+    #[cfg(unix)]
+    use std::process::{Command, Stdio};
 
     fn fake_executable(path: &Path) {
         fs::write(path, "#!/bin/sh\n").unwrap();
@@ -1637,5 +1628,121 @@ mod tests {
 
         assert!(!manager.uninstall("pi").unwrap().installed);
         assert!(!extension.exists());
+    }
+
+    #[test]
+    fn antigravity_install_matches_global_hook_schema_and_preserves_other_hooks() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("agy"));
+        let hooks = home.join(".gemini/config/hooks.json");
+        ensure_parent(&hooks).unwrap();
+        fs::write(&hooks, r#"{"user-hook":{"enabled":true}}"#).unwrap();
+        let manager = IntegrationManager::new_with_paths(root, home, vec![bin]);
+
+        assert!(manager.install("antigravity").unwrap().healthy);
+        let content = read_json_required(&hooks).unwrap();
+        assert_eq!(content["user-hook"]["enabled"], true);
+        assert_eq!(content["nuzzle-antigravity"]["enabled"], true);
+        assert!(
+            content["nuzzle-antigravity"]["PreToolUse"][0]["hooks"][0]["command"]
+                .as_str()
+                .unwrap()
+                .contains(" antigravity tool.before")
+        );
+
+        assert!(!manager.uninstall("antigravity").unwrap().installed);
+        assert_eq!(
+            read_json_required(&hooks).unwrap()["user-hook"]["enabled"],
+            true
+        );
+    }
+
+    #[test]
+    fn opencode_uses_auto_discovered_plugin_without_duplicate_config_entry() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let bin = temp.path().join("bin");
+        fs::create_dir_all(&bin).unwrap();
+        fake_executable(&bin.join("opencode"));
+        let config = home.join(".config/opencode/opencode.json");
+        ensure_parent(&config).unwrap();
+        fs::write(
+            &config,
+            r#"{"theme":"dark","plugin":["keep","./plugins/nuzzle.js"],"plugins":["keep-v2","./plugins/nuzzle.js"]}"#,
+        )
+        .unwrap();
+        let manager = IntegrationManager::new_with_paths(root, home.clone(), vec![bin]);
+
+        assert!(manager.install("opencode").unwrap().healthy);
+        let plugin = home.join(".config/opencode/plugins/nuzzle.js");
+        assert!(fs::read_to_string(&plugin)
+            .unwrap()
+            .contains(MANAGED_MARKER));
+        let content = read_json_required(&config).unwrap();
+        assert_eq!(content["theme"], "dark");
+        assert_eq!(content["plugin"], json!(["keep"]));
+        assert_eq!(content["plugins"], json!(["keep-v2"]));
+
+        assert!(!manager.uninstall("opencode").unwrap().installed);
+        assert!(!plugin.exists());
+        assert_eq!(read_json_required(&config).unwrap()["theme"], "dark");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn hook_helper_delivers_codex_and_antigravity_events_to_native_runtime() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let root = home.join(".nuzzle");
+        let manager = IntegrationManager::new_with_paths(&root, &home, vec![]);
+        manager.ensure_helper().unwrap();
+        let runtime_dir = root.join("runtime");
+        let runtime = RuntimeManager::start(&runtime_dir, |_| {}).unwrap();
+
+        let cases = [
+            (
+                "codex",
+                "tool.before",
+                r#"{"tool_name":"shell"}"#,
+                "Codex",
+                "tool",
+                "shell",
+            ),
+            (
+                "antigravity",
+                "tool.after",
+                r#"{"toolCall":{"name":"run_command"},"error":"exit status 1"}"#,
+                "Antigravity",
+                "error",
+                "run_command",
+            ),
+        ];
+        for (agent, kind, input, expected_agent, expected_type, expected_sub) in cases {
+            let mut child = Command::new(manager.helper_path())
+                .args([agent, kind])
+                .env("NUZZLE_RUNTIME_DIR", &runtime_dir)
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+            use std::io::Write;
+            let mut stdin = child.stdin.take().unwrap();
+            stdin.write_all(input.as_bytes()).unwrap();
+            drop(stdin);
+            let output = child.wait_with_output().unwrap();
+            assert!(output.status.success());
+
+            let event = runtime.events_after(0).events.last().unwrap().event.clone();
+            assert_eq!(event.agent, expected_agent);
+            assert_eq!(event.event_type, expected_type);
+            assert_eq!(event.sub, expected_sub);
+        }
+        assert_eq!(runtime.status().accepted_events, 2);
+        runtime.shutdown();
     }
 }

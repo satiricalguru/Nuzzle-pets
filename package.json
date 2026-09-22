@@ -8,11 +8,13 @@
     "test:python": "python3 -m unittest discover -s scripts -p 'test_*.py'",
     "test:ui": "python3 scripts/verify_app.py",
     "pets:audit": "python3 scripts/audit_all_pets.py",
+    "pets:optimize": "python3 scripts/optimize_pets.py",
+    "pets:check-size": "python3 scripts/optimize_pets.py --check",
     "dev": "npm run frontend:build && tauri dev",
     "build": "npm run frontend:build && tauri build",
     "build:universal": "npm run frontend:build && tauri build --target universal-apple-darwin --bundles dmg",
     "release:macos": "sh scripts/build_macos_release.sh",
-    "check": "npm run frontend:build && npm run pets:audit && npm run test:python && cargo test --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings"
+    "check": "npm run frontend:build && npm run pets:audit && npm run pets:check-size && npm run test:python && cargo test --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.4"
