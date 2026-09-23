@@ -1699,7 +1699,7 @@ document.addEventListener('click', event => {
   if (toastTarget) showToast(toastTarget.dataset.toast);
 
   // Float pet on desktop action
-  if (event.target.id === 'float-desktop-btn' || event.target.closest('#float-desktop-btn') || event.target.id === 'topbar-float-btn' || event.target.closest('#topbar-float-btn')) {
+  if (event.target.id === 'float-desktop-btn' || event.target.closest('#float-desktop-btn')) {
     floatPetOnDesktop();
     return;
   }

@@ -167,7 +167,6 @@ try:
         print("Testing Floating Desktop Overlay & Mini Companion...")
         page.get_by_role("button", name="Overview").click()
         assert page.locator("#float-desktop-btn").is_visible()
-        assert page.locator("#topbar-float-btn").is_visible()
 
         mini_page = browser.new_page(viewport={"width": 300, "height": 380})
         mini_page.goto(f"http://127.0.0.1:{PORT}/mini.html", wait_until="domcontentloaded")
