@@ -1261,6 +1261,91 @@ function renderActivity() {
   `).join('');
 }
 
+function renderNotificationsPopover() {
+  const container = $('#notifications-list');
+  if (!container) return;
+
+  const escapeHtml = value => String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+  if (!state.activity || state.activity.length === 0) {
+    container.innerHTML = `
+      <div class="popover-empty-state">
+        <span>♧</span>
+        <p>No recent activity</p>
+        <small>All agent activity is calm and up to date.</small>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = state.activity.map(item => `
+    <div class="popover-notification-item">
+      <div class="activity-icon ${escapeHtml(item.type)}">${escapeHtml(item.icon)}</div>
+      <div class="notification-item-content">
+        <div class="notification-item-header">
+          <strong>${escapeHtml(item.title)}</strong>
+          <span class="activity-time">${escapeHtml(capitalize(item.time))}</span>
+        </div>
+        <small>${escapeHtml(item.sub)}</small>
+      </div>
+    </div>
+  `).join('');
+}
+
+function togglePopover(popoverId, force) {
+  const popover = document.getElementById(popoverId);
+  if (!popover) return;
+  const isHidden = popover.hasAttribute('hidden');
+  const shouldOpen = force !== undefined ? force : isHidden;
+
+  // Close other popovers first
+  $$('.topbar-popover').forEach(p => {
+    if (p !== popover) {
+      p.setAttribute('hidden', '');
+      const btn = p.closest('.topbar-dropdown-container')?.querySelector('button');
+      if (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        btn.classList.remove('active');
+      }
+    }
+  });
+
+  const trigger = popover.closest('.topbar-dropdown-container')?.querySelector('button');
+
+  if (shouldOpen) {
+    popover.removeAttribute('hidden');
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'true');
+      trigger.classList.add('active');
+    }
+    if (popoverId === 'notifications-popover') {
+      renderNotificationsPopover();
+    }
+  } else {
+    popover.setAttribute('hidden', '');
+    if (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+      trigger.classList.remove('active');
+    }
+  }
+}
+
+function closeAllPopovers() {
+  $$('.topbar-popover').forEach(p => {
+    p.setAttribute('hidden', '');
+    const btn = p.closest('.topbar-dropdown-container')?.querySelector('button');
+    if (btn) {
+      btn.setAttribute('aria-expanded', 'false');
+      btn.classList.remove('active');
+    }
+  });
+}
+
 // 8. COMMAND PALETTE SEARCH & NAVIGATION
 const PALETTE_ACTIONS = [
   { id: 'view-overview', category: 'Navigation', title: 'Go to Overview', icon: '⌂', shortcut: '1', action: () => setView('overview') },
@@ -1352,6 +1437,7 @@ window.nuzzle.showToast = showToast;
 
 // 10. NAVIGATION & VIEW CONTROLLER
 function setView(view) {
+  closeAllPopovers();
   state.currentView = view;
   $$('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
   $$('.view-panel').forEach(panel => panel.classList.toggle('active', panel.id === `${view}-view`));
@@ -1486,6 +1572,11 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   state.activity.unshift(item);
   if (state.activity.length > 10) state.activity.pop();
   renderActivity();
+  renderNotificationsPopover();
+  const badge = $('#notification-badge');
+  if (badge) badge.classList.remove('hidden');
+  const countBadge = $('#notifications-count');
+  if (countBadge) countBadge.textContent = 'New';
   setPetState(item.petState, item.durationMs);
   if (item.type === 'done') {
     playChime('completion');
@@ -1684,6 +1775,47 @@ function updateDateTime() {
 
 // 14. GLOBAL EVENT DELEGATION
 document.addEventListener('click', event => {
+  // Topbar popover triggers
+  if (event.target.id === 'notification-btn' || event.target.closest('#notification-btn')) {
+    event.stopPropagation();
+    togglePopover('notifications-popover');
+    return;
+  }
+
+  if (event.target.id === 'profile-btn' || event.target.closest('#profile-btn')) {
+    event.stopPropagation();
+    togglePopover('profile-popover');
+    return;
+  }
+
+  // Clear notifications badge
+  if (event.target.id === 'mark-all-read-btn' || event.target.closest('#mark-all-read-btn')) {
+    const badge = $('#notification-badge');
+    if (badge) badge.classList.add('hidden');
+    const countBadge = $('#notifications-count');
+    if (countBadge) countBadge.textContent = '0 new';
+    showToast('Notifications marked as read.');
+    return;
+  }
+
+  // Simulate event from popover
+  if (event.target.id === 'simulate-popover-event-btn' || event.target.closest('#simulate-popover-event-btn')) {
+    simulateAgentEvent();
+    return;
+  }
+
+  // Open command palette from profile menu
+  if (event.target.id === 'open-palette-menu-btn' || event.target.closest('#open-palette-menu-btn')) {
+    closeAllPopovers();
+    openPalette(true);
+    return;
+  }
+
+  // Close popovers if clicked outside
+  if (!event.target.closest('.topbar-dropdown-container')) {
+    closeAllPopovers();
+  }
+
   // Rail navigation
   const nav = event.target.closest('[data-view]');
   if (nav) return setView(nav.dataset.view);
@@ -1852,9 +1984,14 @@ $('#palette-input')?.addEventListener('input', e => {
 document.addEventListener('keydown', event => {
   const paletteOpen = $('#command-palette')?.classList.contains('open');
 
+  if (event.key === 'Escape') {
+    closeAllPopovers();
+  }
+
   // Command palette open trigger
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
     event.preventDefault();
+    closeAllPopovers();
     openPalette(!paletteOpen);
     return;
   }
@@ -1902,6 +2039,7 @@ renderFeaturedPet();
 renderPetStrip();
 renderAgents();
 renderActivity();
+renderNotificationsPopover();
 applySettings();
 refreshNativeIntegrations();
 pollNativeState();

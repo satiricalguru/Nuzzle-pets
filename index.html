@@ -44,8 +44,78 @@
           <div class="breadcrumb"><span>Companion Studio</span><b>/</b><strong id="page-title">Overview</strong></div>
           <div class="topbar-actions">
             <button class="status-pill" id="system-status-btn" data-toast="The native app uses an authenticated loopback runtime; browser preview can use the local bridge."><span class="pulse-dot"></span> Browser preview</button>
-            <button class="icon-button" id="notification-btn" data-toast="All agent activity is calm and up to date." aria-label="Notifications">♧<i></i></button>
-            <button class="avatar-button" id="profile-btn" data-toast="Nuzzle Companion Studio (Local Session)" aria-label="User profile">JP</button>
+            <!-- Notifications Dropdown -->
+            <div class="topbar-dropdown-container">
+              <button class="icon-button" id="notification-btn" aria-label="Notifications" aria-expanded="false" aria-haspopup="true" title="Recent activity & notifications">
+                ♧<i id="notification-badge"></i>
+              </button>
+              <div class="topbar-popover notifications-popover" id="notifications-popover" role="dialog" aria-label="Notifications" hidden>
+                <div class="popover-header">
+                  <div class="popover-title">
+                    <strong>Notifications</strong>
+                    <span class="popover-badge" id="notifications-count">New</span>
+                  </div>
+                  <button class="popover-action-btn" id="mark-all-read-btn" type="button">Clear badge</button>
+                </div>
+                <div class="notifications-scroll-area" id="notifications-list">
+                  <!-- Populated dynamically from state.activity -->
+                </div>
+                <div class="popover-footer">
+                  <button class="popover-link-btn" data-view="agents" type="button">Agent Fleet →</button>
+                  <button class="popover-link-btn secondary" id="simulate-popover-event-btn" type="button">+ Simulate</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Dropdown -->
+            <div class="topbar-dropdown-container">
+              <button class="avatar-button" id="profile-btn" aria-label="User profile" aria-expanded="false" aria-haspopup="true" title="User profile and settings">JP</button>
+              <div class="topbar-popover profile-popover" id="profile-popover" role="dialog" aria-label="User profile" hidden>
+                <div class="profile-card-header">
+                  <div class="profile-avatar-large">JP</div>
+                  <div class="profile-meta">
+                    <strong class="profile-name">Jatin Pandey</strong>
+                    <span class="profile-status"><span class="status-indicator-dot"></span> Studio Session</span>
+                  </div>
+                </div>
+                <div class="popover-divider"></div>
+                <div class="profile-menu-items">
+                  <button class="profile-menu-item" data-view="settings" type="button">
+                    <span class="menu-icon">◌</span>
+                    <div class="menu-text">
+                      <strong>Preferences & Settings</strong>
+                      <small>Sound, appearance, and alerts</small>
+                    </div>
+                  </button>
+                  <button class="profile-menu-item" data-view="agents" type="button">
+                    <span class="menu-icon">⌘</span>
+                    <div class="menu-text">
+                      <strong>Agent Fleet</strong>
+                      <small>Active tools & hooks</small>
+                    </div>
+                  </button>
+                  <button class="profile-menu-item" data-view="library" type="button">
+                    <span class="menu-icon">✣</span>
+                    <div class="menu-text">
+                      <strong>Companion Library</strong>
+                      <small>Switch or pet companions</small>
+                    </div>
+                  </button>
+                  <button class="profile-menu-item" id="open-palette-menu-btn" type="button">
+                    <span class="menu-icon">⌕</span>
+                    <div class="menu-text">
+                      <strong>Command Palette</strong>
+                      <small>Jump anywhere quickly</small>
+                    </div>
+                    <kbd>⌘K</kbd>
+                  </button>
+                </div>
+                <div class="popover-footer profile-footer">
+                  <span class="version-label">Nuzzle Companion v0.3.0</span>
+                  <span class="local-tag">LOCAL-FIRST</span>
+                </div>
+              </div>
+            </div>
           </div>
         </header>
 
