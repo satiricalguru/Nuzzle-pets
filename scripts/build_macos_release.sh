@@ -13,6 +13,11 @@ else
   exit 1
 fi
 
+# Prefer rustup's toolchain over a standalone (e.g. Homebrew) cargo, which lacks cross targets.
+toolchain_bin="$(dirname "$("$rustup_bin" which cargo)")"
+PATH="$toolchain_bin:$PATH"
+export PATH
+
 installed_targets="$("$rustup_bin" target list --installed)"
 for target in aarch64-apple-darwin x86_64-apple-darwin; do
   if ! printf '%s\n' "$installed_targets" | grep -qx "$target"; then

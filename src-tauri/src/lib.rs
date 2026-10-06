@@ -1,9 +1,11 @@
 mod desktop_state;
 mod integrations;
+mod pet_store;
 mod runtime;
 
 use desktop_state::{DesktopState, DesktopStateSnapshot};
 use integrations::{IntegrationManager, IntegrationSummary};
+use pet_store::{PetStore, UserPet};
 use runtime::{RuntimeEventBatch, RuntimeManager, RuntimeStatus};
 use std::path::PathBuf;
 use tauri::{
@@ -105,10 +107,93 @@ fn get_desktop_state(state: State<'_, DesktopState>) -> DesktopStateSnapshot {
 
 #[tauri::command]
 fn select_native_pet(
+    app: AppHandle,
     state: State<'_, DesktopState>,
     id: String,
 ) -> Result<DesktopStateSnapshot, String> {
-    state.select_pet(&id).map_err(|error| error.to_string())
+    let snapshot = state.select_pet(&id).map_err(|error| error.to_string())?;
+    // Push the change so other windows update instantly instead of polling.
+    let _ = app.emit("nuzzle-pet-selected", &snapshot);
+    Ok(snapshot)
+}
+
+async fn with_pet_store<T: Send + 'static>(
+    task: impl FnOnce(PetStore) -> std::io::Result<T> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(move || task(PetStore::from_codex_home()?))
+        .await
+        .map_err(|error| error.to_string())?
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn list_user_pets() -> Result<Vec<UserPet>, String> {
+    with_pet_store(|store| store.list()).await
+}
+
+#[tauri::command]
+async fn install_catalog_pet(
+    app: AppHandle,
+    slug: String,
+    name: String,
+    description: String,
+    sheet: String,
+) -> Result<UserPet, String> {
+    let pet =
+        with_pet_store(move |store| store.install_from_catalog(&slug, &name, &description, &sheet))
+            .await?;
+    let _ = app.emit("nuzzle-user-pets-changed", &pet.id);
+    Ok(pet)
+}
+
+#[tauri::command]
+async fn save_custom_pet(
+    app: AppHandle,
+    name: String,
+    description: String,
+    image: String,
+) -> Result<UserPet, String> {
+    let pet = with_pet_store(move |store| store.save_custom(&name, &description, &image)).await?;
+    let _ = app.emit("nuzzle-user-pets-changed", &pet.id);
+    Ok(pet)
+}
+
+#[tauri::command]
+async fn remove_user_pet(app: AppHandle, id: String) -> Result<(), String> {
+    let removed = id.clone();
+    with_pet_store(move |store| store.remove(&id)).await?;
+    let _ = app.emit("nuzzle-user-pets-changed", &removed);
+    Ok(())
+}
+
+/// Open a link in the default browser. Only known project and catalog hosts are allowed.
+#[tauri::command]
+fn open_url(url: String) -> Result<(), String> {
+    const ALLOWED: [&str; 3] = [
+        "https://codexpets.net/",
+        "https://github.com/",
+        "https://codex-pet-share.pages.dev/",
+    ];
+    if !ALLOWED.iter().any(|prefix| url.starts_with(prefix)) || url.chars().any(char::is_whitespace) {
+        return Err("This link is not allowed".into());
+    }
+    std::process::Command::new("/usr/bin/open")
+        .arg(url)
+        .spawn()
+        .map(|_| ())
+        .map_err(|error| error.to_string())
+}
+
+#[tauri::command]
+async fn reveal_user_pets() -> Result<(), String> {
+    with_pet_store(|store| {
+        std::fs::create_dir_all(store.root())?;
+        std::process::Command::new("/usr/bin/open")
+            .arg(store.root())
+            .spawn()
+            .map(|_| ())
+    })
+    .await
 }
 
 #[tauri::command]
@@ -201,6 +286,13 @@ pub fn run() {
             app.manage(manager);
             app.manage(runtime);
             app.manage(DesktopState::load(&root));
+            // Let the webviews load user pet sheets from the Codex pets folder only.
+            if let Ok(store) = PetStore::from_codex_home() {
+                let _ = std::fs::create_dir_all(store.root());
+                let _ = app
+                    .asset_protocol_scope()
+                    .allow_directory(store.root(), true);
+            }
             build_tray(app)?;
 
             if let Some(companion) = app.get_webview_window("companion") {
@@ -254,7 +346,13 @@ pub fn run() {
             select_native_pet,
             list_integrations,
             install_integration,
-            uninstall_integration
+            uninstall_integration,
+            list_user_pets,
+            install_catalog_pet,
+            save_custom_pet,
+            remove_user_pet,
+            reveal_user_pets,
+            open_url
         ])
         .build(tauri::generate_context!())
         .expect("failed to build Nuzzle")

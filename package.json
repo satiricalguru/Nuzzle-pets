@@ -1,6 +1,6 @@
 {
   "name": "nuzzle-desktop",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "A native floating desktop companion for coding agents",
   "scripts": {
@@ -14,7 +14,10 @@
     "build": "npm run frontend:build && tauri build",
     "build:universal": "npm run frontend:build && tauri build --target universal-apple-darwin --bundles dmg",
     "release:macos": "sh scripts/build_macos_release.sh",
-    "check": "npm run frontend:build && npm run pets:audit && npm run pets:check-size && npm run test:python && cargo test --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings"
+    "check": "npm run frontend:build && npm run pets:audit && npm run pets:check-size && python3 scripts/make_thumbs.py --check && npm run test:python && cargo test --manifest-path src-tauri/Cargo.toml && cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings",
+    "pets:thumbs": "python3 scripts/make_thumbs.py",
+    "pets:sync": "python3 scripts/sync_codexpets_catalog.py",
+    "clean": "cargo clean --manifest-path src-tauri/Cargo.toml && rm -rf dist"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.8.4"

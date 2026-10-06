@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 import argparse
+import io
 import math
 import os
+import subprocess
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -15,7 +17,7 @@ from PIL import Image, ImageChops, ImageStat
 
 ROOT = Path(__file__).resolve().parents[1]
 PETS_DIR = ROOT / "public" / "pets"
-MIN_VISIBLE_PSNR = 30.0
+MIN_VISIBLE_PSNR = 32.0
 
 
 def webp_is_lossless(path: Path) -> bool:
@@ -47,12 +49,32 @@ def visible_psnr(before: Image.Image, after: Image.Image) -> float:
     return min(scores)
 
 
-def optimize(path: Path, quality: int) -> tuple[str, int, int, float]:
+def lossless_source(path: Path, rev: str | None) -> bytes | None:
+    """Return lossless atlas bytes from disk or, with ``rev``, from git history."""
+    if rev is None:
+        return path.read_bytes() if webp_is_lossless(path) else None
+    relative = path.relative_to(ROOT).as_posix()
+    blob = subprocess.run(
+        ["git", "show", f"{rev}:{relative}"], cwd=ROOT, capture_output=True, check=False
+    ).stdout
+    if blob[:4] != b"RIFF" or blob[8:12] != b"WEBP":
+        return None
+    # Only re-encode from git when the historical copy really is lossless.
+    probe = Path(tempfile.mkstemp(suffix=".webp")[1])
+    try:
+        probe.write_bytes(blob)
+        return blob if webp_is_lossless(probe) else None
+    finally:
+        probe.unlink(missing_ok=True)
+
+
+def optimize(path: Path, quality: int, rev: str | None = None) -> tuple[str, int, int, float]:
     original_size = path.stat().st_size
-    if not webp_is_lossless(path):
+    source_bytes = lossless_source(path, rev)
+    if source_bytes is None:
         return path.name, original_size, original_size, math.inf
 
-    with Image.open(path) as source:
+    with Image.open(io.BytesIO(source_bytes)) as source:
         image = source.convert("RGBA")
     handle = tempfile.NamedTemporaryFile(
         dir=path.parent, prefix=f".{path.stem}-", suffix=".webp", delete=False
@@ -60,21 +82,25 @@ def optimize(path: Path, quality: int) -> tuple[str, int, int, float]:
     candidate = Path(handle.name)
     handle.close()
     try:
-        image.save(
-            candidate,
-            format="WEBP",
-            quality=quality,
-            alpha_quality=100,
-            method=6,
-        )
-        with Image.open(candidate) as encoded:
-            decoded = encoded.convert("RGBA")
-        if decoded.size != image.size:
-            raise ValueError(f"{path.name}: dimensions changed during optimization")
-        if ImageChops.difference(image.getchannel("A"), decoded.getchannel("A")).getbbox():
-            raise ValueError(f"{path.name}: alpha channel changed during optimization")
-        psnr = visible_psnr(image, decoded)
-        if psnr < MIN_VISIBLE_PSNR:
+        # Start at the requested quality and step up until the visible-quality bar is met.
+        for attempt in range(quality, 101, 4):
+            image.save(
+                candidate,
+                format="WEBP",
+                quality=attempt,
+                alpha_quality=100,
+                method=6,
+            )
+            with Image.open(candidate) as encoded:
+                decoded = encoded.convert("RGBA")
+            if decoded.size != image.size:
+                raise ValueError(f"{path.name}: dimensions changed during optimization")
+            if ImageChops.difference(image.getchannel("A"), decoded.getchannel("A")).getbbox():
+                raise ValueError(f"{path.name}: alpha channel changed during optimization")
+            psnr = visible_psnr(image, decoded)
+            if psnr >= MIN_VISIBLE_PSNR:
+                break
+        else:
             raise ValueError(
                 f"{path.name}: visible PSNR {psnr:.2f} dB is below {MIN_VISIBLE_PSNR:.2f} dB"
             )
@@ -89,7 +115,12 @@ def optimize(path: Path, quality: int) -> tuple[str, int, int, float]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--quality", type=int, default=92, choices=range(80, 101), metavar="80-100")
+    parser.add_argument("--quality", type=int, default=80, choices=range(70, 101), metavar="70-100")
+    parser.add_argument(
+        "--from-git",
+        metavar="REV",
+        help="re-encode from the lossless atlases stored at this git revision",
+    )
     parser.add_argument("--jobs", type=int, default=min(4, os.cpu_count() or 1))
     parser.add_argument(
         "--check",
@@ -111,7 +142,7 @@ def main() -> None:
 
     before = sum(path.stat().st_size for path in paths)
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as executor:
-        results = list(executor.map(lambda path: optimize(path, args.quality), paths))
+        results = list(executor.map(lambda path: optimize(path, args.quality, args.from_git), paths))
     after = sum(path.stat().st_size for path in paths)
     changed = sum(old != new for _, old, new, _ in results)
     finite_psnr = [psnr for _, old, new, psnr in results if old != new and math.isfinite(psnr)]

@@ -548,6 +548,8 @@
 
         let isWalking = false;
         let isShiftedForMenu = false;
+        // Our own repositioning (menu flyout) must not look like a user drag.
+        let ignoreMovesUntil = 0;
 
         function updateCompanionWindowSize() {
           if (!IS_NATIVE_APP) return;
@@ -564,6 +566,7 @@
             if (willOverflowRight) {
               document.body.classList.add('menu-left');
               isShiftedForMenu = true;
+              ignoreMovesUntil = Date.now() + 400;
               invokeNative('set_companion_position', { x: Math.max(0, currentX - 165), y: currentY }).catch(() => {});
             } else {
               document.body.classList.remove('menu-left');
@@ -575,6 +578,7 @@
             if (isShiftedForMenu) {
               const currentX = window.screenX !== undefined ? window.screenX : 0;
               const currentY = window.screenY !== undefined ? window.screenY : 0;
+              ignoreMovesUntil = Date.now() + 400;
               invokeNative('set_companion_position', { x: currentX + 165, y: currentY }).catch(() => {});
               isShiftedForMenu = false;
             }
@@ -716,7 +720,7 @@
           if (state.activePetState !== moveClass) {
             state.activePetState = moveClass;
             if (miniArt) {
-              const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+              const pet = getActivePet();
               miniArt.className = `mini-art state-${moveClass}${pet.ext === 'gif' ? ' gif-pet' : ''}`;
             }
           }
@@ -744,14 +748,20 @@
         if (window.__TAURI__?.event) {
           window.__TAURI__.event.listen('companion-moved', (event) => {
             const payload = event.payload || {};
+            if (Date.now() < ignoreMovesUntil) return;
             handlePetMove(payload.dx || 0);
+            if (miniHud && miniHud.classList.contains('menu-open')) {
+              toggleMenu(false);
+            }
           });
         }
 
-        // 2. Continuous window position delta tracking (catches all OS window dragging)
+        // 2. Browser fallback: popups get no native move events, so sample the window
+        //    position slowly. The native app relies on push events and never polls.
         let prevScreenX = window.screenX;
         let prevScreenY = window.screenY;
-        setInterval(() => {
+        if (!IS_NATIVE_APP) setInterval(() => {
+          if (document.hidden) return;
           const curX = window.screenX;
           const curY = window.screenY;
           const dx = curX - prevScreenX;
@@ -765,7 +775,7 @@
               toggleMenu(false);
             }
           }
-        }, 30);
+        }, 120);
 
         // 3. Pointer drag tracking on container and art
         const miniContainer = document.getElementById('mini-container');
@@ -878,7 +888,7 @@
         };
 
         function updateMiniUI() {
-          const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+          const pet = getActivePet();
           if (miniArt) {
             applyPetArtStyle(miniArt, pet);
             const activeState = state.activePetState || (isWalking ? 'walk' : 'idle');
@@ -891,7 +901,7 @@
 
         // Patting triggers — in Codex Pets, tapping the pet speaks a dialogue above its head
         function handlePat() {
-          const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+          const pet = getActivePet();
           if (typeof patActivePet === 'function') {
             patActivePet();
           } else {
