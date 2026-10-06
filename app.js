@@ -19,6 +19,15 @@ function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
 function capitalizeSegments(str, delimiter = '·') {
   if (!str || typeof str !== 'string') return '';
   return str.split(delimiter).map(s => {
@@ -542,6 +551,31 @@ const PETS = [
   }
 ];
 
+// Library sections. Bundled pets default to anime; user pets get theirs from the
+// native pet store (installed from CodexPets, made in Pet Maker, or other Codex pets).
+const PET_CATEGORY_IDS = {
+  animals: ['dog', 'dragon', 'duck', 'goat', 'horse', 'monkey', 'orange-cat', 'ox', 'panda', 'pig', 'rabbit', 'rat', 'rooster', 'snake', 'tiger'],
+  mascots: ['copet-neo', 'copet-nia', 'copet-mecha', 'dj-fuzz']
+};
+const LIBRARY_SECTIONS = [
+  { id: 'anime', label: 'Anime companions', blurb: 'Heroes from your favorite games and shows' },
+  { id: 'animals', label: 'Animals', blurb: 'Zodiac friends and cozy critters' },
+  { id: 'mascots', label: 'Mascots', blurb: 'Original CoPet characters' },
+  { id: 'installed', label: 'From CodexPets', blurb: 'Community pets you added from Discover' },
+  { id: 'mine', label: 'Made by you', blurb: 'Pet Maker creations and imported sheets' },
+  { id: 'codex', label: 'Other Codex pets', blurb: 'Custom pets found in ~/.codex/pets' }
+];
+const BUNDLED_PET_IDS = new Set(PETS.map(pet => pet.id));
+PETS.forEach(pet => {
+  pet.category = Object.keys(PET_CATEGORY_IDS).find(category => PET_CATEGORY_IDS[category].includes(pet.id)) || 'anime';
+  // Idle-row strips keep grids from decoding dozens of full atlases (~11 MB each).
+  pet.thumb = `/pets/thumbs/${pet.file}.webp`;
+});
+
+function getActivePet() {
+  return PETS.find(pet => pet.id === state.selectedPetId) || PETS[0];
+}
+
 const AGENT_LOGOS = {
   codex: `<svg viewBox="2.5 2.5 19 19" width="22" height="22" fill="none" aria-label="Codex"><defs><linearGradient id="nuzzle-codex-grad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#9FA8FE"/><stop offset="50%" stop-color="#6B7CFB"/><stop offset="100%" stop-color="#3C46F5"/></linearGradient></defs><path d="M9.064 3.344a4.578 4.578 0 012.285-.312c1 .115 1.891.54 2.673 1.275.01.01.024.017.037.021a.09.09 0 00.043 0 4.55 4.55 0 013.046.275l.047.022.116.057a4.581 4.581 0 012.188 2.399c.209.51.313 1.041.315 1.595a4.24 4.24 0 01-.134 1.223.123.123 0 00.03.115c.594.607.988 1.33 1.183 2.17.289 1.425-.007 2.71-.887 3.854l-.136.166a4.548 4.548 0 01-2.201 1.388.123.123 0 00-.081.076c-.191.551-.383 1.023-.74 1.494-.9 1.187-2.222 1.846-3.711 1.838-1.187-.006-2.239-.44-3.157-1.302a.107.107 0 00-.105-.024c-.388.125-.78.143-1.204.138a4.441 4.441 0 01-1.945-.466 4.544 4.544 0 01-1.61-1.335c-.152-.202-.303-.392-.414-.617a5.81 5.81 0 01-.37-.961 4.582 4.582 0 01-.014-2.298.124.124 0 00.006-.056.085.085 0 00-.027-.048 4.467 4.467 0 01-1.034-1.651 3.896 3.896 0 01-.251-1.192 5.189 5.189 0 01.141-1.6c.337-1.112.982-1.985 1.933-2.618.212-.141.413-.251.601-.33.215-.089.43-.164.646-.227a.098.098 0 00.065-.066 4.51 4.51 0 01.829-1.615 4.535 4.535 0 011.837-1.388Z" fill="url(#nuzzle-codex-grad)"/><path d="M8.462 9.23a.637.637 0 00-1.106.631l1.272 2.224-1.266 2.136a.636.636 0 101.095.649l1.454-2.455a.636.636 0 00.005-.64L8.462 9.23z" fill="#FFFFFF"/><path d="M12.546 13.909a.637.637 0 000 1.272h3.636a.637.637 0 100-1.272h-3.636z" fill="#FFFFFF"/></svg>`,
   claude: `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-label="Claude Code"><path d="m4.714 15.956l4.718-2.648l.079-.23l-.08-.128h-.23l-.79-.048l-2.695-.073l-2.337-.097l-2.265-.122l-.57-.121l-.535-.704l.055-.353l.48-.321l.685.06l1.518.104l2.277.157l1.651.098l2.447.255h.389l.054-.158l-.133-.097l-.103-.098l-2.356-1.596l-2.55-1.688l-1.336-.972l-.722-.491L2 6.223l-.158-1.008l.656-.722l.88.06l.224.061l.893.686l1.906 1.476l2.49 1.833l.364.304l.146-.104l.018-.072l-.164-.274l-1.354-2.446l-1.445-2.49l-.644-1.032l-.17-.619a3 3 0 0 1-.103-.729L6.287.133L6.7 0l.995.134l.42.364l.619 1.415L9.735 4.14l1.555 3.03l.455.898l.243.832l.09.255h.159V9.01l.127-1.706l.237-2.095l.23-2.695l.08-.76l.376-.91l.747-.492l.583.28l.48.685l-.067.444l-.286 1.851l-.558 2.903l-.365 1.942h.213l.243-.242l.983-1.306l1.652-2.064l.728-.82l.85-.904l.547-.431h1.032l.759 1.129l-.34 1.166l-1.063 1.347l-.88 1.142l-1.263 1.7l-.79 1.36l.074.11l.188-.02l2.853-.606l1.542-.28l1.84-.315l.832.388l.09.395l-.327.807l-1.967.486l-2.307.462l-3.436.813l-.043.03l.049.061l1.548.146l.662.036h1.62l3.018.225l.79.522l.473.638l-.08.485l-1.213.62l-1.64-.389l-3.825-.91l-1.31-.329h-.183v.11l1.093 1.068l2.003 1.81l2.508 2.33l.127.578l-.321.455l-.34-.049l-2.204-1.657l-.85-.747l-1.925-1.62h-.127v.17l.443.649l2.343 3.521l.122 1.08l-.17.353l-.607.213l-.668-.122l-1.372-1.924l-1.415-2.168l-1.141-1.943l-.14.08l-.674 7.254l-.316.37l-.728.28l-.607-.461l-.322-.747l.322-1.476l.388-1.924l.316-1.53l.285-1.9l.17-.632l-.012-.042l-.14.018l-1.432 1.967l-2.18 2.945l-1.724 1.845l-.413.164l-.716-.37l.066-.662l.401-.589l2.386-3.036l1.439-1.882l.929-1.086l-.006-.158h-.055L4.138 18.56l-1.13.146l-.485-.456l.06-.746l.231-.243l1.907-1.312Z"/></svg>`,
@@ -613,7 +647,8 @@ const state = {
   favorites: new Set(loadStored(STORAGE_KEYS.FAVORITES, ['hu-tao', 'ganyu'])),
   settings: { ...DEFAULT_SETTINGS, ...loadStored(STORAGE_KEYS.SETTINGS, {}) },
   agents: INITIAL_AGENTS.map(agent => ({ ...agent })),
-  activity: [...SAMPLE_EVENTS],
+  // Sample events only decorate the browser preview; the native app shows real hooks.
+  activity: IS_NATIVE_APP ? [] : [...SAMPLE_EVENTS],
   currentView: 'overview',
   currentSettingsTab: 'appearance',
   activePetState: 'idle',
@@ -687,6 +722,7 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 function petUrl(pet) {
+  if (typeof pet === 'object' && pet.src) return pet.src;
   const ext = (typeof pet === 'object' ? pet.ext : 'png') || 'png';
   const file = typeof pet === 'object' ? pet.file : pet;
   return `/pets/${file}.${ext}`;
@@ -697,6 +733,11 @@ function artStyle(petOrFile) {
   const rowStep = 100 / (rows - 1);
   const rowVariables = Array.from({ length: rows }, (_, row) => `--atlas-row-${row}:${(row * rowStep).toFixed(3)}%`).join(';');
   return `background-image:url('${petUrl(petOrFile)}');--atlas-height:${rows * 100}%;${rowVariables}`;
+}
+
+function thumbStyle(pet) {
+  if (!pet.thumb) return artStyle(pet);
+  return `background-image:url('${pet.thumb}');--atlas-height:100%;--atlas-row-0:0%`;
 }
 
 function applyPetArtStyle(element, pet) {
@@ -744,7 +785,7 @@ let petStateTimeout = null;
 
 function setPetState(newState, durationMs = 2000) {
   state.activePetState = newState;
-  const activePet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+  const activePet = getActivePet();
   const gifClass = activePet.ext === 'gif' ? ' gif-pet' : '';
 
   const arts = $$('.pet-art, .mini-art, .pip-art');
@@ -763,7 +804,7 @@ function setPetState(newState, durationMs = 2000) {
   if (petStateTimeout) clearTimeout(petStateTimeout);
   if (newState !== 'idle') {
     petStateTimeout = setTimeout(() => {
-      const activePet2 = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+      const activePet2 = getActivePet();
       const gifClass2 = activePet2.ext === 'gif' ? ' gif-pet' : '';
       $$('.pet-art, .mini-art, .pip-art').forEach(art => {
         const isMini = art.classList.contains('mini-art');
@@ -787,7 +828,7 @@ function updatePipWindow() {
     return;
   }
   try {
-    const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+    const pet = getActivePet();
     const art = pipWindowInstance.document.getElementById('pip-art');
     const name = pipWindowInstance.document.getElementById('pip-name');
     const quote = pipWindowInstance.document.getElementById('pip-quote');
@@ -987,7 +1028,7 @@ async function floatPetOnDesktop() {
       `;
       pip.document.head.appendChild(pipStyle);
 
-      const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+      const pet = getActivePet();
       pip.document.body.innerHTML = `
         <div class="pip-card" id="pip-card">
           <div class="pet-particles" id="pip-particles"></div>
@@ -1055,7 +1096,7 @@ function createHeartBurst(event) {
 }
 
 function patActivePet() {
-  const activePet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+  const activePet = getActivePet();
   setPetState('pat', 2200);
   createHeartBurst();
   playChime('pat');
@@ -1086,10 +1127,7 @@ function selectCompanion(petId) {
     channel.close();
   }
 
-  renderFeaturedPet();
-  renderPetStrip();
-  const activeFilter = $('.filter-button.active')?.dataset.filter || 'all';
-  if (state.currentView === 'library') renderLibrary(activeFilter, $('#pet-search')?.value || '');
+  refreshPetViews();
   setPetState('pat', 1500);
   createHeartBurst();
   playChime('pat');
@@ -1107,16 +1145,99 @@ function toggleFavorite(petId) {
     showToast(`Added to favorites`);
   }
   saveStored(STORAGE_KEYS.FAVORITES, [...state.favorites]);
+  refreshPetViews();
+}
 
+// Re-render every surface that shows pets (studio views, mini companion, PiP).
+function refreshPetViews() {
   renderFeaturedPet();
   renderPetStrip();
-  const filter = $('.filter-button.active')?.dataset.filter || 'all';
-  if (state.currentView === 'library') renderLibrary(filter, $('#pet-search')?.value || '');
+  renderLibraryFilters();
+  if (state.currentView === 'library') {
+    renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
+  }
+  updatePipWindow();
+  if (typeof window.updateMiniUI === 'function') window.updateMiniUI();
+  document.dispatchEvent(new CustomEvent('nuzzle:pets-changed'));
+}
+
+const USER_PET_CATEGORY = { codexpets: 'installed', maker: 'mine', codex: 'codex' };
+
+function userPetFromNative(item) {
+  const category = USER_PET_CATEGORY[item.source] || 'codex';
+  const description = String(item.description || '').trim();
+  return {
+    id: item.id,
+    name: item.displayName || item.id,
+    file: item.id,
+    src: TAURI.core.convertFileSrc(item.spritesheetPath),
+    vibe: 'cozy',
+    element: category === 'mine' ? 'handmade' : 'community',
+    note: category === 'mine' ? 'handmade · original' : category === 'installed' ? 'community · codexpets' : 'custom · codex',
+    quote: description ? `“${description}”` : '“Ready when you are.”',
+    badge: category === 'mine' ? 'your creation' : 'community pet',
+    spriteVersion: item.spriteVersion === 2 ? 2 : 1,
+    category,
+    userPet: true,
+    removable: Boolean(item.removable)
+  };
+}
+
+// Pets installed from Discover or made in Pet Maker live in ~/.codex/pets.
+async function loadUserPets() {
+  if (!IS_NATIVE_APP) return false;
+  try {
+    const list = await invokeNative('list_user_pets');
+    const fresh = list.filter(item => !BUNDLED_PET_IDS.has(item.id)).map(userPetFromNative);
+    for (let index = PETS.length - 1; index >= 0; index -= 1) {
+      if (PETS[index].userPet) PETS.splice(index, 1);
+    }
+    PETS.push(...fresh);
+    return true;
+  } catch (error) {
+    console.warn('Unable to load user pets:', error);
+    return false;
+  }
+}
+
+async function removeUserPet(petId) {
+  const pet = PETS.find(item => item.id === petId);
+  if (!pet?.removable) return;
+  try {
+    await invokeNative('remove_user_pet', { id: petId });
+    state.favorites.delete(petId);
+    saveStored(STORAGE_KEYS.FAVORITES, [...state.favorites]);
+    if (state.selectedPetId === petId) selectCompanion(PETS[0].id);
+    await loadUserPets();
+    refreshPetViews();
+    showToast(`${pet.name} moved to the Trash.`);
+  } catch (error) {
+    showToast(`Could not remove ${pet.name}: ${error}`, { type: 'error' });
+  }
+}
+
+// Two-step confirmation for destructive buttons (WKWebView has no confirm()).
+function confirmAction(button, label = 'Click again to confirm') {
+  if (button.dataset.armed === 'true') {
+    delete button.dataset.armed;
+    button.textContent = button.dataset.originalLabel || button.textContent;
+    return true;
+  }
+  button.dataset.armed = 'true';
+  button.dataset.originalLabel = button.textContent;
+  button.textContent = label;
+  setTimeout(() => {
+    if (button.dataset.armed === 'true') {
+      delete button.dataset.armed;
+      button.textContent = button.dataset.originalLabel;
+    }
+  }, 3500);
+  return false;
 }
 
 // 7. RENDER FUNCTIONS
 function renderFeaturedPet() {
-  const pet = PETS.find(p => p.id === state.selectedPetId) || PETS[0];
+  const pet = getActivePet();
   const heroArt = $('#hero-pet-art');
   const heroName = $('#hero-pet-name');
   const heroQuote = $('#hero-pet-quote');
@@ -1132,33 +1253,96 @@ function renderFeaturedPet() {
   if (heroName) heroName.textContent = pet.name;
   if (heroQuote) heroQuote.textContent = pet.quote;
   if (heroBadge) {
-    const badgeText = state.favorites.has(pet.id) ? 'Currently your favorite' : capitalize(pet.badge);
+    const badgeText = state.favorites.has(pet.id) ? 'One of your favorites' : capitalize(pet.badge);
     heroBadge.innerHTML = `<span class="mini-spark">✦</span> ${badgeText}`;
   }
   if (heroVibe) heroVibe.textContent = `${capitalize(pet.vibe)} · ${capitalize(pet.element)}`;
   if (heroAtlas) heroAtlas.textContent = pet.spriteVersion === 2 ? 'V2 · 8×11 atlas' : 'V1 · 8×9 atlas';
+  const avatar = $('#profile-btn');
+  if (avatar) avatar.setAttribute('style', thumbStyle(pet));
+  const avatarLarge = $('.profile-avatar-large');
+  if (avatarLarge) avatarLarge.setAttribute('style', thumbStyle(pet));
 }
 
 function renderPetStrip() {
   const strip = $('#pet-strip');
   if (!strip) return;
 
-  // Show 4 pets (prioritize selected and favorites)
-  const displayPets = PETS.slice(0, 4);
+  // Favorites first in a stable order, always including the active companion.
+  const ranked = [...PETS.filter(pet => state.favorites.has(pet.id)), ...PETS.filter(pet => !state.favorites.has(pet.id))];
+  const displayPets = ranked.slice(0, 4);
+  const active = getActivePet();
+  if (!displayPets.includes(active)) displayPets[displayPets.length - 1] = active;
   strip.innerHTML = displayPets.map(pet => {
     const isSelected = pet.id === state.selectedPetId;
     const isFav = state.favorites.has(pet.id);
     return `
       <div class="pet-tile ${isSelected ? 'selected' : ''}" data-pet-id="${pet.id}" role="listitem" tabindex="0">
-        <div class="pet-tile-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${artStyle(pet)}"></div>
+        <div class="pet-tile-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${thumbStyle(pet)}"></div>
         <div class="pet-tile-copy">
-          <strong>${pet.name}</strong>
-          <small>${capitalizeSegments(pet.note)}</small>
+          <strong>${escapeHtml(pet.name)}</strong>
+          <small>${escapeHtml(capitalizeSegments(pet.note))}</small>
         </div>
-        <button class="pet-tile-fav ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-label="Favorite ${pet.name}" title="Favorite ${pet.name}">♥</button>
+        <button class="pet-tile-fav ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-pressed="${isFav}" aria-label="Favorite ${escapeHtml(pet.name)}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">♥</button>
       </div>
     `;
   }).join('');
+}
+
+function petsForFilter(filter) {
+  if (filter === 'all') return PETS;
+  if (filter === 'favorites') return PETS.filter(pet => state.favorites.has(pet.id));
+  if (filter === 'installed') return PETS.filter(pet => pet.category === 'installed' || pet.category === 'codex');
+  return PETS.filter(pet => pet.category === filter);
+}
+
+function renderLibraryFilters() {
+  $$('.filter-button[data-filter]').forEach(button => {
+    const count = button.querySelector('.filter-count');
+    if (count) count.textContent = petsForFilter(button.dataset.filter).length;
+  });
+  const navCount = $('#nav-pet-count');
+  if (navCount) navCount.textContent = PETS.length;
+  const storage = $('#storage-pet-count');
+  if (storage) {
+    const added = PETS.filter(pet => pet.userPet).length;
+    storage.lastChild.textContent = ` ${BUNDLED_PET_IDS.size} bundled · ${added} added`;
+  }
+}
+
+function libraryCardHtml(pet) {
+  const isActive = pet.id === state.selectedPetId;
+  const isFav = state.favorites.has(pet.id);
+  const name = escapeHtml(pet.name);
+  return `
+    <article class="library-card ${isActive ? 'is-active-companion' : ''}" data-pet-id="${pet.id}">
+      <div class="library-art-stage" data-action="select-companion" data-pet-id="${pet.id}" title="Make ${name} your companion">
+        <div class="library-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${thumbStyle(pet)}"></div>
+        ${pet.userPet ? `<span class="library-source-tag">${pet.category === 'mine' ? 'Yours' : pet.category === 'installed' ? 'CodexPets' : 'Codex'}</span>` : ''}
+      </div>
+      <div class="library-info">
+        <div>
+          <strong>${name}</strong>
+          <small>${escapeHtml(capitalizeSegments(pet.note))}</small>
+        </div>
+        <button class="library-heart ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-pressed="${isFav}" aria-label="Favorite ${name}" title="${isFav ? 'Remove from favorites' : 'Add to favorites'}">♥</button>
+      </div>
+      <div class="library-card-actions">
+        <button class="library-select-btn" data-action="select-companion" data-pet-id="${pet.id}">
+          ${isActive ? '✓ Active companion' : 'Set as companion'}
+        </button>
+        ${pet.removable ? `<button class="library-remove-btn" data-action="remove-user-pet" data-pet-id="${pet.id}" title="Move ${name} to the Trash">Remove</button>` : ''}
+      </div>
+    </article>
+  `;
+}
+
+function libraryEmptyState(filter, query) {
+  if (query) return `<div class="empty-state">No companions match “${escapeHtml(query)}”. Try a name, element, or vibe — or <button class="text-button inline" data-view-target="discover">search CodexPets</button>.</div>`;
+  if (filter === 'favorites') return '<div class="empty-state">Tap the ♥ on any pet to keep it here.</div>';
+  if (filter === 'mine') return '<div class="empty-state">You have not made a pet yet. <button class="text-button inline" data-view-target="maker">Open Pet Maker <span>↗</span></button></div>';
+  if (filter === 'installed') return '<div class="empty-state">Add community pets from <button class="text-button inline" data-view-target="discover">Discover <span>↗</span></button> — they download only when you add them.</div>';
+  return '<div class="empty-state">No companions here yet.</div>';
 }
 
 function renderLibrary(filter = 'all', search = '') {
@@ -1166,43 +1350,49 @@ function renderLibrary(filter = 'all', search = '') {
   if (!grid) return;
 
   const query = search.trim().toLowerCase();
-  const visible = PETS.filter(pet => {
-    const matchesFilter = (filter === 'all' || pet.vibe === filter);
-    const matchesSearch = !query || `${pet.name} ${pet.note} ${pet.quote} ${pet.element}`.toLowerCase().includes(query);
-    return matchesFilter && matchesSearch;
-  });
+  const visible = petsForFilter(filter).filter(pet => !query ||
+    `${pet.name} ${pet.note} ${pet.quote} ${pet.element} ${pet.category}`.toLowerCase().includes(query));
 
   const countDisplay = $('#library-count-display');
   if (countDisplay) countDisplay.textContent = visible.length;
 
   if (!visible.length) {
-    grid.innerHTML = '<div class="empty-state">No tiny companions found matching your criteria. Try another search.</div>';
+    grid.classList.remove('is-grouped');
+    grid.innerHTML = libraryEmptyState(filter, query);
     return;
   }
 
-  grid.innerHTML = visible.map(pet => {
-    const isActive = pet.id === state.selectedPetId;
-    const isFav = state.favorites.has(pet.id);
-    return `
-      <article class="library-card ${isActive ? 'is-active-companion' : ''}" data-pet-id="${pet.id}">
-        <div class="library-art-stage" data-action="select-companion" data-pet-id="${pet.id}" title="Click to make ${pet.name} your companion">
-          <div class="library-art${pet.ext === 'gif' ? ' gif-pet' : ''}" style="${artStyle(pet)}"></div>
-        </div>
-        <div class="library-info">
-          <div>
-            <strong>${pet.name}</strong>
-            <small>${capitalizeSegments(pet.note)}</small>
-          </div>
-          <button class="library-heart ${isFav ? 'active' : ''}" data-fav-id="${pet.id}" aria-label="Favorite ${pet.name}" title="Favorite ${pet.name}">♥</button>
-        </div>
-        <div class="library-card-actions">
-          <button class="library-select-btn" data-action="select-companion" data-pet-id="${pet.id}">
-            ${isActive ? '✓ Active companion' : 'Set as companion'}
-          </button>
-        </div>
-      </article>
-    `;
-  }).join('');
+  // "All" without a search shows one section per kind of pet.
+  if (filter === 'all' && !query) {
+    grid.classList.add('is-grouped');
+    grid.innerHTML = LIBRARY_SECTIONS.map(section => {
+      const pets = visible.filter(pet => pet.category === section.id);
+      if (!pets.length) return '';
+      return `
+        <section class="library-section" aria-labelledby="library-section-${section.id}">
+          <header class="library-section-head">
+            <h3 id="library-section-${section.id}">${section.label} <span>${pets.length}</span></h3>
+            <p>${section.blurb}</p>
+            <button class="text-button" data-filter-jump="${section.id === 'codex' ? 'installed' : section.id}">Only ${section.label.toLowerCase()} <span>→</span></button>
+          </header>
+          <div class="library-section-grid">${pets.map(libraryCardHtml).join('')}</div>
+        </section>
+      `;
+    }).join('');
+    return;
+  }
+
+  grid.classList.remove('is-grouped');
+  grid.innerHTML = `<div class="library-section-grid">${visible.map(libraryCardHtml).join('')}</div>`;
+}
+
+function setLibraryFilter(filter) {
+  $$('.filter-button[data-filter]').forEach(button => {
+    const active = button.dataset.filter === filter;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+  renderLibrary(filter, $('#pet-search')?.value || '');
 }
 
 function renderAgents() {
@@ -1213,7 +1403,7 @@ function renderAgents() {
     <article class="agent-card">
       <div class="agent-card-top">
         <div class="agent-logo ${agent.key}">${AGENT_LOGOS[agent.key] || agent.mark}</div>
-        <button class="toggle ${agent.active ? 'on' : ''}" data-agent-toggle="${agent.id}" aria-label="${agent.active ? 'Disconnect' : 'Connect'} ${agent.name}" ${!agent.available && !agent.active ? 'disabled' : ''}>
+        <button class="toggle ${agent.active ? 'on' : ''}" role="switch" aria-checked="${agent.active}" data-agent-toggle="${agent.id}" aria-label="Connect ${agent.name}" ${!agent.available && !agent.active ? 'disabled' : ''}>
           <span></span>
         </button>
       </div>
@@ -1236,18 +1426,38 @@ function renderAgents() {
   if (navCount) navCount.textContent = `${activeCount}/${totalCount}`;
   if (orbitCount) orbitCount.textContent = activeCount;
   if (activeAgentsNum) activeAgentsNum.textContent = activeCount;
+
+  const sub = $('#active-agents-sub');
+  if (sub) {
+    const working = state.activity.filter(item => item.type === 'working').length;
+    sub.textContent = !activeCount
+      ? 'Connect one in Agents'
+      : working ? `${working} recent tool ${working === 1 ? 'call' : 'calls'}` : 'Quiet right now';
+  }
+  const stack = $('#agent-avatar-stack');
+  if (stack) {
+    const connected = state.agents.filter(agent => agent.active);
+    const shown = connected.slice(0, 3);
+    stack.innerHTML = shown.map(agent =>
+      `<span class="agent-chip ${agent.key}" title="${agent.name}">${AGENT_LOGOS[agent.key] || ''}</span>`
+    ).join('') + (connected.length > 3 ? `<span class="agent-chip more">+${connected.length - 3}</span>` : '');
+    stack.hidden = !connected.length;
+  }
 }
 
 function renderActivity() {
   const list = $('#activity-list');
   if (!list) return;
 
-  const escapeHtml = value => String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+  if (!state.activity.length) {
+    list.innerHTML = `
+      <div class="activity-empty">
+        <strong>No agent activity yet</strong>
+        <small>Connect an agent and your companion will react to prompts, tools, and completions here.</small>
+        <button class="text-button" data-view-target="agents">Connect an agent <span>↗</span></button>
+      </div>`;
+    return;
+  }
 
   list.innerHTML = state.activity.map(item => `
     <div class="activity-item">
@@ -1264,13 +1474,6 @@ function renderActivity() {
 function renderNotificationsPopover() {
   const container = $('#notifications-list');
   if (!container) return;
-
-  const escapeHtml = value => String(value ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
 
   if (!state.activity || state.activity.length === 0) {
     container.innerHTML = `
@@ -1347,24 +1550,33 @@ function closeAllPopovers() {
 }
 
 // 8. COMMAND PALETTE SEARCH & NAVIGATION
-const PALETTE_ACTIONS = [
-  { id: 'view-overview', category: 'Navigation', title: 'Go to Overview', icon: '⌂', shortcut: '1', action: () => setView('overview') },
-  { id: 'view-library', category: 'Navigation', title: 'Browse Pet Library', icon: '✣', shortcut: '2', action: () => setView('library') },
-  { id: 'view-agents', category: 'Navigation', title: 'Manage Agents & Integrations', icon: '⌘', shortcut: '3', action: () => setView('agents') },
-  { id: 'view-settings', category: 'Navigation', title: 'Open Settings & Preferences', icon: '◌', shortcut: '4', action: () => setView('settings') },
-  { id: 'act-float', category: 'Desktop', title: 'Float Companion on Desktop (Always on Top)', icon: '❐', shortcut: 'F', action: () => floatPetOnDesktop() },
-  { id: 'act-codex-setup', category: 'Codex Integration', title: 'Auto-Set 42 Companions in Codex (~/.codex/pets)', icon: '⌘', shortcut: 'C', action: () => autoSetCodex() },
-  { id: 'act-pat', category: 'Pet Actions', title: 'Pet Active Companion', icon: '♡', action: () => patActivePet() },
-  { id: 'act-sim', category: 'Agent Actions', title: 'Simulate Agent Tool Call', icon: '⚡︎', action: () => simulateAgentEvent() },
-  ...PETS.map(p => ({ id: `pet-${p.id}`, category: 'Switch Companion', title: `Switch Companion to ${p.name}`, icon: '✦', action: () => selectCompanion(p.id) }))
-];
+function paletteActions() {
+  return [
+    { id: 'view-overview', category: 'Navigation', title: 'Go to Overview', icon: '⌂', shortcut: '1', action: () => setView('overview') },
+    { id: 'view-library', category: 'Navigation', title: 'Browse Pet Library', icon: '✣', shortcut: '2', action: () => setView('library') },
+    { id: 'view-discover', category: 'Navigation', title: 'Discover Community Pets (CodexPets.net)', icon: '✧', shortcut: '3', action: () => setView('discover') },
+    { id: 'view-maker', category: 'Navigation', title: 'Make a Custom Pet', icon: '✎', shortcut: '4', action: () => setView('maker') },
+    { id: 'view-agents', category: 'Navigation', title: 'Manage Agents & Integrations', icon: '⌘', shortcut: '5', action: () => setView('agents') },
+    { id: 'view-settings', category: 'Navigation', title: 'Open Settings & Preferences', icon: '◌', shortcut: '6', action: () => setView('settings') },
+    { id: 'act-float', category: 'Desktop', title: 'Float Companion on Desktop (Always on Top)', icon: '❐', action: () => floatPetOnDesktop() },
+    ...(IS_NATIVE_APP ? [{ id: 'act-reveal-pets', category: 'Desktop', title: 'Show Pets Folder in Finder', icon: '⌂', action: () => invokeNative('reveal_user_pets').catch(error => showToast(String(error))) }] : []),
+    { id: 'act-codex-setup', category: 'Codex Integration', title: 'Connect Codex Lifecycle Hooks', icon: '⌘', action: () => autoSetCodex() },
+    { id: 'act-pat', category: 'Pet Actions', title: 'Pet Active Companion', icon: '♡', action: () => patActivePet() },
+    { id: 'act-sim', category: 'Agent Actions', title: 'Simulate Agent Tool Call', icon: '⚡︎', action: () => simulateAgentEvent() },
+    ...PETS.map(p => ({ id: `pet-${p.id}`, category: 'Switch Companion', title: `Switch Companion to ${p.name}`, icon: '✦', action: () => selectCompanion(p.id) }))
+  ];
+}
+
+function filteredPaletteActions(query) {
+  const q = query.trim().toLowerCase();
+  return paletteActions().filter(item => !q || (item.title + ' ' + item.category).toLowerCase().includes(q));
+}
 
 function renderCommandPalette(query = '') {
   const container = $('#palette-results');
   if (!container) return;
 
-  const q = query.trim().toLowerCase();
-  const filtered = PALETTE_ACTIONS.filter(item => !q || (item.title + ' ' + item.category).toLowerCase().includes(q));
+  const filtered = filteredPaletteActions(query);
 
   if (!filtered.length) {
     container.innerHTML = '<div class="empty-state" style="padding:20px;">No matching commands</div>';
@@ -1377,13 +1589,13 @@ function renderCommandPalette(query = '') {
   container.innerHTML = filtered.map((item, index) => `
     <button class="palette-item ${index === state.paletteIndex ? 'highlighted' : ''}" data-palette-id="${item.id}">
       <span class="palette-icon">${item.icon}</span>
-      <span>${item.title}</span>
+      <span>${escapeHtml(item.title)}</span>
       ${item.shortcut ? `<kbd>${item.shortcut}</kbd>` : ''}
     </button>
   `).join('');
 }
 
-function openPalette(open = true) {
+function openPalette(open = true, initialQuery = '') {
   const palette = $('#command-palette');
   const input = $('#palette-input');
   if (!palette) return;
@@ -1394,17 +1606,15 @@ function openPalette(open = true) {
   if (open) {
     state.paletteIndex = 0;
     if (input) {
-      input.value = '';
-      renderCommandPalette('');
+      input.value = initialQuery;
+      renderCommandPalette(initialQuery);
       setTimeout(() => input.focus(), 50);
     }
   }
 }
 
 function executePaletteItem(index) {
-  const q = $('#palette-input')?.value.trim().toLowerCase() || '';
-  const filtered = PALETTE_ACTIONS.filter(item => !q || (item.title + ' ' + item.category).toLowerCase().includes(q));
-  const target = filtered[index];
+  const target = filteredPaletteActions($('#palette-input')?.value || '')[index];
   if (target && target.action) {
     openPalette(false);
     target.action();
@@ -1436,16 +1646,31 @@ window.nuzzle = window.nuzzle || {};
 window.nuzzle.showToast = showToast;
 
 // 10. NAVIGATION & VIEW CONTROLLER
+const VIEW_TITLES = {
+  overview: 'Overview',
+  library: 'Pet library',
+  discover: 'Discover',
+  maker: 'Pet Maker',
+  agents: 'Agents',
+  settings: 'Settings'
+};
+
 function setView(view) {
+  if (!VIEW_TITLES[view]) return;
   closeAllPopovers();
   state.currentView = view;
   $$('.nav-item').forEach(item => item.classList.toggle('active', item.dataset.view === view));
   $$('.view-panel').forEach(panel => panel.classList.toggle('active', panel.id === `${view}-view`));
   const pageTitle = $('#page-title');
-  if (pageTitle) pageTitle.textContent = capitalize(view);
+  if (pageTitle) pageTitle.textContent = VIEW_TITLES[view];
+  $$('.nav-item').forEach(item => {
+    if (item.dataset.view === view) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
   if (view === 'library') {
     renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
   }
+  document.dispatchEvent(new CustomEvent('nuzzle:view', { detail: view }));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1485,8 +1710,11 @@ function applySettings() {
     const key = toggle.dataset.settingKey;
     if (key in state.settings) {
       toggle.classList.toggle('on', Boolean(state.settings[key]));
+      toggle.setAttribute('role', 'switch');
+      toggle.setAttribute('aria-checked', String(Boolean(state.settings[key])));
     }
   });
+  $$('.size-option').forEach(btn => btn.setAttribute('aria-checked', String(btn.dataset.size === state.settings.petSize)));
 }
 
 function setSettingsTab(tabName) {
@@ -1500,6 +1728,16 @@ function setSettingsTab(tabName) {
     panel.classList.toggle('active', panel.id === `settings-panel-${tabName}`);
   });
 }
+
+const SETTING_LABELS = {
+  noise: 'Film grain',
+  animation: 'Sprite animation',
+  showMessages: 'Agent messages',
+  launchGreeting: 'Launch greeting',
+  keepOnTop: 'Keep on top',
+  petSounds: 'Pet chimes',
+  completionSounds: 'Completion alerts'
+};
 
 // 12. LIVE ACTIVITY SIMULATOR
 const SIM_ACTIVITIES = [
@@ -1572,6 +1810,7 @@ function dispatchAgentEvent(payload = {}, { toast = true } = {}) {
   state.activity.unshift(item);
   if (state.activity.length > 10) state.activity.pop();
   renderActivity();
+  renderAgents();
   renderNotificationsPopover();
   const badge = $('#notification-badge');
   if (badge) badge.classList.remove('hidden');
@@ -1651,22 +1890,22 @@ async function refreshNativeIntegrations() {
     if (status) status.lastChild.textContent = ` Native runtime · ${runtime.acceptedEvents} events`;
     const mode = $('.eyebrow-mono');
     if (mode) mode.textContent = 'NATIVE HOOKS READY';
+    const notes = $('#view-integration-doc-btn');
+    if (notes) notes.dataset.toast = `Hooks post events to ${runtime.endpoint} with a rotating local token.`;
   } catch (error) {
     console.warn('Native integration status failed:', error);
   }
 }
 
-function applyNativePetSelection(petId) {
-  if (!PETS.some(pet => pet.id === petId) || state.selectedPetId === petId) return;
+async function applyNativePetSelection(petId) {
+  if (state.selectedPetId === petId && PETS.some(pet => pet.id === petId)) return;
+  if (!PETS.some(pet => pet.id === petId)) {
+    await loadUserPets();
+    if (!PETS.some(pet => pet.id === petId)) return;
+  }
   state.selectedPetId = petId;
   saveStored(STORAGE_KEYS.SELECTED_PET, petId);
-  renderFeaturedPet();
-  renderPetStrip();
-  if (state.currentView === 'library') {
-    renderLibrary($('.filter-button.active')?.dataset.filter || 'all', $('#pet-search')?.value || '');
-  }
-  updatePipWindow();
-  if (typeof window.updateMiniUI === 'function') window.updateMiniUI();
+  refreshPetViews();
 }
 
 async function pollNativeState() {
@@ -1708,7 +1947,7 @@ window.nuzzle.setPetLookDirection = setPetLookDirection;
 window.nuzzle.clearPetLookDirection = clearPetLookDirection;
 window.nuzzle.artStyle = artStyle;
 document.addEventListener('pointermove', event => {
-  const pet = PETS.find(item => item.id === state.selectedPetId) || PETS[0];
+  const pet = getActivePet();
   $$('.pet-art, .mini-art').forEach(art => setPetLookDirection(art, pet, event.clientX, event.clientY));
 });
 document.documentElement.addEventListener('mouseleave', () => {
@@ -1762,6 +2001,15 @@ if (IS_NATIVE_APP && TAURI?.event?.listen) {
     nativeEventSequence = Math.max(nativeEventSequence, sequence);
     dispatchAgentEvent(entry.event || entry);
   }).catch(error => console.warn('Native event listener failed:', error));
+  TAURI.event.listen('nuzzle-pet-selected', incoming => {
+    const snapshot = incoming.payload || {};
+    nativePetRevision = snapshot.revision;
+    applyNativePetSelection(snapshot.selectedPetId);
+  }).catch(error => console.warn('Pet selection listener failed:', error));
+  TAURI.event.listen('nuzzle-user-pets-changed', async () => {
+    await loadUserPets();
+    refreshPetViews();
+  }).catch(error => console.warn('User pet listener failed:', error));
 }
 
 // 13. DATE/TIME TICKER
@@ -1842,6 +2090,38 @@ document.addEventListener('click', event => {
     return;
   }
 
+  const removeAction = event.target.closest('[data-action="remove-user-pet"]');
+  if (removeAction) {
+    if (confirmAction(removeAction, 'Move to Trash?')) removeUserPet(removeAction.dataset.petId);
+    return;
+  }
+
+  const filterJump = event.target.closest('[data-filter-jump]');
+  if (filterJump) {
+    setLibraryFilter(filterJump.dataset.filterJump);
+    $('#library-view')?.scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  if (event.target.closest('#reveal-pets-btn')) {
+    if (IS_NATIVE_APP) invokeNative('reveal_user_pets').catch(error => showToast(String(error)));
+    else showToast('Your pets folder is ~/.codex/pets');
+    return;
+  }
+
+  // External links open in the default browser from the native app.
+  const externalLink = event.target.closest('a[href^="https://"]');
+  if (externalLink && IS_NATIVE_APP) {
+    event.preventDefault();
+    invokeNative('open_url', { url: externalLink.href }).catch(error => showToast(String(error)));
+    return;
+  }
+
+  if (event.target.closest('#stage-actions-btn')) {
+    openPalette(true, 'Switch');
+    return;
+  }
+
   // Pet selection from library or tiles
   const selectAction = event.target.closest('[data-action="select-companion"]');
   if (selectAction) {
@@ -1864,14 +2144,9 @@ document.addEventListener('click', event => {
   }
 
   // Library filter tabs
-  const filterBtn = event.target.closest('[data-filter]');
+  const filterBtn = event.target.closest('.filter-button[data-filter]');
   if (filterBtn) {
-    $$('.filter-button').forEach(b => {
-      const active = b === filterBtn;
-      b.classList.toggle('active', active);
-      b.setAttribute('aria-selected', String(active));
-    });
-    renderLibrary(filterBtn.dataset.filter, $('#pet-search')?.value || '');
+    setLibraryFilter(filterBtn.dataset.filter);
     return;
   }
 
@@ -1890,7 +2165,7 @@ document.addEventListener('click', event => {
     saveStored(STORAGE_KEYS.SETTINGS, state.settings);
     applySettings();
     playChime('pop');
-    showToast(`${key} is now ${state.settings[key] ? 'enabled' : 'disabled'}`);
+    showToast(`${SETTING_LABELS[key] || key} ${state.settings[key] ? 'on' : 'off'}`);
     return;
   }
 
@@ -1926,15 +2201,15 @@ document.addEventListener('click', event => {
 
   // Reset data button
   if (event.target.id === 'reset-data-btn') {
+    if (!confirmAction(event.target, 'Click again to reset')) return;
     Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
     state.selectedPetId = 'hu-tao';
     state.favorites = new Set(['hu-tao', 'ganyu']);
     state.settings = { ...DEFAULT_SETTINGS, showMessages: true };
     state.agents = INITIAL_AGENTS.map(agent => ({ ...agent }));
     applySettings();
-    renderFeaturedPet();
-    renderPetStrip();
-    if (state.currentView === 'library') renderLibrary();
+    refreshPetViews();
+    refreshNativeIntegrations();
     renderAgents();
     showToast('Preferences restored to defaults.');
     return;
@@ -1955,7 +2230,7 @@ document.addEventListener('click', event => {
   // Command palette item click
   const paletteItem = event.target.closest('[data-palette-id]');
   if (paletteItem) {
-    const item = PALETTE_ACTIONS.find(p => p.id === paletteItem.dataset.paletteId);
+    const item = paletteActions().find(p => p.id === paletteItem.dataset.paletteId);
     if (item && item.action) {
       openPalette(false);
       item.action();
@@ -1988,6 +2263,14 @@ document.addEventListener('keydown', event => {
     closeAllPopovers();
   }
 
+  const typing = event.target.closest?.('input, textarea, select, [contenteditable="true"]');
+  if (event.key === '/' && !typing && !paletteOpen && !event.metaKey && !event.ctrlKey) {
+    if (state.currentView !== 'discover' && state.currentView !== 'library') setView('library');
+    event.preventDefault();
+    (state.currentView === 'discover' ? $('#discover-search') : $('#pet-search'))?.focus();
+    return;
+  }
+
   // Command palette open trigger
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
     event.preventDefault();
@@ -2001,9 +2284,9 @@ document.addEventListener('keydown', event => {
       openPalette(false);
       return;
     }
-    if (['1', '2', '3', '4'].includes(event.key) && !$('#palette-input').value) {
+    const viewMap = { '1': 'overview', '2': 'library', '3': 'discover', '4': 'maker', '5': 'agents', '6': 'settings' };
+    if (viewMap[event.key] && !$('#palette-input').value) {
       event.preventDefault();
-      const viewMap = { '1': 'overview', '2': 'library', '3': 'agents', '4': 'settings' };
       openPalette(false);
       setView(viewMap[event.key]);
       return;
@@ -2037,6 +2320,7 @@ document.addEventListener('keydown', event => {
 // 15. INITIALIZATION
 renderFeaturedPet();
 renderPetStrip();
+renderLibraryFilters();
 renderAgents();
 renderActivity();
 renderNotificationsPopover();
@@ -2045,7 +2329,17 @@ refreshNativeIntegrations();
 pollNativeState();
 updateDateTime();
 setInterval(updateDateTime, 30000);
-if (IS_NATIVE_APP) setInterval(pollNativeState, 1000);
+// Native events are pushed; this slow poll is only a safety net and sleeps while hidden.
+if (IS_NATIVE_APP) {
+  setInterval(() => { if (!document.hidden) pollNativeState(); }, 5000);
+  loadUserPets().then(loaded => { if (loaded) refreshPetViews(); });
+}
+
+// Pause every CSS animation while the window is hidden (closed studio, other Space).
+document.addEventListener('visibilitychange', () => {
+  document.body.classList.toggle('is-hidden', document.hidden);
+  if (!document.hidden && IS_NATIVE_APP) pollNativeState();
+});
 
 if ('BroadcastChannel' in window) {
   try {

@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-FILES = ("index.html", "mini.html", "styles.css", "app.js")
+FILES = ("index.html", "mini.html", "styles.css", "app.js", "discover.js", "maker.js")
 
 
 def main() -> None:
@@ -24,8 +24,12 @@ def main() -> None:
     public_target.mkdir()
     shutil.copy2(ROOT / "public" / "nuzzle-logo.svg", public_target / "nuzzle-logo.svg")
     shutil.copytree(ROOT / "public" / "pets", DIST / "pets")
+    # Community catalog metadata only; sprite sheets download on demand.
+    shutil.copytree(ROOT / "public" / "catalog", DIST / "catalog")
 
-    print(f"Built native frontend at {DIST} ({len(list((DIST / 'pets').glob('*')))} pets)")
+    size = sum(path.stat().st_size for path in DIST.rglob("*") if path.is_file())
+    pets = len(list((DIST / "pets").glob("*.webp")))
+    print(f"Built native frontend at {DIST} ({pets} pets, {size / 1_048_576:.1f} MiB)")
 
 
 if __name__ == "__main__":

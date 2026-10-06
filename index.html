@@ -21,9 +21,11 @@
 
         <div class="rail-label">Workspace</div>
         <nav class="rail-nav" aria-label="Primary navigation">
-          <button class="nav-item active" data-view="overview"><span class="nav-icon">⌂</span> <span>Overview</span></button>
+          <button class="nav-item active" data-view="overview" aria-current="page"><span class="nav-icon">⌂</span> <span>Overview</span></button>
           <button class="nav-item" data-view="library"><span class="nav-icon">✣</span> <span>Pet library</span> <em id="nav-pet-count">42</em></button>
-          <button class="nav-item" data-view="agents"><span class="nav-icon">⌘</span> <span>Agents</span> <em class="live-count" id="nav-agent-count">0/5</em></button>
+          <button class="nav-item" data-view="discover"><span class="nav-icon">✧</span> <span>Discover</span> <em id="nav-discover-count">840+</em></button>
+          <button class="nav-item" data-view="maker"><span class="nav-icon">✎</span> <span>Pet Maker</span> <em class="new-count">New</em></button>
+          <button class="nav-item" data-view="agents"><span class="nav-icon">⌘</span> <span>Agents</span> <em class="live-count" id="nav-agent-count">0/8</em></button>
           <button class="nav-item" data-view="settings"><span class="nav-icon">◌</span> <span>Settings</span></button>
         </nav>
 
@@ -34,7 +36,7 @@
           <button class="icon-button" data-toast="Agent events stay on your Mac and require a rotating local token." aria-label="Local-first privacy information">?</button>
         </div>
         <div class="rail-footer">
-          <span class="version-dot"></span> Nuzzle 0.3.0 native <span>·</span> <a href="https://github.com/ChanceYu/CoPet" target="_blank" rel="noreferrer">CoPet</a> <span>·</span> <a href="https://github.com/chenxin-dlut/codex-anime-pets" target="_blank" rel="noreferrer">Anime pets</a>
+          <span class="version-dot"></span> Nuzzle 0.4.0 native <span>·</span> <a href="https://github.com/ChanceYu/CoPet" target="_blank" rel="noreferrer">CoPet</a> <span>·</span> <a href="https://github.com/chenxin-dlut/codex-anime-pets" target="_blank" rel="noreferrer">Anime pets</a>
         </div>
       </aside>
 
@@ -69,13 +71,13 @@
 
             <!-- Profile Dropdown -->
             <div class="topbar-dropdown-container">
-              <button class="avatar-button" id="profile-btn" aria-label="User profile" aria-expanded="false" aria-haspopup="true" title="User profile and settings">JP</button>
+              <button class="avatar-button pet-avatar" id="profile-btn" aria-label="Studio menu" aria-expanded="false" aria-haspopup="true" title="Studio menu"></button>
               <div class="topbar-popover profile-popover" id="profile-popover" role="dialog" aria-label="User profile" hidden>
                 <div class="profile-card-header">
-                  <div class="profile-avatar-large">JP</div>
+                  <div class="profile-avatar-large pet-avatar" aria-hidden="true"></div>
                   <div class="profile-meta">
-                    <strong class="profile-name">Jatin Pandey</strong>
-                    <span class="profile-status"><span class="status-indicator-dot"></span> Studio Session</span>
+                    <strong class="profile-name">Your studio</strong>
+                    <span class="profile-status"><span class="status-indicator-dot"></span> Everything stays on this Mac</span>
                   </div>
                 </div>
                 <div class="popover-divider"></div>
@@ -101,6 +103,13 @@
                       <small>Switch or pet companions</small>
                     </div>
                   </button>
+                  <button class="profile-menu-item" data-view="maker" type="button">
+                    <span class="menu-icon">✎</span>
+                    <div class="menu-text">
+                      <strong>Pet Maker</strong>
+                      <small>Design your own companion</small>
+                    </div>
+                  </button>
                   <button class="profile-menu-item" id="open-palette-menu-btn" type="button">
                     <span class="menu-icon">⌕</span>
                     <div class="menu-text">
@@ -111,7 +120,7 @@
                   </button>
                 </div>
                 <div class="popover-footer profile-footer">
-                  <span class="version-label">Nuzzle Companion v0.3.0</span>
+                  <span class="version-label">Nuzzle Companion v0.4.0</span>
                   <span class="local-tag">LOCAL-FIRST</span>
                 </div>
               </div>
@@ -136,7 +145,7 @@
               <div class="pet-particles" id="pet-particles" aria-hidden="true"></div>
               <div class="card-topline">
                 <span class="eyebrow" id="stage-eyebrow">Your active companion</span>
-                <button class="more-button" id="stage-actions-btn" data-toast="Companion actions: Pat, switch, or inspect sprite frames" aria-label="Companion actions">•••</button>
+                <button class="more-button" id="stage-actions-btn" aria-label="Switch companion" title="Switch companion (⌘K)">•••</button>
               </div>
               <div class="pet-stage-content">
                 <div class="pet-art state-idle" id="hero-pet-art" role="img" aria-label="Active pet sprite" title="Click to pat your companion!"></div>
@@ -169,20 +178,9 @@
                 <span class="live-label"><i></i> Streaming</span>
               </div>
               <div class="activity-summary">
-                <strong id="active-agents-num">5</strong>
-                <span>Agents connected<br /><small id="active-agents-sub">2 active right now</small></span>
-                <div class="agent-stack" id="agent-avatar-stack">
-                  <span class="agent-chip codex" title="Codex">
-                    <svg viewBox="2.5 2.5 19 19" width="13" height="13" fill="none" aria-hidden="true"><defs><linearGradient id="nuzzle-codex-chip-grad" x1="50%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#9FA8FE"/><stop offset="50%" stop-color="#6B7CFB"/><stop offset="100%" stop-color="#3C46F5"/></linearGradient></defs><path d="M9.064 3.344a4.578 4.578 0 012.285-.312c1 .115 1.891.54 2.673 1.275.01.01.024.017.037.021a.09.09 0 00.043 0 4.55 4.55 0 013.046.275l.047.022.116.057a4.581 4.581 0 012.188 2.399c.209.51.313 1.041.315 1.595a4.24 4.24 0 01-.134 1.223.123.123 0 00.03.115c.594.607.988 1.33 1.183 2.17.289 1.425-.007 2.71-.887 3.854l-.136.166a4.548 4.548 0 01-2.201 1.388.123.123 0 00-.081.076c-.191.551-.383 1.023-.74 1.494-.9 1.187-2.222 1.846-3.711 1.838-1.187-.006-2.239-.44-3.157-1.302a.107.107 0 00-.105-.024c-.388.125-.78.143-1.204.138a4.441 4.441 0 01-1.945-.466 4.544 4.544 0 01-1.61-1.335c-.152-.202-.303-.392-.414-.617a5.81 5.81 0 01-.37-.961 4.582 4.582 0 01-.014-2.298.124.124 0 00.006-.056.085.085 0 00-.027-.048 4.467 4.467 0 01-1.034-1.651 3.896 3.896 0 01-.251-1.192 5.189 5.189 0 01.141-1.6c.337-1.112.982-1.985 1.933-2.618.212-.141.413-.251.601-.33.215-.089.43-.164.646-.227a.098.098 0 00.065-.066 4.51 4.51 0 01.829-1.615 4.535 4.535 0 011.837-1.388Z" fill="url(#nuzzle-codex-chip-grad)"/><path d="M8.462 9.23a.637.637 0 00-1.106.631l1.272 2.224-1.266 2.136a.636.636 0 101.095.649l1.454-2.455a.636.636 0 00.005-.64L8.462 9.23z" fill="#FFFFFF"/><path d="M12.546 13.909a.637.637 0 000 1.272h3.636a.637.637 0 100-1.272h-3.636z" fill="#FFFFFF"/></svg>
-                  </span>
-                  <span class="agent-chip claude" title="Claude Code">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="m4.714 15.956l4.718-2.648l.079-.23l-.08-.128h-.23l-.79-.048l-2.695-.073l-2.337-.097l-2.265-.122l-.57-.121l-.535-.704l.055-.353l.48-.321l.685.06l1.518.104l2.277.157l1.651.098l2.447.255h.389l.054-.158l-.133-.097l-.103-.098l-2.356-1.596l-2.55-1.688l-1.336-.972l-.722-.491L2 6.223l-.158-1.008l.656-.722l.88.06l.224.061l.893.686l1.906 1.476l2.49 1.833l.364.304l.146-.104l.018-.072l-.164-.274l-1.354-2.446l-1.445-2.49l-.644-1.032l-.17-.619a3 3 0 0 1-.103-.729L6.287.133L6.7 0l.995.134l.42.364l.619 1.415L9.735 4.14l1.555 3.03l.455.898l.243.832l.09.255h.159V9.01l.127-1.706l.237-2.095l.23-2.695l.08-.76l.376-.91l.747-.492l.583.28l.48.685l-.067.444l-.286 1.851l-.558 2.903l-.365 1.942h.213l.243-.242l.983-1.306l1.652-2.064l.728-.82l.85-.904l.547-.431h1.032l.759 1.129l-.34 1.166l-1.063 1.347l-.88 1.142l-1.263 1.7l-.79 1.36l.074.11l.188-.02l2.853-.606l1.542-.28l1.84-.315l.832.388l.09.395l-.327.807l-1.967.486l-2.307.462l-3.436.813l-.043.03l.049.061l1.548.146l.662.036h1.62l3.018.225l.79.522l.473.638l-.08.485l-1.213.62l-1.64-.389l-3.825-.91l-1.31-.329h-.183v.11l1.093 1.068l2.003 1.81l2.508 2.33l.127.578l-.321.455l-.34-.049l-2.204-1.657l-.85-.747l-1.925-1.62h-.127v.17l.443.649l2.343 3.521l.122 1.08l-.17.353l-.607.213l-.668-.122l-1.372-1.924l-1.415-2.168l-1.141-1.943l-.14.08l-.674 7.254l-.316.37l-.728.28l-.607-.461l-.322-.747l.322-1.476l.388-1.924l.316-1.53l.285-1.9l.17-.632l-.012-.042l-.14.018l-1.432 1.967l-2.18 2.945l-1.724 1.845l-.413.164l-.716-.37l.066-.662l.401-.589l2.386-3.036l1.439-1.882l.929-1.086l-.006-.158h-.055L4.138 18.56l-1.13.146l-.485-.456l.06-.746l.231-.243l1.907-1.312Z"/></svg>
-                  </span>
-                  <span class="agent-chip cursor" title="Cursor">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M11.503.131L1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23"/></svg>
-                  </span>
-                  <span class="agent-chip more">+2</span>
-                </div>
+                <strong id="active-agents-num">0</strong>
+                <span>Agents connected<br /><small id="active-agents-sub">Connect one in Agents</small></span>
+                <div class="agent-stack" id="agent-avatar-stack" hidden></div>
               </div>
               <div class="activity-list" id="activity-list" role="feed" aria-label="Recent agent activities"></div>
               <button class="full-width-button" id="simulate-event-button">Simulate agent event <span>⚡︎</span></button>
@@ -206,24 +204,100 @@
             <div>
               <div class="eyebrow"><span class="eyebrow-line"></span> The collection</div>
               <h1 id="library-heading">Find your next <i>sidekick.</i></h1>
-              <p>Animated companion atlases packaged inside the native Nuzzle app. Pick a mood, then make it yours.</p>
+              <p>Bundled companions, community pets you've added, and your own creations — grouped by kind. Click any pet to make it yours.</p>
             </div>
             <div class="library-stats"><strong id="library-count-display">42</strong><span>Pets in<br />the library</span></div>
           </div>
           <div class="toolbar">
             <div class="search-field">
               <span aria-hidden="true">⌕</span>
-              <input id="pet-search" placeholder="Search by name, element, or vibe" aria-label="Search pets by name or vibe" />
+              <input id="pet-search" type="search" placeholder="Search by name, element, or vibe" aria-label="Search pets by name or vibe" />
               <kbd>/</kbd>
             </div>
-            <div class="filter-group" role="tablist" aria-label="Filter pets by vibe">
-              <button class="filter-button active" data-filter="all" role="tab" aria-selected="true">All</button>
-              <button class="filter-button" data-filter="anime" role="tab" aria-selected="false">Anime</button>
-              <button class="filter-button" data-filter="cozy" role="tab" aria-selected="false">Cozy</button>
-              <button class="filter-button" data-filter="chaos" role="tab" aria-selected="false">Chaos</button>
+            <div class="filter-group" role="group" aria-label="Show pets by section">
+              <button class="filter-button active" data-filter="all" aria-pressed="true">All <span class="filter-count">42</span></button>
+              <button class="filter-button" data-filter="anime" aria-pressed="false">Anime <span class="filter-count"></span></button>
+              <button class="filter-button" data-filter="animals" aria-pressed="false">Animals <span class="filter-count"></span></button>
+              <button class="filter-button" data-filter="mascots" aria-pressed="false">Mascots <span class="filter-count"></span></button>
+              <button class="filter-button" data-filter="installed" aria-pressed="false">Added <span class="filter-count"></span></button>
+              <button class="filter-button" data-filter="mine" aria-pressed="false">Mine <span class="filter-count"></span></button>
+              <button class="filter-button" data-filter="favorites" aria-pressed="false">♥ Favorites <span class="filter-count"></span></button>
             </div>
           </div>
           <div class="library-grid" id="library-grid" role="region" aria-label="Pet catalog"></div>
+        </section>
+
+        <!-- VIEW: DISCOVER (CodexPets.net community catalog, downloaded on demand) -->
+        <section class="view-panel" id="discover-view" aria-labelledby="discover-heading">
+          <div class="page-intro">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> Community catalog · CodexPets.net</div>
+              <h1 id="discover-heading">Hundreds more <i>friends.</i></h1>
+              <p>Browse community pets by kind. Nothing is downloaded until you add one — each pet is a single sprite sheet saved to <code>~/.codex/pets</code>, so it works in Codex too.</p>
+            </div>
+            <div class="library-stats"><strong id="discover-count-display">…</strong><span>Community<br />pets</span></div>
+          </div>
+          <div class="toolbar discover-toolbar">
+            <div class="search-field">
+              <span aria-hidden="true">⌕</span>
+              <input id="discover-search" type="search" placeholder="Search community pets" aria-label="Search community pets" />
+              <kbd>/</kbd>
+            </div>
+            <div class="filter-group discover-sections" id="discover-sections" role="group" aria-label="Community pet sections"></div>
+          </div>
+          <div id="discover-results" class="discover-results" aria-live="polite"></div>
+        </section>
+
+        <!-- VIEW: PET MAKER (procedural, fully offline) -->
+        <section class="view-panel" id="maker-view" aria-labelledby="maker-heading">
+          <div class="page-intro">
+            <div>
+              <div class="eyebrow"><span class="eyebrow-line"></span> Pet Maker · offline</div>
+              <h1 id="maker-heading">Dream up a <i>new friend.</i></h1>
+              <p>Describe a pet or tweak the dials. Nuzzle draws a complete Codex-ready 8×9 animation sheet right on your Mac — no account, no upload, no waiting.</p>
+            </div>
+          </div>
+          <div class="maker-layout">
+            <article class="feature-card maker-preview-card">
+              <div class="card-topline">
+                <span class="eyebrow">Live preview</span>
+                <span class="maker-size" id="maker-size">1536×1872</span>
+              </div>
+              <div class="maker-stage">
+                <div class="preview-art maker-art state-idle" id="maker-art" role="img" aria-label="Pet preview"></div>
+              </div>
+              <div class="state-picker" id="maker-states" role="group" aria-label="Preview animation"></div>
+            </article>
+
+            <form class="settings-card maker-form" id="maker-form" autocomplete="off">
+              <label class="maker-field maker-prompt-field">
+                <span>Describe your pet</span>
+                <textarea id="maker-prompt" rows="3" maxlength="300" placeholder="a sleepy orange cat with stripes and a tiny crown"></textarea>
+                <small>Mention an animal, colors, a pattern, or an accessory — the dials below follow along.</small>
+              </label>
+              <div class="maker-presets" role="group" aria-label="Quick styles">
+                <button type="button" class="chip-button" data-maker-preset="cute">♡ Cute</button>
+                <button type="button" class="chip-button" data-maker-preset="cool">✦ Cool</button>
+                <button type="button" class="chip-button" data-maker-preset="funny">☺ Funny</button>
+                <button type="button" class="chip-button" data-maker-preset="random">⚄ Surprise me</button>
+              </div>
+              <div class="maker-grid">
+                <label class="maker-field"><span>Name</span><input id="maker-name" maxlength="40" placeholder="Mochi" /></label>
+                <label class="maker-field"><span>Creature</span><select id="maker-species"></select></label>
+                <label class="maker-field"><span>Body color</span><input type="color" id="maker-body" value="#f2a65a" /></label>
+                <label class="maker-field"><span>Accent color</span><input type="color" id="maker-accent" value="#fff1dc" /></label>
+                <label class="maker-field"><span>Pattern</span><select id="maker-pattern"></select></label>
+                <label class="maker-field"><span>Accessory</span><select id="maker-accessory"></select></label>
+              </div>
+              <div class="maker-actions">
+                <button type="submit" class="primary-button" id="maker-save"><span>✦</span> Save &amp; use</button>
+                <button type="button" class="small-button secondary" id="maker-import-btn">Import a sheet…</button>
+                <button type="button" class="text-button" id="maker-download">Download PNG <span>↓</span></button>
+                <input type="file" id="maker-import" accept="image/png,image/webp" hidden />
+              </div>
+              <p class="maker-note" id="maker-note">Saved pets live in <code>~/.codex/pets</code>, so they also show up in Codex → Settings → Appearance → Pets.</p>
+            </form>
+          </div>
         </section>
 
         <!-- VIEW 3: AGENTS INTEGRATIONS -->
@@ -245,7 +319,7 @@
               <div class="orbit-track-middle" aria-hidden="true"><div class="orbit-blip-secondary"></div></div>
               <div class="orbit-ring-inner" aria-hidden="true"></div>
               <div class="orbit-track" aria-hidden="true"><div class="orbit-blip"></div></div>
-              <span id="orbit-count">5</span>
+              <span id="orbit-count">0</span>
               <small><span class="orbit-live-dot" aria-hidden="true"></span>Connected</small>
             </div>
           </div>
@@ -273,6 +347,7 @@
             <!-- SETTINGS SUB TABS -->
             <div class="settings-nav" role="tablist" aria-label="Settings categories">
               <button class="settings-tab active" data-settings-tab="appearance" role="tab" aria-selected="true">Appearance</button>
+              <button class="settings-tab" data-settings-tab="storage" role="tab" aria-selected="false">Storage</button>
               <button class="settings-tab" data-settings-tab="behavior" role="tab" aria-selected="false">Behavior</button>
               <button class="settings-tab" data-settings-tab="sound" role="tab" aria-selected="false">Sound</button>
               <button class="settings-tab" data-settings-tab="privacy" role="tab" aria-selected="false">Privacy</button>
@@ -288,10 +363,10 @@
                     <p>Scale your companion avatar on stage and in floating mode.</p>
                   </div>
                   <div class="size-picker" role="radiogroup" aria-label="Pet size">
-                    <button class="size-option" data-size="s" title="Small (75%)">S</button>
-                    <button class="size-option active" data-size="m" title="Medium (100%)">M</button>
-                    <button class="size-option" data-size="l" title="Large (130%)">L</button>
-                    <button class="size-option" data-size="xl" title="Extra Large (160%)">XL</button>
+                    <button class="size-option" role="radio" data-size="s" title="Small (75%)">S</button>
+                    <button class="size-option active" role="radio" data-size="m" title="Medium (100%)">M</button>
+                    <button class="size-option" role="radio" data-size="l" title="Large (130%)">L</button>
+                    <button class="size-option" role="radio" data-size="xl" title="Extra Large (160%)">XL</button>
                   </div>
                 </div>
                 <div class="setting-row">
@@ -353,6 +428,24 @@
                 </div>
               </div>
 
+              <!-- Storage Panel -->
+              <div class="settings-panel" id="settings-panel-storage">
+                <div class="setting-row">
+                  <div>
+                    <strong>Lightweight by design</strong>
+                    <p>Bundled pets ship as optimized WebP sheets. Community pets download only when you add them, one sheet each (≈0.4–2.5 MB).</p>
+                  </div>
+                  <span class="status-pill" id="storage-pet-count"><span class="pulse-dot"></span> 42 bundled</span>
+                </div>
+                <div class="setting-row">
+                  <div>
+                    <strong>Your pets folder</strong>
+                    <p>Added and handmade pets live in <code>~/.codex/pets</code>. Removing a pet in the library moves it to the Trash.</p>
+                  </div>
+                  <button class="small-button secondary" id="reveal-pets-btn">Show in Finder</button>
+                </div>
+              </div>
+
               <!-- Privacy Panel -->
               <div class="settings-panel" id="settings-panel-privacy">
                 <div class="setting-row">
@@ -376,6 +469,24 @@
       </main>
     </div>
 
+    <!-- DISCOVER PREVIEW -->
+    <div class="discover-modal" id="discover-modal" role="dialog" aria-modal="true" aria-labelledby="discover-modal-name" hidden>
+      <div class="discover-modal-card">
+        <button class="icon-button discover-modal-close" id="discover-modal-close" aria-label="Close preview">×</button>
+        <div class="discover-modal-stage">
+          <div class="preview-art state-idle" id="discover-modal-art" role="img"></div>
+        </div>
+        <div class="state-picker" id="discover-modal-states" role="group" aria-label="Preview animation"></div>
+        <div class="discover-modal-copy">
+          <h2 id="discover-modal-name"></h2>
+          <small id="discover-modal-author"></small>
+          <p id="discover-modal-desc"></p>
+          <div class="discover-tags" id="discover-modal-tags"></div>
+        </div>
+        <div class="discover-modal-actions" id="discover-modal-actions"></div>
+      </div>
+    </div>
+
     <!-- TOAST REGION -->
     <div class="toast-region" aria-live="polite"></div>
 
@@ -394,5 +505,7 @@
     </div>
 
     <script src="/app.js"></script>
+    <script src="/discover.js"></script>
+    <script src="/maker.js"></script>
   </body>
 </html>

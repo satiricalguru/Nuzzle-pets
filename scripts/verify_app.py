@@ -74,6 +74,48 @@ try:
         page.get_by_role("button", name="Overview").click()
         assert page.locator("#hero-pet-name").inner_text() == "Klee"
 
+        # 5b. Library sections, Discover catalog, and Pet Maker
+        print("Testing library sections, Discover, and Pet Maker...")
+        page.locator(".nav-item[data-view='library']").click()
+        page.locator("#pet-search").fill("")
+        page.locator(".filter-button[data-filter='all']").click()
+        assert page.locator("#library-grid .library-section").count() == 3
+        page.locator(".filter-button[data-filter='animals']").click()
+        assert page.locator("#library-grid .library-card").count() == 15
+        page.locator(".filter-button[data-filter='all']").click()
+
+        page.locator(".nav-item[data-view='discover']").click()
+        page.wait_for_selector("#discover-results .discover-card")
+        assert page.locator("#discover-results .library-section").count() >= 6
+        page.locator("#discover-sections [data-discover-section='animals']").click()
+        assert page.locator("#discover-results .discover-card").count() == 36
+        page.locator("#discover-search").fill("keqing")
+        page.wait_for_timeout(250)
+        assert page.locator("#discover-results .discover-card").count() >= 1
+        page.locator("#discover-results .discover-art").first.click()
+        assert page.locator("#discover-modal").is_visible()
+        page.locator("#discover-modal [data-preview-state='jump']").click()
+        assert "state-jump" in page.locator("#discover-modal-art").get_attribute("class")
+        page.keyboard.press("Escape")
+        assert page.locator("#discover-modal").is_hidden()
+
+        page.locator(".nav-item[data-view='maker']").click()
+        page.wait_for_function("getComputedStyle(document.querySelector('#maker-art')).backgroundImage.startsWith('url')")
+        page.locator("#maker-prompt").fill("a sleepy blue bunny with spots and a crown")
+        page.wait_for_timeout(250)
+        assert page.locator("#maker-species").input_value() == "bunny"
+        assert page.locator("#maker-accessory").input_value() == "crown"
+        assert page.locator("#maker-pattern").input_value() == "spots"
+        atlas = page.evaluate("""(() => {
+            const canvas = window.nuzzle.maker.renderAtlas({ species: 'cat', body: '#f2a65a', accent: '#fff1dc', pattern: 'stripes', accessory: 'bow', cheeks: true });
+            const context = canvas.getContext('2d');
+            const filled = row => context.getImageData(0, row * 208, 192, 208).data.some((v, i) => i % 4 === 3 && v > 0);
+            return { width: canvas.width, height: canvas.height, rows: [0,1,2,3,4,5,6,7,8].every(filled) };
+        })()""")
+        assert atlas == {"width": 1536, "height": 1872, "rows": True}, atlas
+        page.locator("[data-maker-preset='random']").click()
+        page.locator(".nav-item[data-view='library']").click()
+
         # 6. Agents View & Toggles
         print("Testing Agents View...")
         page.get_by_role("button", name="Agents").click()
@@ -183,7 +225,7 @@ try:
         mobile = browser.new_page(viewport={"width": 390, "height": 844}, device_scale_factor=1)
         mobile.goto(f"http://127.0.0.1:{PORT}", wait_until="domcontentloaded")
         assert mobile.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth")
-        mobile.locator("button[data-view='library']").click()
+        mobile.locator(".nav-item[data-view='library']").click()
         mobile.locator("#pet-search").fill("Anya")
         assert mobile.locator("#library-grid .library-card").count() == 1
         mobile.close()

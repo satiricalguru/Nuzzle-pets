@@ -1,308 +1,220 @@
 <div align="center">
 
-  <img src="https://raw.githubusercontent.com/satiricalguru/Nuzzle-pets/main/public/nuzzle-logo.png" alt="Nuzzle Logo" width="140" />
+<img src="public/nuzzle-logo.png" alt="Nuzzle logo" width="112" />
 
-  # 🐾 Nuzzle — Codex Pets
+# Nuzzle — Codex Pets
 
-  <p><strong>A living companion studio for every AI coding agent.</strong></p>
-  <p>
-    Nuzzle combines the agent-aware interaction model and lifecycle event vocabulary from <a href="https://github.com/ChanceYu/CoPet"><strong>CoPet</strong></a> with an 8×9 Codex-compatible anime & animal pet sprite atlas collection from <a href="https://github.com/chenxin-dlut/codex-anime-pets"><strong>codex-anime-pets</strong></a>.
-  </p>
+**A tiny animated companion for your AI coding agents, living right on your Mac.**
 
-  <p>
-    <a href="https://github.com/satiricalguru/Nuzzle-pets/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-coral?style=for-the-badge&color=ef7861" alt="MIT License" /></a>
-    <img src="https://img.shields.io/badge/Desktop-Tauri%202.0-blue?style=for-the-badge&color=24c8db" alt="Tauri 2.0 Desktop" />
-    <img src="https://img.shields.io/badge/Pets-42%20Available-orange?style=for-the-badge&color=e58c42" alt="42 Pets Available" />
-    <img src="https://img.shields.io/badge/Codex-v1%20%2B%20v2%20Compatible-blue?style=for-the-badge&color=4b8bf5" alt="Codex v1 and v2 Compatible" />
-    <img src="https://img.shields.io/badge/Local--First-100%25-green?style=for-the-badge&color=66a76e" alt="Local First" />
-    <img src="https://img.shields.io/badge/Dependencies-0%20Runtime-yellow?style=for-the-badge&color=e7bc55" alt="Zero Dependencies" />
-  </p>
+It reacts when your agents think, run tools, finish, or fail. Pick from 42 built-in pets, add 840+ community pets, or make your own.
 
-  <p>
-    <a href="#-showcase--previews">Showcase</a> •
-    <a href="#-features">Features</a> •
-    <a href="#-desktop-companion-modes">Companion Modes</a> •
-    <a href="#-supported-agents">Supported Agents</a> •
-    <a href="#-built-in-pets-gallery">Built-in Pets</a> •
-    <a href="#-anime-companions-collection">Anime Companions</a> •
-    <a href="#-current-codex-atlas-contract">Atlas Contract</a> •
-    <a href="#-quick-start">Quick Start</a> •
-    <a href="#-contributors--project-credits">Contributors</a> •
-    <a href="#-license--disclaimers">License</a>
-  </p>
+[![Download for macOS](https://img.shields.io/badge/Download-macOS%20DMG-ef7861?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/satiricalguru/Nuzzle-pets/releases/latest)
+&nbsp;
+[![Watch the tour](https://img.shields.io/badge/Watch-40s%20tour-2a2825?style=for-the-badge&logo=youtube&logoColor=white)](assets/nuzzle-tour.mp4)
+
+[![Release](https://img.shields.io/github/v/release/satiricalguru/Nuzzle-pets?style=flat-square&color=ef7861&label=release)](https://github.com/satiricalguru/Nuzzle-pets/releases)
+![macOS](https://img.shields.io/badge/macOS-10.15%2B%20·%20Universal-2a2825?style=flat-square&logo=apple)
+![Tauri](https://img.shields.io/badge/Tauri-2-24c8db?style=flat-square&logo=tauri&logoColor=white)
+![Pets](https://img.shields.io/badge/pets-42%20built--in%20%2B%20840%2B%20online-e7bc55?style=flat-square)
+![Local first](https://img.shields.io/badge/local--first-no%20telemetry-66a76e?style=flat-square)
+[![License](https://img.shields.io/badge/license-MIT-9ab49d?style=flat-square)](LICENSE)
+
+<img src="assets/nuzzle-pets-parade.gif" alt="Nuzzle pets cycling through idle, run, and wave animations" width="860" />
 
 </div>
 
 ---
 
-## 🎬 Showcase & Live Animations
+## Contents
+
+- [See it in action](#-see-it-in-action)
+- [What's new in 0.4](#-whats-new-in-04)
+- [Features](#-features)
+- [Install](#-install)
+- [Supported agents](#-supported-agents)
+- [Build from source](#-build-from-source)
+- [Pet format](#-pet-format)
+- [Credits](#-credits) · [License](#-license--disclaimers)
+
+---
+
+## 🎬 See it in action
 
 <div align="center">
-  <img src="assets/nuzzle-hero-animated.gif" alt="Nuzzle Animated Companions Hero" width="840" style="max-width: 100%; border-radius: 14px; margin-bottom: 16px;" />
+  <a href="assets/nuzzle-tour.mp4">
+    <img src="assets/nuzzle-tour.webp" alt="Tour: patting a pet, browsing the sectioned library, previewing a community pet in Discover, and generating a pet in Pet Maker" width="860" />
+  </a>
+  <br />
+  <sub>Overview → Library → Discover → Pet Maker. <a href="assets/nuzzle-tour.mp4">Watch the full-quality video (MP4)</a>.</sub>
 </div>
 
-<div align="center">
-  <img src="assets/nuzzle-actions-animated.gif" alt="Nuzzle Live Animation & Lifecycle States" width="840" style="max-width: 100%; border-radius: 14px; margin-bottom: 16px;" />
-</div>
+<br />
 
-<div align="center">
-  <img src="assets/nuzzle-catalog-poster.png" alt="Nuzzle 42 Companions Catalog Poster" width="840" style="max-width: 100%; border-radius: 14px;" />
-</div>
+<table>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/overview-light.webp" alt="Overview with the active companion and live agent activity" /></td>
+    <td width="50%"><img src="assets/screenshots/overview-dark.webp" alt="Overview in macOS dark mode" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Overview</b> · your active companion and live agent activity</sub></td>
+    <td align="center"><sub><b>Dark mode</b> · follows your macOS appearance</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/library.webp" alt="Pet library grouped into Anime, Animals, and Mascots" /></td>
+    <td width="50%"><img src="assets/screenshots/discover.webp" alt="Discover community pets by section" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Library</b> · grouped by kind, with favorites and filters</sub></td>
+    <td align="center"><sub><b>Discover</b> · 842 community pets from CodexPets.net</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/screenshots/discover-preview.webp" alt="Preview every animation before adding a pet" /></td>
+    <td width="50%"><img src="assets/screenshots/maker.webp" alt="Pet Maker generating a striped cat with a crown" /></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Preview</b> · try every animation before adding</sub></td>
+    <td align="center"><sub><b>Pet Maker</b> · describe a pet, get a full animation sheet</sub></td>
+  </tr>
+</table>
+
+---
+
+## 🆕 What's new in 0.4
+
+- **Discover**: browse 842 community pets from [CodexPets.net](https://codexpets.net/gallery) in eight sections. You can search, preview all eight animation states, and add a pet in one click.
+- **Pet Maker**: type something like *"a sleepy orange cat with stripes and a tiny crown"* or pick from the controls. Nuzzle draws a complete Codex-ready 8×9 pixel-art sheet offline. You can also import your own 1536×1872 sheet.
+- **Sectioned library**: pets are grouped into Anime, Animals, Mascots, Added, Mine, and Favorites.
+- **Lighter on your Mac**:
+  - Built-in sprites are 26% smaller, re-encoded from lossless sources with no visible quality change.
+  - Community pets download only when you add them.
+  - Animations pause while windows are hidden.
+  - Tight polling loops were replaced with pushed updates.
+  - Library cards use small preview strips instead of full sprite sheets.
+- **Dark mode**, better keyboard and screen-reader support, and real (not sample) agent activity in the app.
 
 ---
 
 ## ✨ Features
 
-- 🪟 **Codex-Style Desktop Sprite Mode**: Pure transparent, borderless floating companion that stands directly on your macOS desktop without any white card wrappers, borders, or window chrome.
-- 🏃 **Direction-Aware Drag-to-Run Physics**: Moving or dragging your companion across the display dynamically triggers directional running animations (Row 1 right / Row 2 left) and smoothly returns to resting idle when stopped.
-- ⋯ **Compact Frosted Micro-Dock & Context Menu**: Right-click or tap `⋯` on the micro-dock to open a subtle frosted glass menu for walking/resting, cycling pets, and toggling between Sprite and Widget Card modes.
-- ⚡ **Real-Time Agent Reactions**: Companions react instantly to agent prompts, tool execution, thinking/waiting, completions, and error states.
-- 💬 **Quiet Progress Cadence**: Important completions, failures, and approval waits always surface; routine progress messages are rate-limited per agent so the companion speaks occasionally instead of on every hook.
-- 📦 **Release-Optimized Assets**: High-quality WebP atlases retain exact alpha geometry while cutting the bundled catalog by roughly two thirds; the full library is loaded only when opened.
-- 🧭 **Fail-Closed v2 Migration**: Nuzzle rejects synthetic whole-sprite shifts as fake gaze directions; v2 packaging stays disabled until genuinely authored directions pass deterministic and visual QA.
-- 👀 **Genuine v2 Cursor Gaze**: The v2 reference companion uses 16 authored clockwise look directions and follows the pointer without rotating or shifting the whole sprite.
-- 🎨 **Version-Aware Animation Engine**: The renderer supports both Codex v1 8×9 and v2 8×11 atlases while preserving idle, movement, pat, work, wait, failure, and review states.
-- ♡ **Interactive Companion Stage**: Click or pat your active companion in the studio to trigger animated reactions, floating particle bursts, and synthesized Web Audio micro-chimes.
-- 🔄 **Dynamic Companion Switching**: Switch your featured companion from the Quick Dispatch Strip, Pet Library, or Command Palette with instant cross-view synchronization.
-- 📚 **Pet Library & Filtering**: Catalog of 42 companions with instant search and vibe filtering (`all`, `anime`, `cozy`, `chaos`).
-- ⌨️ **Command Palette (`⌘ K` / `Ctrl+K`)**: Fast keyboard-driven command palette with live query filtering, number shortcuts (`1`–`4`), arrow key navigation, and quick companion dispatching.
-- ⚙️ **Customizable Preferences**: Dedicated settings sub-tabs for **Appearance** (pet scale `S`/`M`/`L`, film grain overlay, animations, floating companion style), **Behavior** (agent messaging, start greeting, float mode), **Sound** (reaction micro-tones, completion alerts), and **Privacy** (100% local-first storage reset).
-- 🛡️ **100% Local-First & Zero Cloud**: All state, settings, and favorites are stored locally in your browser/device with zero telemetry, zero tokens leaving your machine, and atomic local writes.
+| | |
+| :--- | :--- |
+| 🪟 **Floating desktop pet** | A transparent, borderless companion that stays above your editor. Drag it and it runs in that direction. Right-click it for walk, size, alerts, and switching pets. |
+| ⚡ **Live agent reactions** | It works while tools run, waits when your approval is needed, cheers on completion, and slumps on errors. Routine progress messages are rate-limited, so it only speaks up now and then. |
+| 🧭 **Discover** | 842 community pets in **Anime · Animals · Game characters · Robots & tech · Pixel art · Cute & cozy · Weird & spooky · Icons & celebs**. Only the catalog ships with the app (~230 KB); each pet (0.4–2.5 MB) downloads when you add it. |
+| ✎ **Pet Maker** | 12 creatures (cat, fox, puppy, bunny, bear, panda, frog, chick, dragon, ghost, robot, slime), colors, patterns, and accessories. Cute / Cool / Funny / Surprise-me presets. All nine animation rows are generated. |
+| 🗂️ **Library** | 42 built-in pets: 23 anime companions, 15 animals, and 4 CoPet mascots, plus everything you add or make. |
+| 🤝 **Shared with Codex** | Added and handmade pets are saved to `~/.codex/pets`, so they also appear in **Codex → Settings → Appearance → Pets**. Removing a pet moves it to the Trash. |
+| 👀 **v2 cursor gaze** | Hu Tao uses a genuine Codex v2 atlas, with 16 drawn look directions that follow your pointer. |
+| ⌨️ **Command palette** | `⌘K` to jump anywhere or switch pets. `/` focuses search. Number keys open views. |
+| 🛡️ **Local-first** | Settings, favorites, and agent events stay on your Mac. Agents talk to an authenticated localhost runtime with a rotating token. |
 
 ---
 
-## 🪟 Desktop Companion Modes
+## 📦 Install
 
-Nuzzle offers two companion styles to fit your workflow:
+1. Download **`Nuzzle_0.4.0_universal.dmg`** from the [latest release](https://github.com/satiricalguru/Nuzzle-pets/releases/latest). It runs natively on Apple Silicon and Intel.
+2. Open the DMG and drag **Nuzzle** into **Applications**.
+3. First launch: this build is ad-hoc signed, not notarized by Apple. If macOS says it can't verify the developer, open **System Settings → Privacy & Security** and click **Open Anyway**. Alternatively, run:
 
-| Feature | 🏃 Sprite Mode *(Codex Default)* | 🪟 Widget Card Mode |
-| :--- | :--- | :--- |
-| **Visual Style** | Pure borderless transparent character sprite | Frosted glass card with stats & borders |
-| **Screen Footprint** | Minimal (~220×280px), zero background chrome | Card shell (~300×420px) |
-| **Physics & Motion** | Direction-aware running animations on drag | Idle breathing and status state animations |
-| **Controls** | Hover micro-dock with `⋯` frosted menu | Integrated button bar |
-| **Ideal For** | Coding alongside agents without clutter | Reviewing companion stats and active agent queues |
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Nuzzle.app
+   ```
 
-> **Tip**: Toggle modes anytime by tapping `⋯` on the companion dock, via **Settings → Appearance**, or pressing `⌘ K` in the studio.
+4. Open **Agents** in Nuzzle and connect the coding agents you use.
 
 ---
 
-## 🤖 Supported Agents
+## 🤖 Supported agents
 
-Nuzzle runs as a desktop overlay alongside any macOS IDE. Automatic lifecycle reactions are implemented and tested for these eight local coding agents/CLIs:
-
-| Agent | Integration Model | Default Config Path |
+| Agent | Integration | Config path |
 | :--- | :--- | :--- |
-| **Codex** | v1/v2 pet manifests + native hooks | `$CODEX_HOME/pets/`, `$CODEX_HOME/hooks.json` |
+| **Codex** | Pet manifests + native hooks | `$CODEX_HOME/pets/`, `$CODEX_HOME/hooks.json` |
 | **Claude Code** | JSON hooks | `~/.claude/settings.json` |
-| **Antigravity** | JSON hooks + Floating overlay | `~/.gemini/config/hooks.json` |
+| **Antigravity** | JSON hooks | `~/.gemini/config/hooks.json` |
 | **Cursor** | JSON hooks | `~/.cursor/hooks.json` |
-| **OpenCode** | Auto-discovered local JS plugin | `~/.config/opencode/plugins/nuzzle.js` |
-| **Gemini CLI** | Official JSON hook schema | `~/.gemini/settings.json` |
-| **GitHub Copilot CLI** | User-level JSON hook file | `${COPILOT_HOME:-~/.copilot}/hooks/nuzzle.json` |
+| **OpenCode** | Auto-discovered JS plugin | `~/.config/opencode/plugins/nuzzle.js` |
+| **Gemini CLI** | JSON hook schema | `~/.gemini/settings.json` |
+| **GitHub Copilot CLI** | User hook file | `${COPILOT_HOME:-~/.copilot}/hooks/nuzzle.json` |
 | **Pi** | Global TypeScript extension | `~/.pi/agent/extensions/nuzzle.ts` |
 
-If `CODEX_HOME` is not set, Nuzzle uses `~/.codex`. Integration writes are backed up, invalid JSON/TOML is never overwritten, and disconnect removes only Nuzzle-managed entries. Editors without a supported agent hook API can still use the floating pet and direct interactions, but cannot emit automatic lifecycle reactions.
+If `CODEX_HOME` is not set, Nuzzle uses `~/.codex`. Integration writes are backed up first, and Nuzzle never overwrites invalid JSON or TOML. Disconnecting removes only the entries Nuzzle added.
 
 ---
 
-## 🐶 Built-in CoPet Mascots & Animals (20 Pets)
+## 🛠 Build from source
 
-Living animated pixel pets from the original CoPet companion collection with full 8×9 animation atlases:
-
-<table>
-  <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/copet-neo.gif" width="80" alt="CoPet Neo" /><br /><sub><b>CoPet Neo</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/copet-nia.gif" width="80" alt="CoPet Nia" /><br /><sub><b>CoPet Nia</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/copet-mecha.gif" width="80" alt="CoPet Mecha" /><br /><sub><b>CoPet Mecha</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/dj-fuzz.gif" width="80" alt="DJ Fuzz" /><br /><sub><b>DJ Fuzz</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/dog.gif" width="80" alt="Lucky Dog" /><br /><sub><b>Lucky Dog</b></sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/dragon.gif" width="80" alt="Azure Dragon" /><br /><sub><b>Azure Dragon</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/duck.gif" width="80" alt="Waddly Duck" /><br /><sub><b>Waddly Duck</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/goat.gif" width="80" alt="Cloud Goat" /><br /><sub><b>Cloud Goat</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/goku.gif" width="80" alt="Goku" /><br /><sub><b>Goku</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/horse.gif" width="80" alt="Chestnut Horse" /><br /><sub><b>Chestnut Horse</b></sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/monkey.gif" width="80" alt="Clever Monkey" /><br /><sub><b>Clever Monkey</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/orange-cat.gif" width="80" alt="Orange Cat" /><br /><sub><b>Orange Cat</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/ox.gif" width="80" alt="Cream Ox" /><br /><sub><b>Cream Ox</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/panda.gif" width="80" alt="Panda" /><br /><sub><b>Panda</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/pig.gif" width="80" alt="Blush Pig" /><br /><sub><b>Blush Pig</b></sub></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/rabbit.gif" width="80" alt="White Rabbit" /><br /><sub><b>White Rabbit</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/rat.gif" width="80" alt="Pearl Rat" /><br /><sub><b>Pearl Rat</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/rooster.gif" width="80" alt="Golden Rooster" /><br /><sub><b>Golden Rooster</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/snake.gif" width="80" alt="Jade Snake" /><br /><sub><b>Jade Snake</b></sub></td>
-    <td align="center"><img src="https://raw.githubusercontent.com/ChanceYu/CoPet/main/public/pets/tiger.gif" width="80" alt="Striped Tiger" /><br /><sub><b>Striped Tiger</b></sub></td>
-  </tr>
-</table>
-
----
-
-## 🌸 Anime Companions Collection (22 Pets)
-
-Codex-compatible anime companions. Hu Tao is the v2 directional reference; the remaining catalog retains its validated v1 animation rows:
-
-| Companion | Preview | Vibe / Element | Lore & Personality |
-| :--- | :---: | :---: | :--- |
-| **Hu Tao**<br><sub>`hu-tao`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/hu-tao.png" width="80" alt="Hu Tao" /> | `chaos` · Pyro | *“If there’s work to do, I’ll haunt it.”* · spirited & lively |
-| **Furina**<br><sub>`furina`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/furina.png" width="80" alt="Furina" /> | `anime` · Hydro | *“Let the drama of code execution unfold!”* · dramatic flair |
-| **Raiden**<br><sub>`raiden`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/raiden.png" width="80" alt="Raiden" /> | `cozy` · Electro | *“Transcendence requires uninterrupted focus.”* · zen master |
-| **Ganyu**<br><sub>`ganyu`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/ganyu.png" width="80" alt="Ganyu" /> | `cozy` · Cryo | *“Overtime again? I brought extra tea...”* · gentle companion |
-| **Klee**<br><sub>`klee`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/klee.png" width="80" alt="Klee" /> | `chaos` · Pyro | *“Spark Knight Klee reporting for bug hunting!”* · pure energy |
-| **Anya**<br><sub>`anya`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/anya.png" width="80" alt="Anya" /> | `anime` · Esper | *“Waku waku! Agent is planning something big!”* · mind reader |
-| **Aiko**<br><sub>`aiko`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/aiko.png" width="80" alt="Aiko" /> | `anime` · Anemo | *“Every line of code is a new little adventure.”* · curious explorer |
-| **Ayaka**<br><sub>`ayaka`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/ayaka.png" width="80" alt="Ayaka" /> | `cozy` · Cryo | *“May your compilation be swift and graceful.”* · calm precision |
-| **Baobao**<br><sub>`baobao`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/baobao.png" width="80" alt="Baobao" /> | `cozy` · Neutral | *“Whatever happens, happens.”* · mystic spirit |
-| **Chen**<br><sub>`chen`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/chen.png" width="80" alt="Chen" /> | `chaos` · Sword | *“Duty first. Let's finish this task.”* · sword operator |
-| **Conan**<br><sub>`conan`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/conan.png" width="80" alt="Conan" /> | `anime` · Detective | *“There is always only one truth.”* · keen detective |
-| **Kid**<br><sub>`kid`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/kid.png" width="80" alt="Kid" /> | `anime` · Magic | *“Ladies and gentlemen, watch this refactor!”* · phantom thief |
-| **Lappland**<br><sub>`lappland`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/lappland.png" width="80" alt="Lappland" /> | `chaos` · Wolf | *“Let me at those unit tests!”* · lone wolf |
-| **March 7th**<br><sub>`march-7th`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/march-7th.png" width="80" alt="March 7th" /> | `anime` · Cryo | *“Check out this awesome new snapshot!”* · cheerful star |
-| **Exusiai**<br><sub>`new-covenant-exusiai`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/new-covenant-exusiai.png" width="80" alt="Exusiai" /> | `chaos` · Light | *“Apple pie! Build succeeded!”* · angel marksman |
-| **Phoebe**<br><sub>`phoebe`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/phoebe.png" width="80" alt="Phoebe" /> | `cozy` · Wind | *“Rest easy, the code is in good hands.”* · serene cleric |
-| **Regulus**<br><sub>`regulus-star-antimony`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/regulus-star-antimony.png" width="80" alt="Regulus" /> | `chaos` · Rock | *“So you have a pirate radio too?”* · radio DJ arcanist |
-| **Shinchan**<br><sub>`shinchan`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/shinchan.png" width="80" alt="Shinchan" /> | `chaos` · Cheeky | *“Hehehe, look at that silly bug!”* · unstoppable prankster |
-| **Sonetto**<br><sub>`sonetto`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/sonetto.png" width="80" alt="Sonetto" /> | `cozy` · Light | *“Following protocol, one commit at a time.”* · field agent |
-| **Vertin**<br><sub>`vertin`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/vertin.png" width="80" alt="Vertin" /> | `cozy` · Chrono | *“Time flows, but this branch stays.”* · timekeeper |
-| **Yoimiya**<br><sub>`yoimiya`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/yoimiya.png" width="80" alt="Yoimiya" /> | `anime` · Pyro | *“Let's light up the night with a clean build!”* · fireworks maker |
-| **Zani**<br><sub>`zani`</sub> | <img src="https://raw.githubusercontent.com/chenxin-dlut/codex-anime-pets/main/assets/previews/zani.png" width="80" alt="Zani" /> | `anime` · Electro | *“Power surge — the pipeline is live.”* · dark spark |
-
----
-
-## 📐 Current Codex Atlas Contract
-
-Nuzzle supports both Codex atlas contracts. Hu Tao is a genuine v2 atlas; the other 41 bundled pets currently use the v1 9-row layout:
-
-- **Dimensions**: v1 is `1536 × 1872` (`8 columns × 9 rows`); v2 is `1536 × 2288` (`8 columns × 11 rows`).
-- **Cell Size**: `192 × 208` pixels per frame.
-- **Manifest**: v1 omits `spriteVersionNumber`; v2 declares `spriteVersionNumber: 2`.
-- **Row Mappings**:
-  - **Row 0**: `idle` (6 active frames) — *Gentle breathing and blinking*
-  - **Row 1**: `running-right` (8 active frames) — *Moving right*
-  - **Row 2**: `running-left` (8 active frames) — *Moving left*
-  - **Row 3**: `waving` (4 active frames) — *Head pat & greeting reaction*
-  - **Row 4**: `jumping` (5 active frames) — *Excited & happy state*
-  - **Row 5**: `failed` (8 active frames) — *Agent error state*
-  - **Row 6**: `waiting` (6 active frames) — *Thinking & resting state*
-  - **Row 7**: `running` (6 active frames) — *Active tool call / work state*
-  - **Row 8**: `review` (6 frames) — *Code review & summary state*
-
-Codex v2 uses `1536 × 2288` pixels (`8 × 11`), adds a dedicated neutral frame and rows 9–10 for 16 clockwise directions. Nuzzle does not label shifted or duplicated v1 poses as v2.
-
----
-
-## 🚀 Quick Start
-
-### 1. Run the Native Desktop Companion (Tauri 2.0)
-
-For the full macOS floating sprite experience with always-on-top positioning, borderless transparency, and drag-running physics:
+Requirements: Node 20+, Rust (stable), Python 3 with Pillow. Playwright is needed only for UI tests and media capture.
 
 ```bash
-# Install Tauri CLI & dependencies
 npm install
-
-# Run in development mode (builds frontend to dist/ and launches native app)
 npm run dev
-
-# Build production macOS application bundle (.dmg / .app)
-npm run build
-
-# Build one universal Intel + Apple Silicon DMG
-npm run build:universal
 ```
 
-For a distributable build, run `npm run release:macos`. With `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`, and `APPLE_TEAM_ID` set, the script builds, Developer ID signs, notarizes, staples, and verifies the universal app and DMG. Without them it produces an explicitly ad-hoc-signed development build. The tag-triggered GitHub workflow uses the same universal target and expects the Apple certificate/notarization secrets documented in [Tauri's macOS signing guide](https://v2.tauri.app/distribute/sign/macos/).
+| Command | What it does |
+| :--- | :--- |
+| `npm run dev` | Build the web UI and launch the native app |
+| `npm run build` | Release `.app` + `.dmg` for this Mac's architecture |
+| `npm run build:universal` | One universal Apple Silicon + Intel DMG |
+| `npm run release:macos` | Full checks, then a verified universal DMG (signed + notarized when Apple credentials are set) |
+| `npm run check` | Pet audit, size gates, Python tests, Rust tests, and clippy |
+| `npm run test:ui` | Playwright end-to-end UI suite |
+| `npm run pets:sync` | Refresh the CodexPets.net catalog snapshot |
+| `npm run pets:thumbs` | Regenerate the library preview strips |
+| `npm run pets:optimize` | Re-encode atlases at a set visual-quality floor |
+| `npm run clean` | Delete the Rust build cache (`src-tauri/target` can reach several GB) |
+
+**Browser preview** (no install): run `python3 scripts/server.py` and open <http://localhost:4173>. Agent hooks, adding pets, and saving Pet Maker creations need the Mac app.
+
+**README media** is captured from the live UI with `python3 scripts/capture_readme_media.py`.
 
 ---
 
-### 2. Run in the Browser (Zero-Install)
+## 📐 Pet format
 
-Serve the companion studio with any static HTTP server:
+Nuzzle reads and writes standard Codex pet packages: a `pet.json` manifest plus a sprite sheet of **192×208 px cells, 8 columns wide**.
 
-```bash
-# Using Python 3 built-in HTTP server
-python3 -m http.server 4173
+| Row | State | Frames | | Row | State | Frames |
+| :-: | :--- | :-: | :-: | :-: | :--- | :-: |
+| 0 | idle | 6 | | 5 | failed | 8 |
+| 1 | running right | 8 | | 6 | waiting | 6 |
+| 2 | running left | 8 | | 7 | working | 6 |
+| 3 | waving | 4 | | 8 | review | 6 |
+| 4 | jumping | 5 | | | | |
 
-# Or with live local agent SSE event bridge:
-python3 scripts/server.py
-```
-
-Then open **[http://localhost:4173](http://localhost:4173)** in your browser.
-
----
-
-### 3. Install Companions to Native Codex App
-
-Install all 42 validated companions into `$CODEX_HOME/pets/` (or `~/.codex/pets/` when `CODEX_HOME` is unset):
-
-```bash
-python3 scripts/setup_codex.py
-```
-
-Existing packages are preserved by default. Use `--force` only when you intend to replace them; Nuzzle backs up each replaced package first. Connect lifecycle hooks from **Nuzzle → Agents → Codex**, where JSON/TOML validation, backups, feature enablement, and hook trust are handled atomically.
+- **v1** sheets are `1536 × 1872` (9 rows).
+- **v2** sheets are `1536 × 2288`: they add rows 9–10 for 16 clockwise look directions and set `spriteVersionNumber: 2`.
+- Nuzzle never fakes v2 by shifting v1 poses.
 
 ---
 
-### 4. Run Automated Test & Verification Suites
-
-```bash
-# Run end-to-end Playwright UI verification (11 comprehensive test suites)
-python3 scripts/verify_app.py
-
-# Audit all 42 sprite atlases, row dimensions, and metadata contracts
-python3 scripts/audit_all_pets.py
-
-# Verify that release atlases have passed the size optimization gate
-npm run pets:check-size
-```
-
----
-
-## 👥 Contributors & Project Credits
-
-Nuzzle is built on the shoulders of brilliant open-source creators:
+## 👥 Credits
 
 <table>
   <tr>
     <td align="center" width="25%">
-      <a href="https://github.com/ChanceYu">
-        <img src="https://github.com/ChanceYu.png" width="90" style="border-radius: 50%;" alt="ChanceYu" /><br />
-        <sub><b>ChanceYu</b></sub>
-      </a><br />
-      <small>Creator & Maintainer of <a href="https://github.com/ChanceYu/CoPet">CoPet</a></small>
+      <a href="https://github.com/ChanceYu"><img src="https://github.com/ChanceYu.png" width="72" alt="ChanceYu" /><br /><sub><b>ChanceYu</b></sub></a><br />
+      <sub><a href="https://github.com/ChanceYu/CoPet">CoPet</a>: agent event model &amp; mascots</sub>
     </td>
     <td align="center" width="25%">
-      <a href="https://github.com/chenxin-dlut">
-        <img src="https://github.com/chenxin-dlut.png" width="90" style="border-radius: 50%;" alt="chenxin-dlut" /><br />
-        <sub><b>Xin Chen (chenxin-dlut)</b></sub>
-      </a><br />
-      <small>Creator of <a href="https://github.com/chenxin-dlut/codex-anime-pets">codex-anime-pets</a></small>
+      <a href="https://github.com/chenxin-dlut"><img src="https://github.com/chenxin-dlut.png" width="72" alt="chenxin-dlut" /><br /><sub><b>Xin Chen</b></sub></a><br />
+      <sub><a href="https://github.com/chenxin-dlut/codex-anime-pets">codex-anime-pets</a></sub>
     </td>
     <td align="center" width="25%">
-      <a href="https://github.com/webbrain-one">
-        <img src="https://github.com/webbrain-one.png" width="90" style="border-radius: 50%;" alt="webbrain-one" /><br />
-        <sub><b>webbrain-one</b></sub>
-      </a><br />
-      <small>Contributor to <a href="https://github.com/chenxin-dlut/codex-anime-pets">codex-anime-pets</a></small>
+      <a href="https://github.com/webbrain-one"><img src="https://github.com/webbrain-one.png" width="72" alt="webbrain-one" /><br /><sub><b>webbrain-one</b></sub></a><br />
+      <sub>codex-anime-pets contributor</sub>
     </td>
     <td align="center" width="25%">
-      <a href="https://github.com/satiricalguru">
-        <img src="https://github.com/satiricalguru.png" width="90" style="border-radius: 50%;" alt="satiricalguru" /><br />
-        <sub><b>Jatin Pandey (satiricalguru)</b></sub>
-      </a><br />
-      <small>Maintainer of <a href="https://github.com/satiricalguru/Nuzzle-pets">Nuzzle Studio</a></small>
+      <a href="https://github.com/satiricalguru"><img src="https://github.com/satiricalguru.png" width="72" alt="satiricalguru" /><br /><sub><b>Jatin Pandey</b></sub></a><br />
+      <sub>Nuzzle maintainer</sub>
     </td>
   </tr>
 </table>
 
+Community pets in **Discover** are made by the authors listed on each card and mirrored by [CodexPets.net](https://codexpets.net). Nuzzle stores only their catalog metadata and downloads a pet when you choose to add it.
+
 ---
 
-## 📄 License & Disclaimers
+## 📄 License & disclaimers
 
-- **Code & Documentation**: Licensed under the [MIT License](LICENSE) © 2026 Nuzzle Contributors, ChanceYu, and Xin Chen.
-- **Pet Sprite Sheet Assets**: The character sprite sheet images in `public/pets/` are fan-made generated art interpretations inspired by anime and game characters. No license is granted to any underlying third-party character, trademark, or franchise. All copyrights and trademarks remain with their respective rights holders. This project is unofficial, non-commercial, and not affiliated with or endorsed by any rights holder.
+- **Code and documentation**: [MIT](LICENSE) © 2026 Nuzzle contributors, ChanceYu, and Xin Chen.
+- **Pet artwork**: the sprite sheets in `public/pets/` and community pets are fan-made art inspired by anime and game characters. No license is granted to any underlying character, trademark, or franchise; rights stay with their owners. Nuzzle is unofficial, non-commercial, and not affiliated with OpenAI, CodexPets.net, or any rights holder.

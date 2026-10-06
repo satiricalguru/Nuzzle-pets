@@ -1,6 +1,6 @@
 [package]
 name = "nuzzle-desktop"
-version = "0.3.0"
+version = "0.4.0"
 description = "Native floating companion for AI coding agents"
 authors = ["Nuzzle contributors"]
 edition = "2021"
@@ -22,7 +22,7 @@ getrandom = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha2 = "0.10"
-tauri = { version = "2", features = ["macos-private-api", "tray-icon"] }
+tauri = { version = "2", features = ["macos-private-api", "tray-icon", "protocol-asset"] }
 thiserror = "2"
 toml = "0.9"
 toml_edit = "0.23"
